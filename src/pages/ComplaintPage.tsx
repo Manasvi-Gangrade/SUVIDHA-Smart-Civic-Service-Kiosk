@@ -1,4 +1,3 @@
-import KioskHeader from "@/components/KioskHeader";
 import { useState } from "react";
 import { MessageSquarePlus, CheckCircle2 } from "lucide-react";
 
@@ -29,7 +28,6 @@ const ComplaintPage = () => {
   if (submitted) {
     return (
       <div className="min-h-screen bg-background">
-        <KioskHeader />
         <div className="container flex flex-col items-center py-20 text-center">
           <div className="rounded-full bg-kiosk-green/10 p-6 mb-6">
             <CheckCircle2 className="h-16 w-16 text-kiosk-green" />
@@ -50,7 +48,6 @@ const ComplaintPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <KioskHeader />
       <div className="border-b border-border bg-primary py-8">
         <div className="container flex items-center gap-4">
           <div className="rounded-2xl bg-secondary p-4">

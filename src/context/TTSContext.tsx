@@ -32,29 +32,53 @@ export const TTSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     }, []);
 
-    const speak = useCallback((text: string, lang: string = i18n.language) => {
+    const speak = useCallback((text: string, manualLang?: string) => {
         if (!supported) return;
 
         window.speechSynthesis.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
-
-        // Better voice selection logic
         const voices = voicesRef.current.length > 0 ? voicesRef.current : window.speechSynthesis.getVoices();
 
-        let preferredVoice = null;
-        if (lang === "hi" || lang === "mr" || lang === "bn") {
-            // Priority 1: Google Hindi/India specific
-            preferredVoice = voices.find(v => v.name.includes("Google हिन्दी") || v.name.includes("Lekha") || v.name.includes("Neerja"));
-
-            // Priority 2: Any Indian language voice
-            if (!preferredVoice) {
-                preferredVoice = voices.find(v => v.lang.includes("IN") || v.name.includes("India"));
+        // Detect current language from Google Translate if possible
+        let lang = manualLang;
+        if (!lang) {
+            const googCookie = document.cookie.match(/(^|;)\s*googtrans=([^;]+)/);
+            if (googCookie) {
+                lang = googCookie[2].split('/')[2]; // e.g. "/en/es" -> "es"
+            } else {
+                lang = i18n.language || "en";
             }
         }
 
-        // Fallback to English/default if no specific voice found
-        if (!preferredVoice && lang === "en") {
+        // Handle specific regional dialects or Google's language mappings
+        const langMap: Record<string, string> = {
+            'zh-CN': 'zh-CN',
+            'zh-TW': 'zh-TW',
+            'es': 'es', // Spanish
+            'fr': 'fr', // French
+            'ja': 'ja', // Japanese
+            'ar': 'ar', // Arabic
+            'de': 'de', // German
+            'hi': 'hi', 'mr': 'mr', 'ta': 'ta', 'te': 'te', 'gu': 'gu', 'bn': 'bn' // Indian Languages
+        };
+
+        const targetLangPrefix = langMap[lang] || lang;
+        let preferredVoice = null;
+
+        if (lang === "hi" || lang === "mr" || lang === "bn" || lang === "ta" || lang === "te" || lang === "gu") {
+            // Priority 1: Google Indian voices (Hindi, etc)
+            preferredVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) || v.name.includes("Google हिन्दी") || v.name.includes("Lekha"));
+            // Priority 2: Any generic IN voice
+            if (!preferredVoice) preferredVoice = voices.find(v => v.lang.includes("IN") || v.name.includes("India"));
+        } else if (targetLangPrefix !== "en") {
+            // General Priority 1: Google branded voices for that language
+            preferredVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) && v.name.includes("Google"));
+            // General Priority 2: Any voice matching that language prefix (e.g., 'fr-FR', 'es-ES')
+            if (!preferredVoice) preferredVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) || v.lang.startsWith(targetLangPrefix.toLowerCase()));
+        }
+
+        // Final Fallback for all cases including English
+        if (!preferredVoice) {
             preferredVoice = voices.find(v => v.lang.startsWith("en-US") || v.name.includes("Google US"));
         }
 
@@ -78,16 +102,17 @@ export const TTSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Auto-read on navigation if enabled
     useEffect(() => {
         if (ttsEnabled && supported) {
-            // Small delay to allow page content to update
             const timeoutId = setTimeout(() => {
-                const textToRead = document.body.innerText.substring(0, 300).replace(/\n/g, ". ");
-                speak(textToRead, i18n.language);
+                // Focus on reading actual UI text, ignoring the invisible Google Translate banner
+                const interactables = Array.from(document.querySelectorAll('h1, h2, h3, p.text-muted-foreground')).map(el => (el as HTMLElement).innerText).join('. ');
+                const textToRead = interactables.substring(0, 300).replace(/\n/g, ". ");
+                speak(textToRead);
             }, 1000);
             return () => clearTimeout(timeoutId);
         } else {
             stop();
         }
-    }, [location.pathname, ttsEnabled, supported, speak, i18n.language, stop]);
+    }, [location.pathname, ttsEnabled, supported, speak, stop]);
 
     // Global Hover Listener for TTS
     useEffect(() => {
@@ -106,8 +131,8 @@ export const TTSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
                 if (text && text.trim().length > 0) {
                     // Optimization: Don't read if overly long container
-                    if (text.length < 200) {
-                        speak(text, i18n.language);
+                    if (text.length < 200 && text.trim() !== "S") {
+                        speak(text);
                     }
                 }
             }
@@ -125,7 +150,7 @@ export const TTSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             document.removeEventListener('mouseout', handleMouseOut);
             stop();
         };
-    }, [ttsEnabled, supported, speak, stop, i18n.language]);
+    }, [ttsEnabled, supported, speak, stop]);
 
     return (
         <TTSContext.Provider value={{ speak, stop, speaking, supported, ttsEnabled, setTtsEnabled }}>

@@ -1,4 +1,3 @@
-import KioskHeader from "@/components/KioskHeader";
 import ServiceItem from "@/components/ServiceItem";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -94,7 +93,6 @@ const DepartmentPage = () => {
   if (!deptData) {
     return (
       <div className="min-h-screen bg-background">
-        <KioskHeader />
         <div className="container py-20 text-center">
           <h2 className="text-2xl font-bold text-foreground">Department not found</h2>
         </div>
@@ -114,7 +112,6 @@ const DepartmentPage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <KioskHeader />
 
       {/* Enhanced Hero Section */}
       <div className="relative overflow-hidden border-b border-border bg-primary py-12 md:py-16">

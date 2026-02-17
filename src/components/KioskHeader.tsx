@@ -1,8 +1,41 @@
-import { ArrowLeft, Home, Globe, Volume2, VolumeX, Lock, Sun, Cloud } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX, Lock, Sun } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { useTTS } from "@/hooks/useTTS";
+
+// Ensure window types are known
+declare global {
+  interface Window {
+    googleTranslateElementInit: () => void;
+    google: any;
+  }
+}
+
+// Dedicated component to ensure the div stays intact
+const GoogleTranslateWidget = memo(() => {
+  useEffect(() => {
+    // Add Google Translate script dynamically so it fires after the div is mounted
+    if (!document.getElementById("google-translate-script")) {
+      window.googleTranslateElementInit = () => {
+        if (window.google && window.google.translate) {
+          new window.google.translate.TranslateElement(
+            { pageLanguage: 'en', autoDisplay: false },
+            'google_translate_element'
+          );
+        }
+      };
+
+      const script = document.createElement("script");
+      script.id = "google-translate-script";
+      script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  return <div id="google_translate_element" className="flex items-center min-w-[140px] [&>div]:m-0 overflow-visible transition-all"></div>;
+});
 
 const KioskHeader = () => {
   const navigate = useNavigate();
@@ -22,28 +55,6 @@ const KioskHeader = () => {
   const dateString = currentTime.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
 
   const isHome = location.pathname === "/";
-
-  const toggleLanguage = () => {
-    const langs = ["en", "hi", "mr", "bn"];
-    // Use resolvedLanguage to handle regional variants (e.g., en-US -> en)
-    const currentLang = i18n.resolvedLanguage || i18n.language || "en";
-    const currentIdx = langs.indexOf(currentLang);
-
-    // If not found (e.g. some unexpected locale), default to en (0)
-    const nextIdx = currentIdx === -1 ? 0 : (currentIdx + 1) % langs.length;
-    const nextLang = langs[nextIdx];
-
-    i18n.changeLanguage(nextLang);
-  };
-
-  const getLangLabel = (lang: string) => {
-    switch (lang) {
-      case "hi": return "हिंदी";
-      case "mr": return "मराठी";
-      case "bn": return "বাংলা";
-      default: return "EN";
-    }
-  };
 
   const toggleTTS = () => {
     if (ttsEnabled) {
@@ -101,13 +112,7 @@ const KioskHeader = () => {
             <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">New Delhi, IN</span>
           </div>
 
-          <button
-            onClick={toggleLanguage}
-            className="kiosk-touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <Globe className="h-4 w-4 text-primary" />
-            <span className="font-semibold">{getLangLabel(i18n.resolvedLanguage || i18n.language || "en")}</span>
-          </button>
+          <GoogleTranslateWidget />
 
           {supported && (
             <button

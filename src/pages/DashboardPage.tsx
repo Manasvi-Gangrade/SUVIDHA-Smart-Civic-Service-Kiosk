@@ -1,4 +1,3 @@
-import KioskHeader from "@/components/KioskHeader";
 import { ClipboardList, Clock, CheckCircle2, AlertCircle, FileText, MessageSquarePlus, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -32,7 +31,6 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <KioskHeader />
       <div className="border-b border-border bg-primary py-8">
         <div className="container flex items-center justify-between">
           <div className="flex items-center gap-4">

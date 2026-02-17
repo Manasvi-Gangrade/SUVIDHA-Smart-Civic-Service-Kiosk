@@ -1,4 +1,3 @@
-import KioskHeader from "@/components/KioskHeader";
 import { useState } from "react";
 import { Search, Clock, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -28,7 +27,6 @@ const TrackPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <KioskHeader />
       <div className="border-b border-border bg-primary py-8">
         <div className="container flex items-center gap-4">
           <div className="rounded-2xl bg-secondary p-4">
