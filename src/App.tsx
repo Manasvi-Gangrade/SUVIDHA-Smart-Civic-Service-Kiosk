@@ -9,6 +9,7 @@ import DepartmentPage from "./pages/DepartmentPage";
 import ComplaintPage from "./pages/ComplaintPage";
 import TrackPage from "./pages/TrackPage";
 import DashboardPage from "./pages/DashboardPage";
+import LoginPage from "./pages/LoginPage";
 import { TTSProvider } from "./context/TTSContext";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <main className="flex-1 overflow-y-auto">
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/login" element={<LoginPage />} />
                 <Route path="/department/:id" element={<DepartmentPage />} />
                 <Route path="/complaint" element={<ComplaintPage />} />
                 <Route path="/track" element={<TrackPage />} />

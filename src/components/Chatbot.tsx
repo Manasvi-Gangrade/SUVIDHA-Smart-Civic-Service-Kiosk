@@ -8,142 +8,182 @@ interface Message {
     sender: "bot" | "user";
 }
 
+// ── Multilingual response maps ──────────────────────────────────────────────
+const RESPONSES: Record<string, Record<string, string>> = {
+    greeting: {
+        en: "Hello! I am Sahayak, your virtual assistant. How can I help you today?",
+        hi: "नमस्ते! मैं सहायक हूँ, आपका वर्चुअल असिस्टेंट। आज मैं आपकी कैसे मदद कर सकता हूँ?",
+        mr: "नमस्कार! मी सहायक आहे, तुमचा व्हर्च्युअल असिस्टंट. आज मी तुमची कशी मदत करू?",
+        ta: "வணக்கம்! நான் சகாயக், உங்கள் மெய்நிகர் உதவியாளர். இன்று நான் உங்களுக்கு எவ்வாறு உதவலாம்?",
+        gu: "નમસ્તે! હું સહાયક છું, તમારો વર્ચ્યુઅલ આસિસ્ટન્ટ. આજે હું તમને કઈ રીતે મદદ કરી શકું?",
+        bn: "নমস্কার! আমি সহায়ক, আপনার ভার্চুয়াল সহকারী। আজ আমি আপনাকে কিভাবে সাহায্য করতে পারি?",
+    },
+    thanks: {
+        en: "You're very welcome! Let me know if you need help with anything else.",
+        hi: "बहुत स्वागत है! यदि आपको और कुछ मदद चाहिए तो बताएं।",
+        mr: "तुमचे खूप स्वागत आहे! इतर कशातही मदत लागली तर सांगा.",
+        ta: "மிகவும் வரவேற்கிறோம்! வேறு ஏதாவது உதவி தேவைப்பட்டால் தெரியப்படுத்துங்கள்.",
+        gu: "ખૂબ સ્વાગત છે! બીજી કોઈ મદદ જોઈએ તો જણાવો.",
+        bn: "খুব স্বাগতম! আর কোনো সাহায্যের দরকার হলে জানান।",
+    },
+    bill: {
+        en: "To pay bills, go to 'Departments' on the Home page and select your utility (Electricity, Water, or Gas).",
+        hi: "बिल भुगतान के लिए होम पेज पर 'विभाग' पर जाएं और संबंधित उपयोगिता (बिजली, पानी या गैस) चुनें।",
+        mr: "बिल भरण्यासाठी, मुख्यपृष्ठावर 'विभाग' मध्ये जा आणि संबंधित सेवा निवडा (वीज, पाणी किंवा गॅस).",
+        ta: "பில் செலுத்த, முகப்புப் பக்கத்தில் 'துறைகள்' என்பதற்குச் சென்று தொடர்புடைய சேவையை (மின்சாரம், தண்ணீர் அல்லது எரிவாயு) தேர்ந்தெடுக்கவும்.",
+        gu: "બિલ ભરવા માટે, હોમ પેજ પર 'વિભાગ' માં જાઓ અને સંબંધિત સેવા (વીજળી, પાણી અથવા ગેસ) પસંદ કરો.",
+        bn: "বিল পরিশোধের জন্য হোম পেজে 'বিভাগ' এ যান এবং সংশ্লিষ্ট পরিষেবা (বিদ্যুৎ, জল বা গ্যাস) নির্বাচন করুন।",
+    },
+    complaint: {
+        en: "You can register a grievance by clicking 'Register Complaint' on the Home page. It takes less than 2 minutes!",
+        hi: "आप होम पेज पर 'शिकायत दर्ज करें' पर क्लिक करके शिकायत दर्ज कर सकते हैं। इसमें 2 मिनट से भी कम समय लगता है!",
+        mr: "मुख्यपृष्ठावर 'तक्रार नोंदवा' वर क्लिक करून तुम्ही तक्रार नोंदवू शकता. यास 2 मिनिटांपेक्षा कमी वेळ लागतो!",
+        ta: "முகப்புப் பக்கத்தில் 'புகார் பதிவு' என்பதைக் கிளிக் செய்வதன் மூலம் புகாரை பதிவு செய்யலாம். இது 2 நிமிடத்திற்கும் குறைவான நேரம் எடுக்கும்!",
+        gu: "હોમ પેજ પર 'ફરિયાદ નોંધો' પર ક્લિક કરીને ઓ ફરિયાદ નોંધાવી શકો. 2 મિનિટ કરતા ઓછો સમય લાગે!",
+        bn: "হোম পেজে 'অভিযোগ নিবন্ধন' এ ক্লিক করে অভিযোগ দাখিল করতে পারেন। মাত্র ২ মিনিট লাগে!",
+    },
+    track: {
+        en: "To check your application status, use 'Track Request'. You'll need your Request ID (e.g., SVD-2026-XXXX).",
+        hi: "अपने आवेदन की स्थिति जांचने के लिए 'अनुरोध ट्रैक करें' का उपयोग करें। आपको रिक्वेस्ट आईडी (जैसे SVD-2026-XXXX) की आवश्यकता होगी।",
+        mr: "तुमच्या अर्जाची स्थिती तपासण्यासाठी 'विनंती ट्रॅक करा' वापरा. तुम्हाला Request ID (उदा. SVD-2026-XXXX) आवश्यक आहे.",
+        ta: "உங்கள் விண்ணப்ப நிலையை சரிபார்க்க 'கோரிக்கையை கண்காணி' பயன்படுத்தவும். உங்களுக்கு Request ID (எ.கா. SVD-2026-XXXX) தேவைப்படும்.",
+        gu: "અરજીની સ્થિતિ ચેક કરવા 'ટ્રૅક રિક્વેસ્ટ' ઉપયોગ કરો. Request ID (દા.ત. SVD-2026-XXXX) ની જરૂર પડશે.",
+        bn: "আবেদনের অবস্থা দেখতে 'ট্র্যাক রিকোয়েস্ট' ব্যবহার করুন। আপনার Request ID (যেমন SVD-2026-XXXX) প্রয়োজন হবে।",
+    },
+    token: {
+        en: "Skip the queue! Generate a digital token for walk-in services directly from any Department page.",
+        hi: "लाइन छोड़ें! किसी भी विभाग पृष्ठ से सीधे वॉक-इन सेवाओं के लिए डिजिटल टोकन जेनरेट करें।",
+        mr: "रांग सोडा! कोणत्याही विभाग पृष्ठावरून थेट walk-in सेवांसाठी डिजिटल टोकन तयार करा.",
+        ta: "வரிசையைத் தவிர்க்கவும்! எந்த துறை பக்கத்திலிருந்தும் நேரடியாக walk-in சேவைகளுக்கான டிஜிட்டல் டோக்கனை உருவாக்குங்கள்.",
+        gu: "લાઇન ન ઊભા! ડિપાર્ટ્મેન્ટ પેજ પ� walk-in સેવા માટે ડિજiટ ટોકન બનાવો.",
+        bn: "লাইনে দাঁড়াবেন না! যেকোনো বিভাগের পেজ থেকে walk-in সেবার ডিজিটাল টোকন তৈরি করুন।",
+    },
+    fallback: {
+        en: "I'm not sure about that. I can help you Pay Bills, Track Requests, or Register Complaints. What would you like?",
+        hi: "मुझे यकीन नहीं है। मैं आपको बिल भुगतान, अनुरोध ट्रैकिंग या शिकायत दर्ज करने में मदद कर सकता हूँ।",
+        mr: "मला खात्री नाही. मी तुम्हाला बिल भरणे, विनंती ट्रॅक करणे किंवा तक्रार नोंदवणे यात मदत करू शकतो.",
+        ta: "எனக்கு நிச்சயமில்லை. பில் செலுத்துதல், கோரிக்கை கண்காணிப்பு அல்லது புகார் பதிவு செய்ய உதவ முடியும்.",
+        gu: "ખાતrી નથી. બil ભрванu, viনti ટreking, ywu rvad ফriyd nondawnwn mdad kri shkn.",
+        bn: "নিশ্চিত না। বিল পরিশোধ, ট্র্যাকিং বা অভিযোগ নিবন্ধনে সাহায্য করতে পারি।",
+    },
+};
+
+function getResponse(input: string, lang: string): string {
+    const base = lang.split("-")[0]; // "hi-IN" → "hi"
+    const l = RESPONSES.greeting[base] ? base : "en";
+    const lower = input.toLowerCase();
+
+    if (lower.match(/\b(hello|hi|namaste|hey|नमस्ते|हेलो)\b/)) return RESPONSES.greeting[l];
+    if (lower.match(/\b(thank|thanks|धन्यवाद|shukriya|शुक्रिया)\b/)) return RESPONSES.thanks[l];
+    if (lower.match(/\b(pay|bill|electricity|water|gas|बिल|पानी|बिजली|गैस)\b/)) return RESPONSES.bill[l];
+    if (lower.match(/\b(complaint|grievance|report|issue|शिकायत|तक्रार)\b/)) return RESPONSES.complaint[l];
+    if (lower.match(/\b(status|track|check|application|ट्रैक|स्थिति)\b/)) return RESPONSES.track[l];
+    if (lower.match(/\b(token|queue|walk-in|टोकन|लाइन)\b/)) return RESPONSES.token[l];
+    return RESPONSES.fallback[l];
+}
+
+// Speech recognition language map
+const SPEECH_LANG_MAP: Record<string, string> = {
+    hi: "hi-IN", mr: "mr-IN", ta: "ta-IN", te: "te-IN",
+    gu: "gu-IN", bn: "bn-IN", en: "en-IN",
+};
+
 const Chatbot = () => {
-    const { t } = useTranslation();
+    const { i18n } = useTranslation();
+    const currentLang = i18n.language?.split("-")[0] || "en";
+    const getGreeting = (lang: string) => RESPONSES.greeting[lang] || RESPONSES.greeting.en;
+
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<Message[]>([
-        { id: 1, text: "Namaste! I am Sahayak, your virtual assistant. How can I help you today?", sender: "bot" }
+    const [messages, setMessages] = useState<Message[]>(() => [
+        { id: 1, text: getGreeting(currentLang), sender: "bot" }
     ]);
     const [inputText, setInputText] = useState("");
     const [isListening, setIsListening] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+    const langRef = useRef(currentLang);
 
     useEffect(() => {
-        if (isOpen) {
-            scrollToBottom();
-        }
+        if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isOpen]);
 
+    // Update greeting ONLY when the language actually changes
+    useEffect(() => {
+        const lang = i18n.language?.split("-")[0] || "en";
+        if (lang === langRef.current) return; // no change
+        langRef.current = lang;
+        const greetingLang = RESPONSES.greeting[lang] ? lang : "en";
+
+        // Optionally update the first message if needed, or append a system message
+        setMessages([{ id: Date.now(), text: RESPONSES.greeting[greetingLang], sender: "bot" }]);
+    }, [i18n.language]);
+
     const speak = (text: string) => {
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            // Try to select a Hindi/Indian English voice if available
-            const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.lang.includes('IN') || v.name.includes('India'));
-            if (preferredVoice) utterance.voice = preferredVoice;
-            window.speechSynthesis.speak(utterance);
-        }
+        if (!("speechSynthesis" in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        const lang = i18n.language?.split("-")[0] || "en";
+        const speechLang = SPEECH_LANG_MAP[lang] || "en-IN";
+        utterance.lang = speechLang;
+
+        // Try getting Indian voices first if available (crucial for local languages)
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(v => v.lang === speechLang) ||
+            voices.find(v => v.lang.startsWith(speechLang.split("-")[0])) ||
+            voices.find(v => v.name.includes("India"));
+
+        if (preferred) utterance.voice = preferred;
+        window.speechSynthesis.speak(utterance);
     };
 
     const startListening = () => {
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'en-US'; // Default to English, can be toggleable
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
+        const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+        if (!SR) { alert("Speech recognition not supported in this browser."); return; }
+        const recognition = new SR();
+        const lang = i18n.language?.split("-")[0] || "en";
+        recognition.lang = SPEECH_LANG_MAP[lang] || "en-IN"; // ← language-aware mic!
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-            setIsListening(true);
-
-            recognition.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                setInputText(transcript);
-                handleSendMessage(undefined, transcript);
-                setIsListening(false);
-            };
-
-            recognition.onerror = () => {
-                setIsListening(false);
-            };
-
-            recognition.onend = () => {
-                setIsListening(false);
-            };
-
-            recognition.start();
-        } else {
-            alert("Speech recognition is not supported in this browser.");
-        }
+        setIsListening(true);
+        recognition.onresult = (event: any) => {
+            const transcript = event.results[0][0].transcript;
+            setInputText(transcript);
+            sendMessage(transcript);
+            setIsListening(false);
+        };
+        recognition.onerror = () => setIsListening(false);
+        recognition.onend = () => setIsListening(false);
+        recognition.start();
     };
 
-    const handleSendMessage = (e?: React.FormEvent, overrideText?: string) => {
-        e?.preventDefault();
-        const textPayload = overrideText || inputText;
-        if (!textPayload.trim()) return;
-
-        const userMsg: Message = { id: Date.now(), text: textPayload, sender: "user" };
+    const sendMessage = (text: string) => {
+        if (!text.trim()) return;
+        const userMsg: Message = { id: Date.now(), text, sender: "user" };
         setMessages(prev => [...prev, userMsg]);
         setInputText("");
 
-        // Enhanced keyword-based auto-response
         setTimeout(() => {
-            let botResponse = "I'm sorry, I didn't quite catch that. Could you please rephrase?";
-            const lowerInput = textPayload.toLowerCase();
-
-            // Greetings
-            if (lowerInput.match(/\b(hello|hi|namaste|hey|greetings)\b/)) {
-                botResponse = "Hello! I am here to assist you with Citizen Services. You can ask me about bills, complaints, or navigation.";
-            }
-            // Gratitude & Acknowledgement
-            else if (lowerInput.match(/\b(thank|thanks|thx|धन्यवाद|shukriya)\b/)) {
-                botResponse = "You're very welcome! Let me know if you need help with anything else.";
-            }
-            else if (lowerInput.match(/\b(okay|ok|kk|done|great|good)\b/)) {
-                botResponse = "Great! Is there anything else I can assist you with today?";
-            }
-            else if (lowerInput.match(/\b(bye|goodbye|see you|tata)\b/)) {
-                botResponse = "Goodbye! Have a wonderful day.";
-            }
-            // Utility Bills
-            else if (lowerInput.match(/\b(pay|bill|electricity|water|gas|recharge)\b/)) {
-                botResponse = "To pay bills, please visit the 'Departments' section on the Home page and select the relevant utility (Electricity, Water, or Gas).";
-            }
-            // Complaints
-            else if (lowerInput.match(/\b(complaint|grievance|report|issue|broken|help)\b/)) {
-                botResponse = "You can register a grievance by clicking the 'Register Complaint' button on the Home dashboard. It takes less than 2 minutes!";
-            }
-            // Status Tracking
-            else if (lowerInput.match(/\b(status|track|application|check)\b/)) {
-                botResponse = "To check your application status, use the 'Track Request' feature. You will need your Request ID (e.g., SVD-2024-XXXX).";
-            }
-            // Admin/Staff
-            else if (lowerInput.match(/\b(admin|staff|login|employee)\b/)) {
-                botResponse = "Staff login is located at the top-right corner of the header (lock icon). Please use your authorized credentials.";
-            }
-            // Queue/Token
-            else if (lowerInput.match(/\b(token|queue|walk-in|appointment)\b/)) {
-                botResponse = "Skip the queue! You can generate a digital token for walk-in services directly from any Department page.";
-            }
-            // Fallback with options
-            else {
-                botResponse = "I'm not sure about that. I can help you **Pay Bills**, **Track Requests**, or **Contact Admin**. What would you like to do?";
-            }
-
-            setMessages(prev => [...prev, { id: Date.now() + 1, text: botResponse, sender: "bot" }]);
-            speak(botResponse); // Read out the response
-        }, 1000);
+            const lang = i18n.language?.split("-")[0] || "en";
+            const botText = getResponse(text, lang);
+            setMessages(prev => [...prev, { id: Date.now() + 1, text: botText, sender: "bot" }]);
+            speak(botText);
+        }, 800);
     };
 
     return (
         <>
-            {/* Floating Button */}
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 animate-bounce"
+                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 animate-bounce select-none"
                     aria-label="Open Chatbot"
                 >
                     <MessageCircle className="h-7 w-7" />
                 </button>
             )}
 
-            {/* Chat Window */}
             {isOpen && (
-                <div className="fixed bottom-6 right-6 z-50 w-80 flex flex-col rounded-2xl border border-border bg-card shadow-2xl sm:w-96 h-[500px] overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
+                <div className="fixed bottom-6 right-6 z-50 w-80 flex flex-col rounded-2xl border border-border bg-card shadow-2xl sm:w-96 h-[500px] overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 select-none">
                     {/* Header */}
                     <div className="flex items-center justify-between bg-primary p-4 text-primary-foreground">
                         <div className="flex items-center gap-3">
@@ -154,32 +194,24 @@ const Chatbot = () => {
                                 <h3 className="font-bold text-lg leading-none">Sahayak</h3>
                                 <div className="flex items-center gap-1.5 mt-1">
                                     <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-                                    <span className="text-xs font-medium opacity-90">Online Assistant</span>
+                                    <span className="text-xs font-medium opacity-90">
+                                        {SPEECH_LANG_MAP[currentLang] ? `${currentLang.toUpperCase()} Mode Active` : "Online Assistant"}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        <button
-                            onClick={() => setIsOpen(false)}
-                            className="rounded-full p-2 hover:bg-white/20 transition-colors"
-                            aria-label="Close Chat"
-                        >
+                        <button onClick={() => setIsOpen(false)} className="rounded-full p-2 hover:bg-white/20 transition-colors" aria-label="Close Chat">
                             <X className="h-5 w-5" />
                         </button>
                     </div>
 
-                    {/* Messages Area */}
+                    {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/30">
                         {messages.map((msg) => (
-                            <div
-                                key={msg.id}
-                                className={`flex w-full ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-                            >
-                                <div
-                                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${msg.sender === "user"
-                                            ? "bg-primary text-primary-foreground rounded-br-none"
-                                            : "bg-card border border-border text-foreground rounded-bl-none"
-                                        }`}
-                                >
+                            <div key={msg.id} className={`flex w-full ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
+                                <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${msg.sender === "user"
+                                    ? "bg-primary text-primary-foreground rounded-br-none"
+                                    : "bg-card border border-border text-foreground rounded-bl-none"}`}>
                                     {msg.text}
                                 </div>
                             </div>
@@ -187,14 +219,14 @@ const Chatbot = () => {
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Input Area */}
-                    <form onSubmit={(e) => handleSendMessage(e)} className="border-t border-border p-3 bg-card">
+                    {/* Input */}
+                    <form onSubmit={(e) => { e.preventDefault(); sendMessage(inputText); }} className="border-t border-border p-3 bg-card">
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
                                 onClick={startListening}
-                                className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${isListening ? 'bg-red-500 animate-pulse text-white' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
-                                title="Speak"
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all ${isListening ? "bg-red-500 animate-pulse text-white shadow-red-500/30" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                                title={`Speak in ${currentLang.toUpperCase()}`}
                             >
                                 <Mic className="h-4 w-4" />
                             </button>
@@ -202,17 +234,22 @@ const Chatbot = () => {
                                 type="text"
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
-                                placeholder="Type or speak..."
+                                placeholder={currentLang === "hi" ? "टाइप करें या बोलें..." : "Type or speak..."}
                                 className="flex-1 rounded-full border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
                             />
                             <button
                                 type="submit"
                                 disabled={!inputText.trim()}
-                                className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                             >
                                 <Send className="h-4 w-4" />
                             </button>
                         </div>
+                        {isListening && (
+                            <p className="text-[10px] text-center text-red-500 font-medium mt-1.5 animate-pulse">
+                                Listening... Speak now.
+                            </p>
+                        )}
                     </form>
                 </div>
             )}

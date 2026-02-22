@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Zap, Flame, Building2, Droplets, Trash2, FileText, Search, MessageSquarePlus, ClipboardList } from "lucide-react";
 import DepartmentCard from "@/components/DepartmentCard";
 import heroBanner from "@/assets/hero-banner.jpg";
@@ -11,18 +12,92 @@ import img4 from "../../images/digital_concept.png";
 import img5 from "../../images/image copy 5.png";
 import img6 from "../../images/urban_hub.png";
 
+const FILTER_TABS = ["All", "Utility", "Civic", "Property"];
+
+const allDepartments = [
+  {
+    icon: Zap,
+    titleKey: "departments.electricity",
+    descKey: "departmentDesc.electricity",
+    path: "/department/electricity",
+    color: "saffron" as const,
+    serviceCount: 5,
+    status: "Online" as const,
+    category: "Utility",
+    searchTerms: "electricity power outage bill meter connection",
+  },
+  {
+    icon: Flame,
+    titleKey: "departments.gas",
+    descKey: "departmentDesc.gas",
+    path: "/department/gas",
+    color: "navy" as const,
+    serviceCount: 4,
+    status: "Online" as const,
+    category: "Utility",
+    searchTerms: "gas lpg cylinder booking leakage subsidy",
+  },
+  {
+    icon: Building2,
+    titleKey: "departments.municipal",
+    descKey: "departmentDesc.municipal",
+    path: "/department/municipal",
+    color: "teal" as const,
+    serviceCount: 3,
+    status: "High Load" as const,
+    category: "Civic",
+    searchTerms: "municipal corporation grievance contact office civic",
+  },
+  {
+    icon: Droplets,
+    titleKey: "departments.water",
+    descKey: "departmentDesc.water",
+    path: "/department/water",
+    color: "green" as const,
+    serviceCount: 3,
+    status: "Online" as const,
+    category: "Utility",
+    searchTerms: "water supply connection bill leakage pipeline",
+  },
+  {
+    icon: Trash2,
+    titleKey: "departments.waste",
+    descKey: "departmentDesc.waste",
+    path: "/department/waste",
+    color: "saffron" as const,
+    serviceCount: 3,
+    status: "Online" as const,
+    category: "Civic",
+    searchTerms: "waste garbage pickup sanitation cleanliness truck",
+  },
+  {
+    icon: FileText,
+    titleKey: "departments.property",
+    descKey: "departmentDesc.property",
+    path: "/department/property",
+    color: "navy" as const,
+    serviceCount: 3,
+    status: "Online" as const,
+    category: "Property",
+    searchTerms: "property tax assessment registration payment",
+  },
+];
+
 const Index = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const departments = [
-    { icon: Zap, title: t("departments.electricity"), description: t("departmentDesc.electricity"), path: "/department/electricity", color: "saffron" as const },
-    { icon: Flame, title: t("departments.gas"), description: t("departmentDesc.gas"), path: "/department/gas", color: "navy" as const },
-    { icon: Building2, title: t("departments.municipal"), description: t("departmentDesc.municipal"), path: "/department/municipal", color: "teal" as const },
-    { icon: Droplets, title: t("departments.water"), description: t("departmentDesc.water"), path: "/department/water", color: "green" as const },
-    { icon: Trash2, title: t("departments.waste"), description: t("departmentDesc.waste"), path: "/department/waste", color: "saffron" as const },
-    { icon: FileText, title: t("departments.property"), description: t("departmentDesc.property"), path: "/department/property", color: "navy" as const },
-  ];
+  const filteredDepts = allDepartments.filter((dept) => {
+    const matchesFilter = activeFilter === "All" || dept.category === activeFilter;
+    const query = searchQuery.toLowerCase();
+    const matchesSearch =
+      !query ||
+      t(dept.titleKey).toLowerCase().includes(query) ||
+      dept.searchTerms.includes(query);
+    return matchesFilter && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,7 +123,6 @@ const Index = () => {
                 {t("heroSubtitle")}
               </p>
 
-              {/* Taglines with improved styling */}
               <div className="mt-8 space-y-3 border-l-2 border-secondary/50 pl-4 py-1">
                 <p className="text-lg font-semibold text-secondary italic tracking-wide">
                   {t("tagline1")}
@@ -76,10 +150,10 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Right Column: Structured 2-3-2 Image Grid */}
+            {/* Right Column: 2-3-2 Image Grid */}
             <div className="relative mt-12 lg:mt-0 w-full min-h-[600px] flex items-center justify-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
               <div className="flex flex-col gap-4 sm:gap-6 items-center w-full max-w-[650px]">
-                {/* Row 1: 2 Images (Top) */}
+                {/* Row 1: 2 Images */}
                 <div className="grid grid-cols-2 gap-4 sm:gap-8 w-full px-12 sm:px-20">
                   <div className="group transition-all duration-500 hover:z-40">
                     <div className="relative overflow-hidden rounded-2xl border-2 border-white/10 shadow-lg glass-card animate-float-slow">
@@ -93,14 +167,13 @@ const Index = () => {
                   </div>
                 </div>
 
-                {/* Row 2: 3 Images Side-by-Side (Middle) */}
+                {/* Row 2: 3 Images */}
                 <div className="grid grid-cols-3 gap-3 sm:gap-6 items-center w-full">
                   <div className="group transition-all duration-500 hover:z-40">
                     <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-white/10 shadow-lg glass-card animate-float-slow" style={{ animationDelay: "1s" }}>
                       <img src={img3} alt="Civic 3" className="w-full h-full object-cover aspect-square" />
                     </div>
                   </div>
-                  {/* Focal Centerpiece */}
                   <div className="z-30 scale-150 lg:scale-[1.75] group px-1 sm:px-2">
                     <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border-4 border-white/20 shadow-2xl transition-all duration-700 group-hover:scale-105 group-hover:rotate-1 group-hover:border-secondary/40">
                       <img src={kioskImg} alt="Smart Kiosk" className="w-full h-auto" />
@@ -115,7 +188,7 @@ const Index = () => {
                   </div>
                 </div>
 
-                {/* Row 3: 2 Images (Bottom) */}
+                {/* Row 3: 2 Images */}
                 <div className="grid grid-cols-2 gap-4 sm:gap-8 w-full px-12 sm:px-20">
                   <div className="group transition-all duration-500 hover:z-40">
                     <div className="relative overflow-hidden rounded-2xl border-2 border-white/10 shadow-lg glass-card animate-float-slow" style={{ animationDelay: "2s" }}>
@@ -129,25 +202,96 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Symmetrical Background Decor */}
-              <div className="absolute inset-0 bg-radial-gradient from-secondary/5 to-transparent blur-[120px] -z-20 pointer-events-none animate-pulse" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Departments */}
+      {/* Stats Strip */}
+      <div className="bg-primary/5 border-y border-border py-4">
+        <div className="container flex flex-wrap gap-6 justify-center sm:justify-between items-center text-sm">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-kiosk-green animate-pulse" />
+            <span className="font-semibold text-foreground">1,247</span>
+            <span className="text-muted-foreground">Complaints Resolved Today</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-secondary animate-pulse" />
+            <span className="font-semibold text-foreground">38</span>
+            <span className="text-muted-foreground">In Progress Right Now</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="font-semibold text-foreground">6 Departments</span>
+            <span className="text-muted-foreground">Active & Available</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-kiosk-teal animate-pulse" />
+            <span className="font-semibold text-foreground">Avg 2.4 days</span>
+            <span className="text-muted-foreground">Resolution Time</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Departments Section */}
       <section className="container py-16">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold text-foreground">{t("selectDepartment")}</h2>
-          <p className="mt-2 text-muted-foreground">{t("selectDepartmentDesc")}</p>
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground">{t("selectDepartment")}</h2>
+              <p className="mt-1 text-muted-foreground">{t("selectDepartmentDesc")}</p>
+            </div>
+            {/* Search Input */}
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search departments..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-input bg-card pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex gap-2 flex-wrap">
+            {FILTER_TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveFilter(tab)}
+                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${activeFilter === tab
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-muted text-muted-foreground hover:bg-muted/70"
+                  }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {departments.map((dept) => (
-            <DepartmentCard key={dept.title} {...dept} />
-          ))}
-        </div>
+
+        {filteredDepts.length === 0 ? (
+          <div className="py-16 text-center text-muted-foreground">
+            <Search className="mx-auto h-10 w-10 mb-3 opacity-30" />
+            <p className="text-lg font-medium">No departments found for "{searchQuery}"</p>
+          </div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredDepts.map((dept) => (
+              <DepartmentCard
+                key={dept.titleKey}
+                icon={dept.icon}
+                title={t(dept.titleKey)}
+                description={t(dept.descKey)}
+                path={dept.path}
+                color={dept.color}
+                serviceCount={dept.serviceCount}
+                status={dept.status}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Quick Actions */}
@@ -156,7 +300,7 @@ const Index = () => {
           <div className="grid gap-4 sm:grid-cols-3">
             <button
               onClick={() => navigate("/complaint")}
-              className="kiosk-touch-target flex items-center gap-4 rounded-lg bg-muted p-5 transition-colors hover:bg-muted/70"
+              className="kiosk-touch-target flex items-center gap-4 rounded-xl bg-muted p-5 transition-all hover:bg-muted/70 hover:-translate-y-0.5 hover:shadow-md"
             >
               <MessageSquarePlus className="h-8 w-8 text-secondary" />
               <div className="text-left">
@@ -166,7 +310,7 @@ const Index = () => {
             </button>
             <button
               onClick={() => navigate("/track")}
-              className="kiosk-touch-target flex items-center gap-4 rounded-lg bg-muted p-5 transition-colors hover:bg-muted/70"
+              className="kiosk-touch-target flex items-center gap-4 rounded-xl bg-muted p-5 transition-all hover:bg-muted/70 hover:-translate-y-0.5 hover:shadow-md"
             >
               <Search className="h-8 w-8 text-kiosk-teal" />
               <div className="text-left">
@@ -176,7 +320,7 @@ const Index = () => {
             </button>
             <button
               onClick={() => navigate("/dashboard")}
-              className="kiosk-touch-target flex items-center gap-4 rounded-lg bg-muted p-5 transition-colors hover:bg-muted/70"
+              className="kiosk-touch-target flex items-center gap-4 rounded-xl bg-muted p-5 transition-all hover:bg-muted/70 hover:-translate-y-0.5 hover:shadow-md"
             >
               <ClipboardList className="h-8 w-8 text-kiosk-green" />
               <div className="text-left">
