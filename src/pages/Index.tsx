@@ -4,10 +4,12 @@ import heroBanner from "@/assets/hero-banner.jpg";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import kioskImg from "../../images/image.png";
-import smartImg from "../../images/image copy.png";
-import mapImg from "../../images/image copy 3.png";
-import govImg from "../../images/image copy 5.png";
-import digitalImg from "../../images/image copy 6.png";
+import img1 from "../../images/image copy.png";
+import img2 from "../../images/image copy 2.png";
+import img3 from "../../images/image copy 3.png";
+import img4 from "../../images/image copy 4.png";
+import img5 from "../../images/image copy 5.png";
+import img6 from "../../images/image copy 6.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -74,54 +76,45 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Right Column: Premium Responsive Image Collage */}
-            <div className="relative mt-12 lg:mt-0 h-[400px] sm:h-[500px] lg:h-[600px] w-full animate-slide-up" style={{ animationDelay: '0.2s' }}>
-              {/* Main Kiosk Image - Floating Centerpiece */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 w-[200px] sm:w-[240px] lg:w-[280px] group transition-all duration-500">
-                <div className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 sm:border-8 border-white/10 shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:rotate-2 group-hover:border-secondary/30">
-                  <img src={kioskImg} alt="Smart Kiosk" className="w-full h-auto" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            {/* Right Column: Structured 3-1-3 Image Grid */}
+            <div className="relative mt-12 lg:mt-0 w-full min-h-[600px] flex items-center justify-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
+              <div className="grid grid-cols-3 gap-4 sm:gap-8 items-center w-full max-w-[600px]">
+                {/* Top Row: 3 Images */}
+                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500">
+                  <img src={img1} alt="Civic 1" className="w-full h-full object-cover" />
                 </div>
-                {/* Visual Accent */}
-                <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-secondary/20 blur-2xl animate-pulse" />
-              </div>
-
-              {/* Supporting Images - Responsive Staggered Layout */}
-
-              {/* Top Right: Smart Cities */}
-              <div className="absolute top-0 right-0 sm:top-10 sm:right-4 z-20 w-[140px] sm:w-[180px] lg:w-[220px] animate-float-slow opacity-90 hover:opacity-100 transition-opacity">
-                <div className="rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white/5 shadow-xl glass-card overflow-hidden">
-                  <img src={smartImg} alt="Smart Cities" className="w-full h-auto object-cover" />
+                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "0.5s" }}>
+                  <img src={img2} alt="Civic 2" className="w-full h-full object-cover" />
                 </div>
-              </div>
-
-              {/* Bottom Left: Digital India Map */}
-              <div className="absolute bottom-4 left-0 sm:bottom-10 sm:left-4 z-20 w-[160px] sm:w-[200px] lg:w-[240px] animate-float opacity-90 hover:opacity-100 transition-opacity" style={{ animationDelay: '1s' }}>
-                <div className="rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white/5 shadow-xl glass-card overflow-hidden">
-                  <img src={mapImg} alt="Digital India Map" className="w-full h-auto" />
+                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "1s" }}>
+                  <img src={img3} alt="Civic 3" className="w-full h-full object-cover" />
                 </div>
-              </div>
 
-              {/* Top Left: Government Services (Smaller Accent) */}
-              <div className="absolute top-10 left-4 sm:top-20 sm:left-10 z-10 w-[100px] sm:w-[140px] animate-float-slow opacity-60 hidden sm:block" style={{ animationDelay: '1.5s' }}>
-                <div className="rounded-xl border-2 border-white/5 shadow-lg glass-card overflow-hidden rotate-[-12deg]">
-                  <img src={govImg} alt="Government Services" className="w-full h-auto opacity-80" />
+                {/* Middle Row: 1 Enlarged Focal Centerpiece */}
+                <div /> {/* Spacer for 1st column */}
+                <div className="z-30 scale-125 lg:scale-150 group">
+                  <div className="relative overflow-hidden rounded-[2.5rem] border-4 border-white/20 shadow-2xl transition-all duration-700 group-hover:scale-105 group-hover:rotate-1 group-hover:border-secondary/40">
+                    <img src={kioskImg} alt="Smart Kiosk" className="w-full h-auto" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <div className="absolute -inset-6 rounded-[3rem] bg-secondary/15 blur-2xl animate-pulse -z-10" />
                 </div>
-              </div>
+                <div /> {/* Spacer for 3rd column */}
 
-              {/* Bottom Right: Digital Connectivity */}
-              <div className="absolute bottom-10 right-4 sm:bottom-20 sm:right-10 z-10 w-[120px] sm:w-[160px] animate-float opacity-60 hidden sm:block" style={{ animationDelay: '2.5s' }}>
-                <div className="rounded-xl border-2 border-white/5 shadow-lg glass-card overflow-hidden rotate-[8deg]">
-                  <img src={digitalImg} alt="Digital Connectivity" className="w-full h-auto opacity-80" />
+                {/* Bottom Row: 3 Images */}
+                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "1.5s" }}>
+                  <img src={img4} alt="Civic 4" className="w-full h-full object-cover" />
+                </div>
+                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "2s" }}>
+                  <img src={img5} alt="Civic 5" className="w-full h-full object-cover" />
+                </div>
+                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "2.5s" }}>
+                  <img src={img6} alt="Civic 6" className="w-full h-full object-cover" />
                 </div>
               </div>
 
-              {/* Dynamic Background Effects */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[300px] w-[300px] sm:h-[400px] sm:w-[400px] lg:h-[500px] lg:w-[500px] rounded-full bg-secondary/10 blur-[80px] sm:blur-[120px] -z-10 animate-pulse" />
-
-              {/* Decorative particles (Desktop only) */}
-              <div className="absolute top-1/4 left-1/2 w-2 h-2 rounded-full bg-secondary/40 lg:block hidden animate-ping" />
-              <div className="absolute bottom-1/4 right-1/3 w-3 h-3 rounded-full bg-white/20 lg:block hidden animate-bounce" style={{ animationDuration: '3s' }} />
+              {/* Symmetrical Background Decor */}
+              <div className="absolute inset-0 bg-radial-gradient from-secondary/5 to-transparent blur-[120px] -z-20 pointer-events-none animate-pulse" />
             </div>
           </div>
         </div>
