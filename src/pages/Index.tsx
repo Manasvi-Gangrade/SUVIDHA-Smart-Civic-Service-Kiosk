@@ -5,11 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import kioskImg from "../../images/image.png";
 import img1 from "../../images/image copy.png";
-import img2 from "../../images/image copy 2.png";
+import img2 from "../../images/smart_city_2.png";
 import img3 from "../../images/image copy 3.png";
-import img4 from "../../images/image copy 4.png";
+import img4 from "../../images/digital_concept.png";
 import img5 from "../../images/image copy 5.png";
-import img6 from "../../images/image copy 6.png";
+import img6 from "../../images/urban_hub.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-primary min-h-[500px] flex items-center">
+      <section className="relative overflow-hidden bg-primary min-h-[600px] flex items-center">
         <div className="absolute inset-0">
           <img src={heroBanner} alt="Smart city services" className="h-full w-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-transparent" />
@@ -76,40 +76,57 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Right Column: Structured 3-1-3 Image Grid */}
+            {/* Right Column: Structured 2-3-2 Image Grid */}
             <div className="relative mt-12 lg:mt-0 w-full min-h-[600px] flex items-center justify-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              <div className="grid grid-cols-3 gap-4 sm:gap-8 items-center w-full max-w-[600px]">
-                {/* Top Row: 3 Images */}
-                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500">
-                  <img src={img1} alt="Civic 1" className="w-full h-full object-cover" />
-                </div>
-                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "0.5s" }}>
-                  <img src={img2} alt="Civic 2" className="w-full h-full object-cover" />
-                </div>
-                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "1s" }}>
-                  <img src={img3} alt="Civic 3" className="w-full h-full object-cover" />
-                </div>
-
-                {/* Middle Row: 1 Enlarged Focal Centerpiece */}
-                <div /> {/* Spacer for 1st column */}
-                <div className="z-30 scale-125 lg:scale-150 group">
-                  <div className="relative overflow-hidden rounded-[2.5rem] border-4 border-white/20 shadow-2xl transition-all duration-700 group-hover:scale-105 group-hover:rotate-1 group-hover:border-secondary/40">
-                    <img src={kioskImg} alt="Smart Kiosk" className="w-full h-auto" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex flex-col gap-4 sm:gap-6 items-center w-full max-w-[650px]">
+                {/* Row 1: 2 Images (Top) */}
+                <div className="grid grid-cols-2 gap-4 sm:gap-8 w-full px-12 sm:px-20">
+                  <div className="group transition-all duration-500 hover:z-40">
+                    <div className="relative overflow-hidden rounded-2xl border-2 border-white/10 shadow-lg glass-card animate-float-slow">
+                      <img src={img1} alt="Civic 1" className="w-full h-full object-cover aspect-square" />
+                    </div>
                   </div>
-                  <div className="absolute -inset-6 rounded-[3rem] bg-secondary/15 blur-2xl animate-pulse -z-10" />
+                  <div className="group transition-all duration-500 hover:z-40">
+                    <div className="relative overflow-hidden rounded-2xl border-2 border-white/10 shadow-lg glass-card animate-float-slow" style={{ animationDelay: "0.5s" }}>
+                      <img src={img2} alt="Civic 2" className="w-full h-full object-cover aspect-square" />
+                    </div>
+                  </div>
                 </div>
-                <div /> {/* Spacer for 3rd column */}
 
-                {/* Bottom Row: 3 Images */}
-                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "1.5s" }}>
-                  <img src={img4} alt="Civic 4" className="w-full h-full object-cover" />
+                {/* Row 2: 3 Images Side-by-Side (Middle) */}
+                <div className="grid grid-cols-3 gap-3 sm:gap-6 items-center w-full">
+                  <div className="group transition-all duration-500 hover:z-40">
+                    <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-white/10 shadow-lg glass-card animate-float-slow" style={{ animationDelay: "1s" }}>
+                      <img src={img3} alt="Civic 3" className="w-full h-full object-cover aspect-square" />
+                    </div>
+                  </div>
+                  {/* Focal Centerpiece */}
+                  <div className="z-30 scale-150 lg:scale-[1.75] group px-1 sm:px-2">
+                    <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border-4 border-white/20 shadow-2xl transition-all duration-700 group-hover:scale-105 group-hover:rotate-1 group-hover:border-secondary/40">
+                      <img src={kioskImg} alt="Smart Kiosk" className="w-full h-auto" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="absolute -inset-6 rounded-[3rem] bg-secondary/15 blur-2xl animate-pulse -z-10" />
+                  </div>
+                  <div className="group transition-all duration-500 hover:z-40">
+                    <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-white/10 shadow-lg glass-card animate-float-slow" style={{ animationDelay: "1.5s" }}>
+                      <img src={img4} alt="Civic 4" className="w-full h-full object-cover aspect-square" />
+                    </div>
+                  </div>
                 </div>
-                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "2s" }}>
-                  <img src={img5} alt="Civic 5" className="w-full h-full object-cover" />
-                </div>
-                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-2 border-white/10 glass-card animate-float-slow hover:scale-110 transition-transform duration-500" style={{ animationDelay: "2.5s" }}>
-                  <img src={img6} alt="Civic 6" className="w-full h-full object-cover" />
+
+                {/* Row 3: 2 Images (Bottom) */}
+                <div className="grid grid-cols-2 gap-4 sm:gap-8 w-full px-12 sm:px-20">
+                  <div className="group transition-all duration-500 hover:z-40">
+                    <div className="relative overflow-hidden rounded-2xl border-2 border-white/10 shadow-lg glass-card animate-float-slow" style={{ animationDelay: "2s" }}>
+                      <img src={img5} alt="Civic 5" className="w-full h-full object-cover aspect-square" />
+                    </div>
+                  </div>
+                  <div className="group transition-all duration-500 hover:z-40">
+                    <div className="relative overflow-hidden rounded-2xl border-2 border-white/10 shadow-lg glass-card animate-float-slow" style={{ animationDelay: "2.5s" }}>
+                      <img src={img6} alt="Civic 6" className="w-full h-full object-cover aspect-square" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
