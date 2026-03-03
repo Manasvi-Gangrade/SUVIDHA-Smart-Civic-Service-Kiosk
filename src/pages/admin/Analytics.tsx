@@ -1,21 +1,27 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-
-const data = [
-    { name: "Electricity", complaints: 400, resolved: 300 },
-    { name: "Water", complaints: 300, resolved: 200 },
-    { name: "Gas", complaints: 200, resolved: 180 },
-    { name: "Municipal", complaints: 278, resolved: 200 },
-    { name: "Waste", complaints: 189, resolved: 150 },
-    { name: "Property", complaints: 150, resolved: 100 },
-];
+import { useEffect, useState } from "react";
+import { db } from "@/lib/database";
 
 const pieData = [
-    { name: "Resolved", value: 856, color: "#22c55e" },
-    { name: "Pending", value: 342, color: "#f97316" },
-    { name: "Critical", value: 50, color: "#ef4444" },
+    { name: "Resolved", value: 85, color: "#22c55e" },
+    { name: "Pending", value: 30, color: "#f97316" },
+    { name: "Critical", value: 5, color: "#ef4444" },
 ];
 
 const Analytics = () => {
+    const [chartData, setChartData] = useState<any[]>([]);
+
+    useEffect(() => {
+        const stats = db.getStats();
+        // Format for Recharts 
+        const formatted = stats.byCategory.map(c => ({
+            name: c.name,
+            complaints: c.value,
+            resolved: Math.floor(c.value * 0.4) // mock resolution rate
+        }));
+        setChartData(formatted);
+    }, []);
+
     return (
         <div className="space-y-8">
             <div>
@@ -28,7 +34,7 @@ const Analytics = () => {
                     <h3 className="text-lg font-semibold mb-6">Complaints by Department</h3>
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={data}>
+                            <BarChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis dataKey="name" fontSize={12} />
                                 <YAxis fontSize={12} />

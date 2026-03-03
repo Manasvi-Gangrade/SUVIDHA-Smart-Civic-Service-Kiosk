@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Zap, Flame, Building2, Droplets, Trash2, FileText, Search, MessageSquarePlus, ClipboardList } from "lucide-react";
+import { Zap, Flame, Building2, Droplets, Trash2, FileText, Search, MessageSquarePlus, ClipboardList, MapPin } from "lucide-react";
 import DepartmentCard from "@/components/DepartmentCard";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useNavigate } from "react-router-dom";
@@ -261,8 +261,8 @@ const Index = () => {
                 key={tab}
                 onClick={() => setActiveFilter(tab)}
                 className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${activeFilter === tab
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "bg-muted text-muted-foreground hover:bg-muted/70"
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-muted text-muted-foreground hover:bg-muted/70"
                   }`}
               >
                 {tab}
@@ -297,7 +297,7 @@ const Index = () => {
       {/* Quick Actions */}
       <section className="border-t border-border bg-card py-12">
         <div className="container">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <button
               onClick={() => navigate("/complaint")}
               className="kiosk-touch-target flex items-center gap-4 rounded-xl bg-muted p-5 transition-all hover:bg-muted/70 hover:-translate-y-0.5 hover:shadow-md"
@@ -326,6 +326,16 @@ const Index = () => {
               <div className="text-left">
                 <div className="font-semibold text-foreground">{t("myDashboard")}</div>
                 <div className="text-sm text-muted-foreground">{t("dashboardDesc")}</div>
+              </div>
+            </button>
+            <button
+              onClick={() => navigate("/map")}
+              className="kiosk-touch-target flex items-center gap-4 rounded-xl bg-muted p-5 transition-all hover:bg-muted/70 hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <MapPin className="h-8 w-8 text-blue-500" />
+              <div className="text-left">
+                <div className="font-semibold text-foreground">Service Map</div>
+                <div className="text-sm text-muted-foreground">Find nearest locations</div>
               </div>
             </button>
           </div>

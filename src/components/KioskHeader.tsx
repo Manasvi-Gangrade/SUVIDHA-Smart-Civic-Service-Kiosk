@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, memo } from "react";
 import { useTTS } from "@/hooks/useTTS";
+import { Cloud, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, SunDim } from "lucide-react";
 
 // Ensure window types are known
 declare global {
@@ -43,16 +44,42 @@ const KioskHeader = () => {
   const { t, i18n } = useTranslation();
   const { speak, stop, speaking, supported, ttsEnabled, setTtsEnabled } = useTTS();
 
-  // Time and Weather State
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [weatherResponse, setWeatherResponse] = useState<{ temp: number; code: number } | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    // New Delhi Coordinates for weather
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=28.6139&longitude=77.2090&current=temperature_2m,weather_code&timezone=auto')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.current) {
+          setWeatherResponse({ temp: Math.round(data.current.temperature_2m), code: data.current.weather_code });
+        }
+      })
+      .catch(err => console.error("Weather fetch failed", err));
+  }, []);
+
   const timeString = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const dateString = currentTime.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+
+  // Map WMO weather codes to Lucide icons
+  const getWeatherIcon = (code: number) => {
+    if (code === 0 || code === 1) return <Sun className="h-4 w-4 text-orange-500" />;
+    if (code === 2) return <SunDim className="h-4 w-4 text-orange-400" />;
+    if (code === 3) return <Cloud className="h-4 w-4 text-slate-400" />;
+    if (code >= 45 && code <= 48) return <Cloud className="h-4 w-4 text-slate-300" />;
+    if (code >= 51 && code <= 57) return <CloudDrizzle className="h-4 w-4 text-blue-300" />;
+    if (code >= 61 && code <= 67) return <CloudRain className="h-4 w-4 text-blue-500" />;
+    if (code >= 71 && code <= 77) return <CloudSnow className="h-4 w-4 text-sky-200" />;
+    if (code >= 80 && code <= 82) return <CloudRain className="h-4 w-4 text-blue-600" />;
+    if (code >= 95 && code <= 99) return <CloudLightning className="h-4 w-4 text-yellow-500" />;
+    return <Sun className="h-4 w-4 text-orange-500" />; // default
+  };
 
   const isHome = location.pathname === "/";
 
@@ -100,10 +127,17 @@ const KioskHeader = () => {
               <span className="text-xs font-bold text-foreground">{timeString}</span>
               <span className="text-[10px] text-muted-foreground">{dateString}</span>
             </div>
-            <div className="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-md">
-              <Sun className="h-4 w-4 text-orange-500" />
-              <span className="text-xs font-medium text-foreground">28°C</span>
-            </div>
+            {weatherResponse ? (
+              <div className="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-md transition-all hover:bg-secondary/20">
+                {getWeatherIcon(weatherResponse.code)}
+                <span className="text-xs font-medium text-foreground">{weatherResponse.temp}°C</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-md animate-pulse">
+                <Sun className="h-4 w-4 text-muted-foreground/50" />
+                <span className="text-xs font-medium text-muted-foreground/50">--°C</span>
+              </div>
+            )}
           </div>
         </div>
 

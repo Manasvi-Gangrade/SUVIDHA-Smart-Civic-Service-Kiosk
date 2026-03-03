@@ -1,21 +1,23 @@
-import { FileText, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { FileText, Clock, CheckCircle2, AlertCircle, FilePlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { db, CitizenRecord } from "@/lib/database";
+import { useEffect, useState } from "react";
 
 const AdminDashboard = () => {
     const { t } = useTranslation();
+    const [statsData, setStatsData] = useState({ total: 0, complaints: 0, applications: 0, byCategory: [] as any[] });
+    const [recentRecords, setRecentRecords] = useState<CitizenRecord[]>([]);
+
+    useEffect(() => {
+        setStatsData(db.getStats());
+        setRecentRecords(db.getAllRecords().slice(0, 5)); // Last 5
+    }, []);
 
     const stats = [
-        { label: t("admin.totalComplaints"), value: 1248, icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" },
-        { label: t("admin.pending"), value: 342, icon: Clock, color: "text-orange-500", bg: "bg-orange-500/10" },
-        { label: t("admin.resolved"), value: 856, icon: CheckCircle2, color: "text-green-500", bg: "bg-green-500/10" },
-        { label: t("admin.critical"), value: 50, icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10" },
-    ];
-
-    const recentActivity = [
-        { id: "SVD-2026-00142", user: "Rajesh Kumar", dept: t("departments.electricity"), action: t("admin.statusUpdated"), time: `10 ${t("admin.minsAgo")}` },
-        { id: "SVD-2026-00141", user: "Priya Singh", dept: t("departments.water"), action: t("admin.newComplaint"), time: `25 ${t("admin.minsAgo")}` },
-        { id: "SVD-2026-00138", user: "Amit Shah", dept: t("departments.municipal"), action: t("admin.complaintResolved"), time: `1 ${t("admin.hourAgo")}` },
-        { id: "SVD-2026-00135", user: "Sneha Gupta", dept: t("departments.gas"), action: t("admin.assignedToOfficer"), time: `2 ${t("admin.hoursAgo")}` },
+        { label: t("admin.totalComplaints"), value: statsData.complaints, icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" },
+        { label: "Total Applications", value: statsData.applications, icon: FilePlus, color: "text-purple-500", bg: "bg-purple-500/10" },
+        { label: t("admin.resolved"), value: Math.floor(statsData.complaints * 0.4), icon: CheckCircle2, color: "text-green-500", bg: "bg-green-500/10" },
+        { label: t("admin.critical"), value: Math.floor(statsData.complaints * 0.1), icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10" },
     ];
 
     return (
@@ -47,15 +49,17 @@ const AdminDashboard = () => {
                 </div>
                 <div className="p-6">
                     <div className="space-y-6">
-                        {recentActivity.map((activity) => (
-                            <div key={activity.id} className="flex items-start justify-between border-b pb-4 last:border-0 last:pb-0">
+                        {recentRecords.map((record) => (
+                            <div key={record.id} className="flex items-start justify-between border-b pb-4 last:border-0 last:pb-0">
                                 <div>
-                                    <p className="font-medium text-foreground">{activity.action}</p>
+                                    <p className="font-medium text-foreground">{record.type === 'complaint' ? "New Complaint Logged" : "New Application Submitted"}</p>
                                     <p className="text-sm text-muted-foreground">
-                                        {activity.user} • {activity.dept} • {activity.id}
+                                        {record.name} • {record.category} • {record.id}
                                     </p>
                                 </div>
-                                <span className="text-xs text-muted-foreground">{activity.time}</span>
+                                <span className={`text-xs font-semibold px-2 py-1 flex items-center gap-1 rounded-full ${record.type === 'application' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                    {record.status}
+                                </span>
                             </div>
                         ))}
                     </div>

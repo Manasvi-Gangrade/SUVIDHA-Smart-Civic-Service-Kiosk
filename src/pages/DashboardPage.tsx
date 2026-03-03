@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ClipboardList, Clock, CheckCircle2, AlertCircle, FileText, MessageSquarePlus, Ticket, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -94,11 +94,22 @@ const DashboardPage = () => {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Dynamic simulation for the dashboard
+  const [liveRequests, setLiveRequests] = useState(requests);
+  const [liveTotal, setLiveTotal] = useState(requests.length + 1200);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLiveTotal(prev => prev + Math.floor(Math.random() * 3));
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
+
   const stats = [
-    { label: "Total Requests", value: requests.length, icon: FileText, color: "text-foreground", bg: "bg-muted" },
-    { label: "In Progress", value: requests.filter((r) => r.status === "In Progress").length, icon: Clock, color: "text-secondary", bg: "bg-secondary/10" },
-    { label: "Resolved", value: requests.filter((r) => r.status === "Resolved").length, icon: CheckCircle2, color: "text-kiosk-green", bg: "bg-kiosk-green/10" },
-    { label: "Pending", value: requests.filter((r) => r.status === "Pending").length, icon: AlertCircle, color: "text-muted-foreground", bg: "bg-muted" },
+    { label: "Total City Requests", value: liveTotal, icon: FileText, color: "text-foreground", bg: "bg-muted" },
+    { label: "My In Progress", value: liveRequests.filter((r) => r.status === "In Progress").length, icon: Clock, color: "text-secondary", bg: "bg-secondary/10" },
+    { label: "My Resolved", value: liveRequests.filter((r) => r.status === "Resolved").length, icon: CheckCircle2, color: "text-kiosk-green", bg: "bg-kiosk-green/10" },
+    { label: "My Pending", value: liveRequests.filter((r) => r.status === "Pending").length, icon: AlertCircle, color: "text-muted-foreground", bg: "bg-muted" },
   ];
 
   return (
@@ -263,10 +274,10 @@ const DashboardPage = () => {
                               )}
                               <div
                                 className={`h-5 w-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${step.done
-                                    ? "bg-kiosk-green border-kiosk-green"
-                                    : idx === r.timeline.findIndex((s) => !s.done)
-                                      ? "border-secondary bg-secondary/10 animate-pulse"
-                                      : "border-border bg-background"
+                                  ? "bg-kiosk-green border-kiosk-green"
+                                  : idx === r.timeline.findIndex((s) => !s.done)
+                                    ? "border-secondary bg-secondary/10 animate-pulse"
+                                    : "border-border bg-background"
                                   }`}
                               >
                                 {step.done && <span className="text-white text-[9px]">✓</span>}

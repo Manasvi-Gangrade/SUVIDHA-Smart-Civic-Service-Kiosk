@@ -83,6 +83,37 @@
     --input: 220 30% 20%;
     --ring: 33 100% 50%;
   }
+
+  /* High Contrast Mode for Accessibility */
+  .high-contrast-mode {
+    --background: 0 0% 0%;
+    --foreground: 60 100% 50%;
+    /* Neon Yellow text on black */
+
+    --card: 0 0% 5%;
+    --card-foreground: 60 100% 50%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 60 100% 50%;
+
+    --border: 60 100% 50%;
+    --input: 60 100% 50%;
+    --ring: 60 100% 50%;
+
+    --primary: 60 100% 50%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 60 100% 50%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 60 100% 40%;
+
+    --accent: 60 100% 50%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+  }
 }
 
 @layer base {
@@ -93,6 +124,31 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     top: 0px !important;
+    transition: font-size 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Dyslexia Friendly Font */
+  .dyslexic-font {
+    font-family: 'OpenDyslexic', 'Comic Sans MS', 'Comic Sans', cursive !important;
+  }
+
+  /* Privacy Mode (Blur inputs to prevent shoulder surfing) */
+  .privacy-mode input,
+  .privacy-mode textarea {
+    filter: blur(5px);
+    transition: filter 0.2s ease;
+  }
+
+  .privacy-mode input:focus,
+  .privacy-mode input:hover,
+  .privacy-mode textarea:focus,
+  .privacy-mode textarea:hover {
+    filter: blur(0px);
+  }
+
+  /* Smooth font scaling */
+  html {
+    transition: font-size 0.3s ease;
   }
 
   h1,
@@ -254,15 +310,19 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
 }
+
 /* Additional Collage Animations */
 .animate-float-slow {
   animation: float-slow 8s ease-in-out infinite;
 }
 
 @keyframes float-slow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(2deg);
   }

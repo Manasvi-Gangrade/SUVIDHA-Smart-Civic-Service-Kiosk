@@ -105,9 +105,15 @@ const DepartmentPage = () => {
   const descKey = `dept.${id}.desc`;
 
   const handleGetToken = () => {
-    // Mock ID generation
-    const newToken = `${id?.substring(0, 1).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}`;
+    // Generate an ID based on department name
+    const deptPrefix = t(titleKey).substring(0, 1).toUpperCase() || id?.substring(0, 1).toUpperCase();
+    const newToken = `${deptPrefix}-${Math.floor(Math.random() * 900 + 100)}`;
     setToken(newToken);
+
+    // Auto navigate to the virtual waiting room after a brief delay
+    setTimeout(() => {
+      navigate(`/queue?token=${newToken}&dept=${encodeURIComponent(t(titleKey))}`);
+    }, 600);
   };
 
   return (
@@ -123,7 +129,7 @@ const DepartmentPage = () => {
             </div>
             <div className="text-center md:text-left">
               <div className="inline-flex items-center rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-medium text-primary-foreground/80 mb-3">
-                Online & Kiosk Services
+                {t("dept.onlineKiosk")}
               </div>
               <h1 className="text-3xl font-bold text-primary-foreground md:text-5xl tracking-tight">{t(titleKey)}</h1>
               <p className="mt-2 text-lg text-primary-foreground/70 max-w-2xl">{t(descKey)}</p>
@@ -143,21 +149,31 @@ const DepartmentPage = () => {
                 {t('quickActions')}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2">
-                {deptData.services.map((service, index) => (
-                  <ServiceItem
-                    key={index}
-                    icon={service.icon}
-                    title={t(`dept.${id}.s${index + 1}`)}
-                    description={t(`dept.${id}.d${index + 1}`)}
-                    onClick={() => navigate("/complaint", {
-                      state: {
-                        category: t(titleKey),
-                        service: t(`dept.${id}.s${index + 1}`),
-                        description: t(`dept.${id}.s${index + 1}`)
-                      }
-                    })}
-                  />
-                ))}
+                {deptData.services.map((service, index) => {
+                  const titleStr = t(`dept.${id}.s${index + 1}`).toLowerCase();
+                  let route = "/complaint";
+                  if (titleStr.includes("pay") || titleStr.includes("bill") || titleStr.includes("tax") || titleStr.includes("subsidy")) {
+                    route = "/payment";
+                  } else if (titleStr.includes("new") || titleStr.includes("connection") || titleStr.includes("registration")) {
+                    route = "/application";
+                  }
+
+                  return (
+                    <ServiceItem
+                      key={index}
+                      icon={service.icon}
+                      title={t(`dept.${id}.s${index + 1}`)}
+                      description={t(`dept.${id}.d${index + 1}`)}
+                      onClick={() => navigate(route, {
+                        state: {
+                          category: t(titleKey),
+                          service: t(`dept.${id}.s${index + 1}`),
+                          description: t(`dept.${id}.s${index + 1}`)
+                        }
+                      })}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -165,17 +181,16 @@ const DepartmentPage = () => {
           {/* Right Column: Walk-in / Queue */}
           <div className="space-y-6">
             <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-              <h3 className="font-semibold text-foreground mb-4">Walk-in Services</h3>
+              <h3 className="font-semibold text-foreground mb-4">{t("dept.walkIn")}</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Visiting the office? Generate a digital token to skip the manual queue.
+                {t("dept.walkInDesc")}
               </p>
-
               {!token ? (
                 <button
                   onClick={handleGetToken}
                   className="w-full rounded-lg bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
-                  Get Digital Token
+                  {t("dept.getToken")}
                 </button>
               ) : (
                 <QueueToken token={token} waitTime="10-15 mins" />
@@ -183,9 +198,9 @@ const DepartmentPage = () => {
             </div>
 
             <div className="rounded-xl bg-muted/50 p-6">
-              <h4 className="font-medium text-foreground mb-2">Need Help?</h4>
+              <h4 className="font-medium text-foreground mb-2">{t("dept.needHelp")}</h4>
               <p className="text-sm text-muted-foreground">
-                Call our helpline for immediate assistance with {t(titleKey)} related issues.
+                {t("dept.helplineDesc")}
               </p>
               <div className="mt-4 flex items-center gap-2 text-primary font-bold">
                 <Phone className="h-5 w-5" />

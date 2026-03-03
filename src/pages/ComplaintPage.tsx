@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { MessageSquarePlus, CheckCircle2, Lightbulb, X, Camera, Paperclip } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { db } from "@/lib/database";
 
 const categories = [
   "Electricity", "Gas Distribution", "Water Supply", "Waste Management", "Municipal Services", "Property & Tax", "Other"
@@ -31,10 +32,12 @@ const ComplaintPage = () => {
   const { t } = useTranslation();
 
   const [submitted, setSubmitted] = useState(false);
+  const [referenceId, setReferenceId] = useState("");
   const [category, setCategory] = useState(state?.category || "");
   const [description, setDescription] = useState(state?.service ? `${state.service}: ` : "");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [locationStr, setLocationStr] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [dismissedSuggestions, setDismissedSuggestions] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -68,6 +71,15 @@ const ComplaintPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const id = db.addComplaint({
+      category: category || "General",
+      service: state?.service || "General Complaint",
+      name,
+      phone,
+      description,
+      location: locationStr || "Not provided"
+    });
+    setReferenceId(id);
     setSubmitted(true);
   };
 
@@ -85,7 +97,7 @@ const ComplaintPage = () => {
           <div className="mt-6 rounded-2xl bg-card kiosk-card-shadow p-6 text-left w-full max-w-sm border border-border">
             <div className="text-sm text-muted-foreground">Reference ID</div>
             <div className="text-2xl font-black text-secondary tracking-wider mt-1">
-              SVD-2026-00{Math.floor(Math.random() * 900 + 100)}
+              {referenceId}
             </div>
             <div className="mt-3 text-xs text-muted-foreground leading-relaxed">
               An SMS confirmation will be sent to your registered mobile number within 5 minutes.
@@ -147,6 +159,19 @@ const ComplaintPage = () => {
               required
               className="kiosk-touch-target w-full rounded-xl border border-input bg-card px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
               placeholder="+91 XXXXX XXXXX"
+            />
+          </div>
+
+          {/* Location */}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-foreground">Location Detail</label>
+            <input
+              type="text"
+              value={locationStr}
+              onChange={(e) => setLocationStr(e.target.value)}
+              required
+              className="kiosk-touch-target w-full rounded-xl border border-input bg-card px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+              placeholder="e.g. Near Metro Station / Landmark"
             />
           </div>
 
