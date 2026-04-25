@@ -13,43 +13,65 @@ const ScannerOverlay = ({ onClose, onSuccess, scanType = "qr" }: ScannerOverlayP
     const [hasCamera, setHasCamera] = useState(true);
 
     useEffect(() => {
-        let html5QrCode: Html5Qrcode;
+        let html5QrCode: Html5Qrcode | null = null;
+        let videoStream: MediaStream | null = null;
 
-        // Slight delay for animation before mounting camera UI
         const initTimer = setTimeout(() => {
             setScanState("scanning");
 
-            const qrCodeId = "qr-reader";
-            html5QrCode = new Html5Qrcode(qrCodeId);
+            if (scanType === "qr") {
+                const qrCodeId = "qr-reader";
+                html5QrCode = new Html5Qrcode(qrCodeId);
 
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText) => {
-                    // Success Callback
-                    setScanState("success");
-                    html5QrCode.stop().then(() => {
-                        html5QrCode.clear();
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        setScanState("success");
+                        setTimeout(() => {
+                            onSuccess({ accountNo: decodedText });
+                            onClose();
+                        }, 1500);
+                    },
+                    () => {}
+                ).catch((err) => {
+                    console.error("Camera start failed", err);
+                    setHasCamera(false);
+                });
+            } else {
+                // Simulated AI Document Scanning
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                    .then(stream => {
+                        videoStream = stream;
+                        const videoEl = document.createElement("video");
+                        videoEl.srcObject = stream;
+                        videoEl.autoplay = true;
+                        videoEl.playsInline = true;
+                        videoEl.className = "w-full h-full object-cover absolute inset-0";
+                        const container = document.getElementById("qr-reader");
+                        if (container) {
+                            container.innerHTML = "";
+                            container.appendChild(videoEl);
+                        }
+                        
+                        // Simulate AI processing taking 3.5 seconds
+                        setTimeout(() => {
+                            setScanState("success");
+                            setTimeout(() => {
+                                onSuccess({
+                                    name: "Rajesh Kumar",
+                                    aadhaar: "4921 8829 4591",
+                                    address: "Block B, Sector 4, New Delhi",
+                                });
+                                onClose();
+                            }, 2000);
+                        }, 3500);
+                    })
+                    .catch((err) => {
+                        console.error("Camera access failed", err);
+                        setHasCamera(false);
                     });
-
-                    setTimeout(() => {
-                        // If it's Aadhaar, mock parse the text, else treat as account details
-                        onSuccess({
-                            name: "Rajesh Kumar",
-                            accountNo: decodedText.substring(0, 10) || "ELE-8829-4591",
-                            aadhaar: decodedText.substring(0, 12) || "4921 xxxx xxxx",
-                            address: "Block B, Sector 4, New Delhi",
-                        });
-                        onClose();
-                    }, 1500);
-                },
-                () => {
-                    // Error/Scanning progress callback (ignore to prevent log spam)
-                }
-            ).catch((err) => {
-                console.error("Camera start failed", err);
-                setHasCamera(false);
-            });
+            }
         }, 800);
 
         return () => {
@@ -57,8 +79,11 @@ const ScannerOverlay = ({ onClose, onSuccess, scanType = "qr" }: ScannerOverlayP
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(() => html5QrCode.clear()).catch(console.error);
             }
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
         };
-    }, [onClose, onSuccess]);
+    }, [onClose, onSuccess, scanType]);
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">

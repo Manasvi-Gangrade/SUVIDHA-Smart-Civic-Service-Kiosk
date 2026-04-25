@@ -1,11 +1,11 @@
-import { ArrowLeft, Volume2, VolumeX, Lock, Sun } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX, Sun, Mic, User, QrCode } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, memo } from "react";
 import { useTTS } from "@/hooks/useTTS";
+import { useVoiceAssistant } from "@/hooks/useVoiceAssistant";
 import { Cloud, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, SunDim } from "lucide-react";
 
-// Ensure window types are known
 declare global {
   interface Window {
     googleTranslateElementInit: () => void;
@@ -13,10 +13,8 @@ declare global {
   }
 }
 
-// Dedicated component to ensure the div stays intact
 const GoogleTranslateWidget = memo(() => {
   useEffect(() => {
-    // Add Google Translate script dynamically so it fires after the div is mounted
     if (!document.getElementById("google-translate-script")) {
       window.googleTranslateElementInit = () => {
         if (window.google && window.google.translate) {
@@ -41,20 +39,21 @@ const GoogleTranslateWidget = memo(() => {
 const KioskHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t, i18n } = useTranslation();
-  const { speak, stop, speaking, supported, ttsEnabled, setTtsEnabled } = useTTS();
+  const { t } = useTranslation();
+
+  const { speak, stop, supported: ttsSupported, ttsEnabled, setTtsEnabled } = useTTS();
+  const { isListening, startListening, stopListening, supported: voiceSupported } = useVoiceAssistant();
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weatherResponse, setWeatherResponse] = useState<{ temp: number; code: number } | null>(null);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
-    // New Delhi Coordinates for weather
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=28.6139&longitude=77.2090&current=temperature_2m,weather_code&timezone=auto')
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=26.1445&longitude=91.7362&current=temperature_2m,weather_code&timezone=auto')
       .then(res => res.json())
       .then(data => {
         if (data && data.current) {
@@ -67,7 +66,6 @@ const KioskHeader = () => {
   const timeString = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const dateString = currentTime.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
 
-  // Map WMO weather codes to Lucide icons
   const getWeatherIcon = (code: number) => {
     if (code === 0 || code === 1) return <Sun className="h-4 w-4 text-orange-500" />;
     if (code === 2) return <SunDim className="h-4 w-4 text-orange-400" />;
@@ -78,7 +76,7 @@ const KioskHeader = () => {
     if (code >= 71 && code <= 77) return <CloudSnow className="h-4 w-4 text-sky-200" />;
     if (code >= 80 && code <= 82) return <CloudRain className="h-4 w-4 text-blue-600" />;
     if (code >= 95 && code <= 99) return <CloudLightning className="h-4 w-4 text-yellow-500" />;
-    return <Sun className="h-4 w-4 text-orange-500" />; // default
+    return <Sun className="h-4 w-4 text-orange-500" />;
   };
 
   const isHome = location.pathname === "/";
@@ -89,9 +87,8 @@ const KioskHeader = () => {
       stop();
     } else {
       setTtsEnabled(true);
-      // Read the current page title or summary immediately
-      const textToRead = document.body.innerText.substring(0, 200);
-      speak(textToRead, i18n.language);
+      const textToRead = document.body.innerText.substring(0, 200).replace(/\n/g, '. ');
+      speak(textToRead);
     }
   };
 
@@ -115,40 +112,40 @@ const KioskHeader = () => {
             <div className="hidden h-10 w-10 md:flex items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-md">
               <span className="text-xl font-bold text-primary-foreground">S</span>
             </div>
-            <div className="flex flex-col items-start">
-              <span className="text-lg font-bold text-foreground tracking-tight leading-none">{t("appTitle")}</span>
-              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider hidden sm:block">Citizen Connect Hub</span>
-            </div>
           </button>
 
-          {/* New Header Feature: Live Info Widget */}
           <div className="hidden lg:flex items-center gap-4 ml-6 border-l border-border pl-6">
             <div className="flex flex-col items-start">
               <span className="text-xs font-bold text-foreground">{timeString}</span>
               <span className="text-[10px] text-muted-foreground">{dateString}</span>
             </div>
-            {weatherResponse ? (
-              <div className="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-md transition-all hover:bg-secondary/20">
+            {weatherResponse && (
+              <div className="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-md">
                 {getWeatherIcon(weatherResponse.code)}
                 <span className="text-xs font-medium text-foreground">{weatherResponse.temp}°C</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-md animate-pulse">
-                <Sun className="h-4 w-4 text-muted-foreground/50" />
-                <span className="text-xs font-medium text-muted-foreground/50">--°C</span>
               </div>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden md:flex items-center gap-2 mr-2">
-            <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">New Delhi, IN</span>
-          </div>
-
           <GoogleTranslateWidget />
 
-          {supported && (
+          {voiceSupported && (
+            <button
+              onClick={isListening ? stopListening : startListening}
+              className={`kiosk-touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 ${
+                isListening 
+                  ? "bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse" 
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <Mic className="h-4 w-4" />
+              {isListening && <span className="text-[10px] font-bold uppercase tracking-tighter">Listening</span>}
+            </button>
+          )}
+
+          {ttsSupported && (
             <button
               onClick={toggleTTS}
               className={`kiosk-touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground ${ttsEnabled ? "text-primary animate-pulse border border-primary/20 bg-primary/5" : "text-muted-foreground"}`}
@@ -159,10 +156,9 @@ const KioskHeader = () => {
 
           <button
             onClick={() => navigate("/admin/login")}
-            className="kiosk-touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Staff Login"
+            className="kiosk-touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest transition-colors hover:bg-muted hover:text-foreground border border-transparent hover:border-border"
           >
-            <Lock className="h-4 w-4" />
+            ADMIN LOGIN
           </button>
         </div>
       </div>

@@ -1,9 +1,15 @@
 import ServiceItem from "@/components/ServiceItem";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import QueueToken from "@/components/QueueToken";
-import { Zap, Flame, Building2, Droplets, Trash2, FileText, PlusCircle, Receipt, AlertTriangle, Gauge, PlugZap, ShieldAlert, Truck, Phone } from "lucide-react";
+import { 
+  Zap, Flame, Building2, Droplets, Trash2, FileText, 
+  PlusCircle, Receipt, AlertTriangle, Gauge, PlugZap, 
+  ShieldAlert, Truck, Phone, CloudSun, Lock, Volume2, 
+  ChevronDown, Globe, Search 
+} from "lucide-react";
+import { DepartmentExtras } from "@/components/DepartmentExtras";
 
 const departmentData: Record<string, {
   title: string;
@@ -81,20 +87,22 @@ const DepartmentPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [token, setToken] = useState<string | null>(null);
+  const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
 
-  // Helper to safely get translation
-  const getTrans = (key: string, defaultVal?: string) => {
-    const val = t(key);
-    return val === key ? defaultVal || key : val;
-  };
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   const deptData = departmentData[id || ""];
 
   if (!deptData) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-slate-50">
         <div className="container py-20 text-center">
-          <h2 className="text-2xl font-bold text-foreground">Department not found</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Department not found</h2>
         </div>
       </div>
     );
@@ -102,113 +110,148 @@ const DepartmentPage = () => {
 
   const Icon = deptData.icon;
   const titleKey = `dept.${id}.title`;
-  const descKey = `dept.${id}.desc`;
 
   const handleGetToken = () => {
-    // Generate an ID based on department name
     const deptPrefix = t(titleKey).substring(0, 1).toUpperCase() || id?.substring(0, 1).toUpperCase();
     const newToken = `${deptPrefix}-${Math.floor(Math.random() * 900 + 100)}`;
     setToken(newToken);
-
-    // Auto navigate to the virtual waiting room after a brief delay
     setTimeout(() => {
       navigate(`/queue?token=${newToken}&dept=${encodeURIComponent(t(titleKey))}`);
     }, 600);
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-
-      {/* Enhanced Hero Section */}
-      <div className="relative overflow-hidden border-b border-border bg-primary py-12 md:py-16">
-        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]" />
-        <div className="container relative z-10">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <div className="rounded-3xl bg-secondary/10 p-6 backdrop-blur-sm border border-secondary/20">
-              <Icon className="h-12 w-12 text-secondary" />
-            </div>
-            <div className="text-center md:text-left">
-              <div className="inline-flex items-center rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-medium text-primary-foreground/80 mb-3">
-                {t("dept.onlineKiosk")}
-              </div>
-              <h1 className="text-3xl font-bold text-primary-foreground md:text-5xl tracking-tight">{t(titleKey)}</h1>
-              <p className="mt-2 text-lg text-primary-foreground/70 max-w-2xl">{t(descKey)}</p>
-            </div>
+    <div className="min-h-screen bg-slate-50 pb-20 font-sans">
+      {/* Premium Navigation Header */}
+      <header className="bg-[#192e59] text-white py-3 px-8 flex items-center justify-between sticky top-0 z-50">
+        <div className="flex items-center gap-6">
+          <div className="h-10 w-10 bg-white rounded-lg flex items-center justify-center font-black text-indigo-900 shadow-lg">S</div>
+          <div>
+            <h2 className="text-sm font-black tracking-tight leading-none">SUVIDHA</h2>
+            <p className="text-[8px] font-bold text-white/50 uppercase tracking-[0.2em] mt-0.5">Citizen Connect Hub</p>
           </div>
         </div>
-      </div>
 
-      <div className="container py-10">
-        <div className="grid gap-10 lg:grid-cols-3">
+        <div className="flex items-center gap-10">
+          <div className="hidden md:flex items-center gap-3 pr-6 border-r border-white/10">
+            <span className="text-sm font-black">{time}</span>
+            <span className="text-[10px] font-bold text-white/50">Thu 30 Apr</span>
+            <div className="flex items-center gap-2 ml-2 bg-white/5 px-3 py-1 rounded-full border border-white/10">
+               <CloudSun className="h-4 w-4 text-orange-400" />
+               <span className="text-xs font-bold">32°C</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+             <div className="bg-white/5 px-4 py-1.5 rounded-full border border-white/10 text-[10px] font-bold uppercase tracking-widest">New Delhi, IN</div>
+             <div className="flex items-center gap-3 bg-white/5 px-4 py-1.5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+                <Globe className="h-3.5 w-3.5 text-white/60" />
+                <span className="text-xs font-black">Select Language</span>
+                <ChevronDown className="h-3.5 w-3.5 text-white/40" />
+             </div>
+             <div className="flex items-center gap-4 ml-2">
+                <Volume2 className="h-5 w-5 text-white/60 cursor-pointer hover:text-white" />
+                <Lock className="h-5 w-5 text-white/60 cursor-pointer hover:text-white" />
+             </div>
+          </div>
+        </div>
+      </header>
 
-          {/* Left Column: Services */}
-          <div className="lg:col-span-2 space-y-8">
-            <div>
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-6">
-                <span className="h-8 w-1 bg-secondary rounded-full" />
-                {t('quickActions')}
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {deptData.services.map((service, index) => {
-                  const titleStr = t(`dept.${id}.s${index + 1}`).toLowerCase();
-                  let route = "/complaint";
-                  if (titleStr.includes("pay") || titleStr.includes("bill") || titleStr.includes("tax") || titleStr.includes("subsidy")) {
-                    route = "/payment";
-                  } else if (titleStr.includes("new") || titleStr.includes("connection") || titleStr.includes("registration")) {
-                    route = "/application";
-                  }
+      {/* Hero Accent */}
+      <div className="h-32 bg-[#192e59]" />
 
-                  return (
-                    <ServiceItem
-                      key={index}
-                      icon={service.icon}
-                      title={t(`dept.${id}.s${index + 1}`)}
-                      description={t(`dept.${id}.d${index + 1}`)}
-                      onClick={() => navigate(route, {
-                        state: {
-                          category: t(titleKey),
-                          service: t(`dept.${id}.s${index + 1}`),
-                          description: t(`dept.${id}.s${index + 1}`)
-                        }
-                      })}
-                    />
-                  );
-                })}
-              </div>
+      <div className="container -mt-16 relative z-10">
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Left Column: Quick Actions */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-3 mb-8">
+               <span className="h-8 w-1.5 bg-orange-500 rounded-full" />
+               <h2 className="text-2xl font-black text-slate-900 tracking-tight">Quick Actions</h2>
+            </div>
+            
+            <div className="grid gap-6 sm:grid-cols-2 mb-10">
+              {deptData.services.map((service, index) => {
+                const titleStr = t(`dept.${id}.s${index + 1}`).toLowerCase();
+                let route = "/complaint";
+                if (titleStr.includes("pay") || titleStr.includes("bill") || titleStr.includes("tax") || titleStr.includes("subsidy")) {
+                  route = "/payment";
+                } else if (titleStr.includes("new") || titleStr.includes("connection") || titleStr.includes("registration")) {
+                  route = "/application";
+                }
+
+                return (
+                  <div 
+                    key={index}
+                    onClick={() => navigate(route, {
+                      state: {
+                        category: t(titleKey),
+                        service: t(`dept.${id}.s${index + 1}`),
+                        description: t(`dept.${id}.s${index + 1}`)
+                      }
+                    })}
+                    className="flex items-center gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group hover:-translate-y-1"
+                  >
+                    <div className="h-12 w-12 rounded-2xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <service.icon className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-900 leading-tight">{t(`dept.${id}.s${index + 1}`)}</h4>
+                      <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{t(`dept.${id}.d${index + 1}`).substring(0, 40)}...</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+                <DepartmentExtras departmentId={id || ""} />
             </div>
           </div>
 
-          {/* Right Column: Walk-in / Queue */}
+          {/* Right Column: Support Widgets */}
           <div className="space-y-6">
-            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-              <h3 className="font-semibold text-foreground mb-4">{t("dept.walkIn")}</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                {t("dept.walkInDesc")}
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm">
+              <h3 className="text-lg font-black text-slate-900 mb-2 uppercase tracking-tight">Walk-in Services</h3>
+              <p className="text-xs text-slate-400 mb-8 font-bold leading-relaxed">
+                Visiting the office? Generate a digital token to skip the manual queue.
               </p>
               {!token ? (
                 <button
                   onClick={handleGetToken}
-                  className="w-full rounded-lg bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="w-full rounded-2xl bg-[#192e59] py-4 font-black text-white hover:bg-indigo-900 transition-all shadow-lg active:scale-95 uppercase tracking-widest text-sm"
                 >
-                  {t("dept.getToken")}
+                  Get Digital Token
                 </button>
               ) : (
                 <QueueToken token={token} waitTime="10-15 mins" />
               )}
             </div>
 
-            <div className="rounded-xl bg-muted/50 p-6">
-              <h4 className="font-medium text-foreground mb-2">{t("dept.needHelp")}</h4>
-              <p className="text-sm text-muted-foreground">
-                {t("dept.helplineDesc")}
+            <div className="bg-[#f1f3f7] rounded-[2.5rem] p-8 border border-slate-100">
+              <h4 className="text-base font-black text-slate-900 mb-2 uppercase tracking-tight">Need Help?</h4>
+              <p className="text-xs text-slate-500 font-bold leading-relaxed">
+                Call our helpline for immediate assistance with related issues.
               </p>
-              <div className="mt-4 flex items-center gap-2 text-primary font-bold">
-                <Phone className="h-5 w-5" />
-                <span>1800-200-1234</span>
+              <div className="mt-8 flex items-center gap-4 text-[#192e59] font-black text-xl">
+                 <Phone className="h-6 w-6" />
+                 <span className="tracking-tighter">1800-200-1234</span>
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Floating SOS */}
+      <button className="fixed bottom-8 left-8 bg-rose-500 text-white px-8 py-4 rounded-full font-black flex items-center gap-3 shadow-2xl hover:scale-105 active:scale-95 transition-all z-50">
+         <AlertTriangle className="h-5 w-5" />
+         SOS
+      </button>
+
+      {/* Accessibility Fab */}
+      <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
+         <button className="h-14 w-14 bg-indigo-600 rounded-full flex items-center justify-center shadow-2xl text-white">
+            <Search className="h-6 w-6" />
+         </button>
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ const AdminLogin = () => {
         e.preventDefault();
         // Mock validation
         if (username === "admin@gmail.com" && password === "12345") {
-            navigate("/admin");
+            navigate("/admin/dashboard");
             toast.success("Login Successful");
         } else {
             toast.error(t("admin.invalid"));

@@ -191,10 +191,13 @@ const Chatbot = () => {
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 animate-bounce select-none"
+                    className="group flex h-14 items-center justify-center rounded-full bg-amber-500 text-slate-900 shadow-lg shadow-amber-500/30 transition-all duration-300 hover:scale-105 border-2 border-white/20 overflow-hidden px-3.5 hover:px-5"
                     aria-label="Open Chatbot"
                 >
-                    <MessageSquare className="h-7 w-7" />
+                    <MessageSquare className="h-7 w-7 shrink-0" />
+                    <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-xs group-hover:opacity-100 group-hover:ml-3 font-bold text-sm">
+                        AI Assistant
+                    </span>
                 </button>
             )}
 
@@ -218,6 +221,35 @@ const Chatbot = () => {
                         <button onClick={() => setIsOpen(false)} className="rounded-full p-2 hover:bg-white/20 transition-colors" aria-label="Close Chat">
                             <X className="h-5 w-5" />
                         </button>
+                    </div>
+
+                    {/* AI Avatar Video Area */}
+                    <div className="w-full h-40 bg-black relative overflow-hidden border-b border-border shrink-0">
+                        <img 
+                            src="https://images.unsplash.com/photo-1573164713988-8665fc963095?w=800&q=80" 
+                            alt="AI Avatar Placeholder" 
+                            className={`w-full h-full object-cover transition-transform duration-[2000ms] ${isTyping ? 'scale-110' : 'scale-100'}`}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-3">
+                            <div className="flex items-center gap-2">
+                                {isTyping ? (
+                                    <div className="flex gap-1 items-center bg-black/50 px-2 py-1 rounded-md backdrop-blur-sm">
+                                        <div className="w-1.5 h-3 bg-green-400 rounded-full animate-bounce"></div>
+                                        <div className="w-1.5 h-4 bg-green-400 rounded-full animate-bounce [animation-delay:-0.2s]"></div>
+                                        <div className="w-1.5 h-2 bg-green-400 rounded-full animate-bounce [animation-delay:-0.4s]"></div>
+                                        <span className="text-xs text-green-400 font-bold ml-1 tracking-wider">SPEAKING...</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-md backdrop-blur-sm">
+                                        <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
+                                        <span className="text-xs text-white font-bold tracking-wider">LISTENING</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="absolute top-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[10px] text-white/70 backdrop-blur-sm border border-white/10">
+                            LIVE FEED
+                        </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/30 relative">

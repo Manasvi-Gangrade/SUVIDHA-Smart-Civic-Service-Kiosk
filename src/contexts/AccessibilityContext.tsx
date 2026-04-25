@@ -13,6 +13,8 @@ interface AccessibilityContextType {
     toggleScreenReader: () => void;
     textSize: TextSize;
     setTextSize: (size: TextSize) => void;
+    magnifierEnabled: boolean;
+    toggleMagnifier: () => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -23,6 +25,7 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
     const [privacyMode, setPrivacyMode] = useState(false);
     const [screenReader, setScreenReader] = useState(false);
     const [textSize, setTextSize] = useState<TextSize>('normal');
+    const [magnifierEnabled, setMagnifierEnabled] = useState(false);
 
     // Load from local storage on mount
     useEffect(() => {
@@ -31,11 +34,13 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
         const savedPrivacy = localStorage.getItem('kiosk_privacyMode') === 'true';
         const savedScreenReader = localStorage.getItem('kiosk_screenReader') === 'true';
         const savedSize = (localStorage.getItem('kiosk_textSize') as TextSize) || 'normal';
+        const savedMagnifier = localStorage.getItem('kiosk_magnifier') === 'true';
         setHighContrast(savedContrast);
         setDyslexiaFont(savedDyslexia);
         setPrivacyMode(savedPrivacy);
         setScreenReader(savedScreenReader);
         setTextSize(savedSize);
+        setMagnifierEnabled(savedMagnifier);
     }, []);
 
     // Apply High Contrast Class to HTML body
@@ -90,6 +95,13 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
     const toggleDyslexiaFont = () => setDyslexiaFont(prev => !prev);
     const togglePrivacyMode = () => setPrivacyMode(prev => !prev);
     const toggleScreenReader = () => setScreenReader(prev => !prev);
+    const toggleMagnifier = () => {
+        setMagnifierEnabled(prev => {
+            const next = !prev;
+            localStorage.setItem('kiosk_magnifier', String(next));
+            return next;
+        });
+    };
 
     return (
         <AccessibilityContext.Provider value={{
@@ -97,7 +109,8 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
             dyslexiaFont, toggleDyslexiaFont,
             privacyMode, togglePrivacyMode,
             screenReader, toggleScreenReader,
-            textSize, setTextSize
+            textSize, setTextSize,
+            magnifierEnabled, toggleMagnifier
         }}>
             {children}
         </AccessibilityContext.Provider>

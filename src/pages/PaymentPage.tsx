@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Receipt, CheckCircle2, ChevronRight, CreditCard, Building2, ScanLine } from "lucide-react";
+import { Receipt, CheckCircle2, ChevronRight, CreditCard, Building2, ScanLine, SmartphoneNfc } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ScannerOverlay from "../components/ScannerOverlay";
@@ -53,9 +53,17 @@ const PaymentPage = () => {
     if (step === 3) {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-500">
-                <div className="rounded-full bg-kiosk-green/20 p-6 mb-6">
-                    <CheckCircle2 className="h-20 w-20 text-kiosk-green" />
+                
+                {/* Pure CSS Animated Checkmark */}
+                <div className="success-checkmark mb-6">
+                    <div className="check-icon">
+                        <span className="icon-line line-tip"></span>
+                        <span className="icon-line line-long"></span>
+                        <div className="icon-circle"></div>
+                        <div className="icon-fix"></div>
+                    </div>
                 </div>
+                
                 <h1 className="text-4xl font-black text-foreground mb-4">{t("payment.success")}</h1>
                 <p className="text-lg text-muted-foreground mb-8">
                     {t("payment.successDesc")}
@@ -205,16 +213,27 @@ const PaymentPage = () => {
                             </div>
                         </div>
 
+                        {/* Payment Options Layer */}
+                        <div className="pt-4 border-t border-border mt-6">
+                            <h4 className="text-sm font-bold text-foreground mb-4">Select Payment Method</h4>
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                <button className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-primary bg-primary/5 text-primary gap-2 transition-all shadow-sm">
+                                    <SmartphoneNfc className="h-6 w-6" />
+                                    <span className="text-xs font-bold">Tap & Pay (NFC)</span>
+                                </button>
+                                <button className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-muted text-muted-foreground gap-2 transition-all hover:bg-muted/80">
+                                    <CreditCard className="h-6 w-6" />
+                                    <span className="text-xs font-bold">Credit/Debit Card</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <button
-                            onClick={handlePay}
+                            onClick={() => setStep(2.5)}
                             disabled={isLoading}
                             className="w-full rounded-xl bg-kiosk-green py-4 text-lg font-bold text-white flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] disabled:opacity-70 shadow-lg shadow-kiosk-green/20"
                         >
-                            {isLoading ? (
-                                <span className="h-6 w-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <><CreditCard className="h-6 w-6" /> {t("payment.proceedPay")}</>
-                            )}
+                            <SmartphoneNfc className="h-6 w-6" /> Proceed to Tap
                         </button>
                         <button
                             onClick={() => setStep(1)}
@@ -222,6 +241,36 @@ const PaymentPage = () => {
                         >
                             {t("payment.cancel")}
                         </button>
+                    </div>
+                )}
+
+                {step === 2.5 && (
+                    <div className="animate-in zoom-in fade-in duration-500 bg-card border border-border rounded-3xl p-8 sm:p-12 text-center shadow-2xl relative overflow-hidden">
+                        <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-blue-500 to-indigo-500" />
+                        
+                        <h2 className="text-2xl font-black text-foreground mb-2">Ready for Payment</h2>
+                        <p className="text-muted-foreground text-sm mb-12">Total Amount: <span className="font-bold text-foreground text-lg">{billDetails?.amount}</span></p>
+
+                        <div className="relative mx-auto w-48 h-48 mb-8 flex items-center justify-center group cursor-pointer" onClick={handlePay}>
+                            {/* Animated NFC rings */}
+                            <div className="absolute inset-0 rounded-full border-4 border-indigo-500/20 animate-[ping_2s_ease-out_infinite]" />
+                            <div className="absolute inset-4 rounded-full border-4 border-indigo-500/40 animate-[ping_2s_ease-out_infinite] [animation-delay:0.5s]" />
+                            <div className="absolute inset-8 rounded-full border-4 border-indigo-500/60 animate-[ping_2s_ease-out_infinite] [animation-delay:1s]" />
+                            
+                            <div className="relative z-10 w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shadow-indigo-500/50">
+                                <SmartphoneNfc className="h-10 w-10 text-white" />
+                            </div>
+
+                            {isLoading && (
+                                <div className="absolute inset-0 bg-background/80 rounded-full flex items-center justify-center z-20 backdrop-blur-sm">
+                                    <div className="h-12 w-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                                </div>
+                            )}
+                        </div>
+
+                        <p className="text-lg font-bold text-indigo-600 animate-pulse">
+                            {isLoading ? "Processing Payment..." : "Tap Smartphone or Card Here (Click to Simulate)"}
+                        </p>
                     </div>
                 )}
             </div>

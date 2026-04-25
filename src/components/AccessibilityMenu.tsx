@@ -1,20 +1,34 @@
 import { useState } from "react";
-import { Accessibility, Type, Contrast, BookOpen, Volume2, X } from "lucide-react";
+import { Accessibility, Type, Contrast, BookOpen, Volume2, X, ZoomIn } from "lucide-react";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
+import { useTTS } from "@/hooks/useTTS";
 
 const AccessibilityMenu = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const { highContrast, toggleHighContrast, dyslexiaFont, toggleDyslexiaFont, screenReader, toggleScreenReader, textSize, setTextSize } = useAccessibility();
+    const { highContrast, toggleHighContrast, dyslexiaFont, toggleDyslexiaFont, textSize, setTextSize, magnifierEnabled, toggleMagnifier } = useAccessibility();
+    const { ttsEnabled, setTtsEnabled, speak, stop } = useTTS();
+
+    const toggleScreenReader = () => {
+        if (ttsEnabled) {
+            setTtsEnabled(false);
+            stop();
+        } else {
+            setTtsEnabled(true);
+            speak("Screen reader enabled");
+        }
+    };
 
     return (
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/30 transition-transform hover:scale-110 select-none border-2 border-white/20"
+                className="group flex h-14 items-center justify-center rounded-full bg-cyan-600 text-white shadow-lg shadow-cyan-600/30 transition-all duration-300 hover:scale-105 border-2 border-white/20 overflow-hidden px-3.5 hover:px-5"
                 aria-label="Accessibility Menu"
-                title="Accessibility Options"
             >
-                <Accessibility className="h-7 w-7" />
+                <Accessibility className="h-7 w-7 shrink-0" />
+                <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-xs group-hover:opacity-100 group-hover:ml-3 font-bold text-sm">
+                    Accessibility Features
+                </span>
             </button>
 
             {isOpen && (
@@ -96,9 +110,23 @@ const AccessibilityMenu = () => {
                                 </div>
                                 <button
                                     onClick={toggleScreenReader}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${screenReader ? 'bg-blue-600' : 'bg-muted-foreground/30'}`}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${ttsEnabled ? 'bg-blue-600' : 'bg-muted-foreground/30'}`}
                                 >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${screenReader ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${ttsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                            <div className="flex items-center justify-between mt-4">
+                                <div>
+                                    <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                                        <ZoomIn className="h-4 w-4 text-muted-foreground" /> Screen Magnifier
+                                    </label>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Zooms and follows your touch</p>
+                                </div>
+                                <button
+                                    onClick={toggleMagnifier}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${magnifierEnabled ? 'bg-blue-600' : 'bg-muted-foreground/30'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${magnifierEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                 </button>
                             </div>
                         </div>
