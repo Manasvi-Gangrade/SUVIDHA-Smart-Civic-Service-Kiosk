@@ -5,20 +5,20 @@ import { InteractiveVideo } from "@/components/InteractiveVideo";
 import { ChevronRight, MessageSquarePlus, Clock } from "lucide-react";
 
 const galleryImages = [
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/Screenshot 2026-04-30 121222.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/Screenshot 2026-04-30 121231.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/Screenshot 2026-04-30 121245.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/Screenshot 2026-04-30 121306.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/Screenshot 2026-04-30 121319.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/smart_city_2.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/urban_hub.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/digital_concept.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/electricity (2).png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/gas.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/municipal.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/property.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/waste.png",
-  "/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/images/water.png",
+  "/images/Screenshot 2026-04-30 121222.png",
+  "/images/Screenshot 2026-04-30 121231.png",
+  "/images/Screenshot 2026-04-30 121245.png",
+  "/images/Screenshot 2026-04-30 121306.png",
+  "/images/Screenshot 2026-04-30 121319.png",
+  "/images/smart_city_2.png",
+  "/images/urban_hub.png",
+  "/images/digital_concept.png",
+  "/images/electricity (2).png",
+  "/images/gas.png",
+  "/images/municipal.png",
+  "/images/property.png",
+  "/images/waste.png",
+  "/images/water.png",
 ];
 
 const Index = () => {
@@ -44,7 +44,7 @@ const Index = () => {
           playsInline
           className="w-full h-full object-cover opacity-20"
         >
-          <source src="/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/videos/14904045_3840_2160_30fps.mp4" type="video/mp4" />
+          <source src="/videos/14904045_3840_2160_30fps.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-b from-[#192e59]/60 via-transparent to-[#192e59]/90" />
       </div>
@@ -59,7 +59,7 @@ const Index = () => {
           <p className="text-[10px] md:text-xs font-bold text-white/80 tracking-[0.3em] uppercase mt-1.5">
             Smart Urban Virtual Interactive Digital Helpdesk
           </p>
-          <div className="w-12 h-0.5 bg-white/30 mt-2 rounded-full" />
+          <div className="w-12 h-0.5 bg-white/40 mt-2 rounded-full" />
         </div>
 
         {/* DUAL PANEL */}
@@ -68,7 +68,7 @@ const Index = () => {
           <div className="animate-slide-up flex flex-col justify-start w-full">
             <div className="w-full aspect-video overflow-hidden rounded-2xl shadow-2xl border border-white/10 bg-black">
               <InteractiveVideo
-                src="/@fs/c:/Users/MANASVI/OneDrive/Desktop/Projects/SUVIDHA-Smart-Civic-Service-Kiosk/videos/What_is_a_smart_city__(720p).mp4"
+                src="/videos/What_is_a_smart_city__(720p).mp4"
                 title="How to make our own city smart? What is a smart city"
               />
             </div>
