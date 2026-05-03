@@ -1,10 +1,10 @@
-import { ArrowLeft, Volume2, VolumeX, Sun, Mic, User, QrCode } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX, Sun, Mic, MapPin, Play } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, memo } from "react";
 import { useTTS } from "@/hooks/useTTS";
 import { useVoiceAssistant } from "@/hooks/useVoiceAssistant";
-import { Cloud, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, SunDim } from "lucide-react";
+import { Cloud, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, SunDim, Clock } from "lucide-react";
 
 declare global {
   interface Window {
@@ -46,6 +46,43 @@ const KioskHeader = () => {
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weatherResponse, setWeatherResponse] = useState<{ temp: number; code: number } | null>(null);
+  const [currentLang, setCurrentLang] = useState("en");
+
+  useEffect(() => {
+    const updateLang = () => {
+      const htmlLang = document.documentElement.lang;
+      if (htmlLang && htmlLang.toLowerCase() !== "en") {
+        const base = htmlLang.split("-")[0].toLowerCase();
+        setCurrentLang(base);
+        return;
+      }
+
+      const googCookie = document.cookie.match(/(^|;)\s*googtrans=([^;]+)/);
+      if (googCookie) {
+        const parts = googCookie[2].split('/');
+        const lang = parts[parts.length - 1];
+        if (lang) {
+          setCurrentLang(lang.toLowerCase());
+          return;
+        }
+      }
+      setCurrentLang("en");
+    };
+
+    updateLang();
+
+    const observer = new MutationObserver(() => {
+      updateLang();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "lang"] });
+
+    const interval = setInterval(updateLang, 1000);
+
+    return () => {
+      observer.disconnect();
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -63,8 +100,18 @@ const KioskHeader = () => {
       .catch(err => console.error("Weather fetch failed", err));
   }, []);
 
-  const timeString = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const dateString = currentTime.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+  const localeCode = currentLang === 'hi' || currentLang === 'mr' ? 'hi-IN' : currentLang === 'bn' ? 'bn-IN' : 'en-IN';
+  
+  const timeString = currentTime.toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' });
+  const dateString = currentTime.toLocaleDateString(localeCode, { weekday: 'short', day: 'numeric', month: 'short' });
+
+  const formatTemperature = (temp: number) => {
+    const numStr = new Intl.NumberFormat(localeCode).format(temp);
+    let unit = '°C';
+    if (currentLang === 'hi' || currentLang === 'mr') unit = '°से';
+    else if (currentLang === 'bn') unit = '°সে';
+    return `${numStr}${unit}`;
+  };
 
   const getWeatherIcon = (code: number) => {
     if (code === 0 || code === 1) return <Sun className="h-4 w-4 text-orange-500" />;
@@ -105,24 +152,25 @@ const KioskHeader = () => {
             </button>
           )}
 
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-3 rounded-lg py-2 transition-colors hover:bg-muted"
-          >
-            <div className="hidden h-10 w-10 md:flex items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-md">
-              <span className="text-xl font-bold text-primary-foreground">S</span>
-            </div>
-          </button>
 
-          <div className="hidden lg:flex items-center gap-4 ml-6 border-l border-border pl-6">
-            <div className="flex flex-col items-start">
-              <span className="text-xs font-bold text-foreground">{timeString}</span>
-              <span className="text-[10px] text-muted-foreground">{dateString}</span>
+
+          <div className="hidden lg:flex items-center gap-5 ml-6 border-l border-slate-200 pl-6 text-sm font-medium text-slate-600">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#0066FF]" />
+              <span className="font-bold text-slate-800">{timeString}</span>
             </div>
+            <div className="w-[1px] h-5 bg-slate-200"></div>
+            <span>{dateString}</span>
+            <div className="w-[1px] h-5 bg-slate-200"></div>
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-red-500" />
+              <span className="font-bold text-slate-800">New Delhi</span>
+            </div>
+            <div className="w-[1px] h-5 bg-slate-200"></div>
             {weatherResponse && (
-              <div className="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-md">
+              <div className="flex items-center gap-2">
                 {getWeatherIcon(weatherResponse.code)}
-                <span className="text-xs font-medium text-foreground">{weatherResponse.temp}°C</span>
+                <span className="font-bold text-slate-800">{formatTemperature(weatherResponse.temp)}</span>
               </div>
             )}
           </div>
@@ -131,33 +179,33 @@ const KioskHeader = () => {
         <div className="flex items-center gap-2">
           <GoogleTranslateWidget />
 
+          {ttsSupported && (
+            <button
+              onClick={toggleTTS}
+              className={`kiosk-touch-target flex items-center justify-center w-10 h-10 rounded-full transition-colors ${ttsEnabled ? "text-[#0066FF] animate-pulse bg-blue-50 border border-blue-200" : "text-slate-500 bg-slate-50 hover:bg-slate-100"}`}
+            >
+              {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+            </button>
+          )}
+
           {voiceSupported && (
             <button
               onClick={isListening ? stopListening : startListening}
-              className={`kiosk-touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 ${
-                isListening 
-                  ? "bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse" 
+              className={`kiosk-touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 ${isListening
+                  ? "bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
+                }`}
             >
               <Mic className="h-4 w-4" />
               {isListening && <span className="text-[10px] font-bold uppercase tracking-tighter">Listening</span>}
             </button>
           )}
 
-          {ttsSupported && (
-            <button
-              onClick={toggleTTS}
-              className={`kiosk-touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground ${ttsEnabled ? "text-primary animate-pulse border border-primary/20 bg-primary/5" : "text-muted-foreground"}`}
-            >
-              {ttsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-            </button>
-          )}
+          <button className="hidden xl:flex text-[#192e59] bg-white border border-[#192e59] px-5 py-2.5 rounded-full font-bold text-xs uppercase items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm ml-2">
+            <Play className="w-3.5 h-3.5" /> SIMULATION
+          </button>
 
-          <button
-            onClick={() => navigate("/admin/login")}
-            className="kiosk-touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest transition-colors hover:bg-muted hover:text-foreground border border-transparent hover:border-border"
-          >
+          <button onClick={() => navigate("/admin/login")} className="bg-[#192e59] hover:bg-[#112040] text-white px-8 py-2.5 rounded-full font-bold text-xs uppercase shadow-[0_4px_14px_0_rgba(25,46,89,0.39)] transition-transform hover:-translate-y-0.5">
             ADMIN LOGIN
           </button>
         </div>

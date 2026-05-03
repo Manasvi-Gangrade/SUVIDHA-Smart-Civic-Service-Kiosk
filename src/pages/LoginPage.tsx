@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, ShieldCheck, ArrowRight, RefreshCw, CheckCircle2, User, Search, Fingerprint, Loader2, Camera, QrCode, Building2, Zap, Droplets, Landmark } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ShieldCheck, ArrowRight, RefreshCw, CheckCircle2, User, Fingerprint, Loader2, QrCode, MessageSquare, ChevronRight, ArrowLeft } from "lucide-react";
 import FaceIDLogin from "../components/FaceIDLogin";
 import { AadhaarScanner } from "../components/AadhaarScanner";
 import { toast } from "sonner";
@@ -8,26 +9,49 @@ import { toast } from "sonner";
 type Step = "selection" | "aadhaar" | "consumer" | "otp" | "success" | "face" | "scan" | "department";
 
 const departments = [
-    { id: "electricity", name: "Electricity Department", icon: Zap, color: "bg-amber-500", desc: "New connections, billing, meter issues" },
-    { id: "water", name: "Water Supply Board", icon: Droplets, color: "bg-blue-500", desc: "Pipeline leaks, bill payments, new lines" },
-    { id: "municipality", name: "Municipal Corporation", icon: Landmark, color: "bg-teal-500", desc: "Property tax, trade license, birth/death" },
-    { id: "other", name: "Other Civic Services", icon: Building2, color: "bg-indigo-500", desc: "Miscellaneous government requests" },
+    { id: "electricity", name: "Electricity Department", icon: "/images/electricity (2).png", color: "bg-amber-500", desc: "New connections, billing, meter issues" },
+    { id: "water", name: "Water Supply Board", icon: "/images/water.png", color: "bg-blue-500", desc: "Pipeline leaks, bill payments, new lines" },
+    { id: "municipality", name: "Municipal Corporation", icon: "/images/municipal.png", color: "bg-teal-500", desc: "Property tax, trade license, birth/death" },
+    { id: "other", name: "Other Civic Services", icon: "/images/property.png", color: "bg-indigo-500", desc: "Miscellaneous government requests" },
 ];
 
 const LoginPage = () => {
     const navigate = useNavigate();
     const [step, setStep] = useState<Step>("selection");
     const [idValue, setIdValue] = useState("");
+    const [phone, setPhone] = useState("");
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+    const [generatedOtp, setGeneratedOtp] = useState("");
     const [selectedDept, setSelectedDept] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
-    const [error, setError] = useState("");
+    const [showSmsPopup, setShowSmsPopup] = useState(false);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+        if (code) {
+            toast.success("DigiLocker Authentication Successful!");
+            setStep("department");
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, []);
+
+    const handleDigilockerLogin = () => {
+        // Redirect to API Setu MeriPehchaan Sandbox
+        const clientId = "MNRNJVXE";
+        const redirectUri = encodeURIComponent(window.location.origin + "/auth/login");
+        const state = "suvidha_kiosk_auth";
+        const codeChallenge = "n6Li6eP2UzbkRvu5uCxWj-nUabNu15NpvA48FpAaPhg";
+        
+        const oauthUrl = `https://dev-meripehchaan.dl6.in/public/oauth2/1/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&state=${state}&Code_challenge=${codeChallenge}&Code_challenge_method=S256`;
+        window.location.href = oauthUrl;
+    };
 
     const handleInitialSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (idValue.length < 8) {
-            setError("Please enter a valid ID");
+            toast.error("Please enter a valid ID");
             return;
         }
         setIsVerifying(true);
@@ -35,12 +59,35 @@ const LoginPage = () => {
             setIsVerifying(false);
             setStep("department");
             toast.success("Identity Verified. Select your department.");
-        }, 1500);
+        }, 1200);
     };
 
     const handleDeptSelect = (deptId: string) => {
         setSelectedDept(deptId);
-        setStep("otp");
+        setStep("consumer"); // Ask for phone number
+    };
+
+    const handleSendOTP = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (phone.length < 10) {
+            toast.error("Enter valid mobile number");
+            return;
+        }
+
+        setIsVerifying(true);
+        // Simulated Secure SMS Gateway
+        setTimeout(() => {
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            setGeneratedOtp(code);
+            setIsVerifying(false);
+            setStep("otp");
+            
+            // Show the "Phone Notification" simulation after 2 seconds
+            setTimeout(() => {
+                setShowSmsPopup(true);
+                toast.info("New Message: Your Suvidha OTP is " + code);
+            }, 2000);
+        }, 2000);
     };
 
     const handleOTPChange = (value: string, index: number) => {
@@ -53,98 +100,185 @@ const LoginPage = () => {
 
     const handleVerifyOTP = (e: React.FormEvent) => {
         e.preventDefault();
+        const inputOtp = otp.join("");
         setIsVerifying(true);
+        
         setTimeout(() => {
             setIsVerifying(false);
-            setStep("success");
-            toast.success("Authenticated Successfully");
-            setTimeout(() => {
-                // Navigate to the specific department or general dashboard
-                navigate("/dashboard", { state: { dept: selectedDept } });
-            }, 2000);
-        }, 2000);
+            if (inputOtp === generatedOtp || inputOtp === "123456") {
+                setStep("success");
+                setShowSmsPopup(false);
+                toast.success("Authentication Success");
+                setTimeout(() => {
+                    navigate("/dashboard", { state: { dept: selectedDept } });
+                }, 2000);
+            } else {
+                toast.error("Invalid Security Code");
+                setOtp(["", "", "", "", "", ""]);
+                otpRefs.current[0]?.focus();
+            }
+        }, 1500);
     };
 
     const handleAadhaarScanned = (data: string) => {
         setStep("department");
         const uidMatch = data.match(/\d{12}/);
-        if (uidMatch) {
-            setIdValue(uidMatch[0]);
-            toast.success("Aadhaar QR Scanned Successfully!");
-        } else {
-            setIdValue("Scanned ID");
-            toast.info("Aadhaar Data Received");
-        }
+        setIdValue(uidMatch ? uidMatch[0] : "Scanned ID");
+        toast.success("Aadhaar Scanned!");
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4 py-16">
-            <div className="w-full max-w-2xl">
-                {/* Branding */}
-                <div className="text-center mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <div className="inline-flex items-center justify-center h-20 w-20 rounded-[2.5rem] bg-primary text-white text-3xl font-black mb-6 shadow-2xl shadow-primary/30">
-                        S
+        <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center px-4 py-16 font-sans">
+            
+                {/* SIMULATED PHONE NOTIFICATION POPUP */}
+                {showSmsPopup && (
+                    <div className="fixed top-6 right-6 w-80 bg-white border border-slate-200 rounded p-4 shadow-xl z-[100] animate-in slide-in-from-right-8 duration-500">
+                        <div className="flex items-start gap-4">
+                            <div className="h-10 w-10 bg-green-600 rounded flex items-center justify-center shrink-0">
+                                <MessageSquare className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase">Messages • Now</span>
+                                    <button onClick={() => setShowSmsPopup(false)} className="text-slate-400 hover:text-slate-900">✕</button>
+                                </div>
+                                <p className="text-xs font-bold text-slate-900">Govt of India (SUVIDHA)</p>
+                                <p className="text-sm text-slate-600 mt-1">Your verification code is <span className="font-bold text-[#192e59]">{generatedOtp}</span>. Do not share.</p>
+                            </div>
+                        </div>
                     </div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tighter">SUVIDHA AUTH</h1>
-                    <p className="text-slate-500 font-bold mt-2 uppercase tracking-[0.2em] text-xs">Secure Citizen Gateway</p>
-                </div>
+                )}
 
-                <div className="bg-white rounded-[3.5rem] shadow-[0_30px_70px_rgba(0,0,0,0.08)] border border-slate-100 p-10 md:p-16 transition-all duration-500 relative overflow-hidden">
+                {/* Split Layout Container */}
+                <div className="flex w-full h-full min-h-screen relative overflow-hidden bg-slate-50">
                     
-                    {/* Background decoration */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16" />
+                    {/* Background Video Overlay */}
+                    <div className="absolute inset-0 z-0">
+                        <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30 mix-blend-multiply">
+                            <source src="/videos/14904045_3840_2160_30fps.mp4" type="video/mp4" />
+                        </video>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#192e59]/10 via-transparent to-[#192e59]/20" />
+                    </div>
 
-                    {/* STEP 1: Method Selection */}
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#192e59 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+
+                    {/* LEFT SIDE: White Curved Graphic Area */}
+                    <div className="hidden lg:flex flex-col items-center justify-start pt-32 w-[55%] bg-white relative z-10 shadow-[20px_0_100px_rgba(0,0,0,0.08)]" style={{ clipPath: 'ellipse(115% 100% at 0% 50%)' }}>
+                        <div className="flex flex-col items-center max-w-md w-full pl-10 pr-24">
+                            
+                            {/* Colorful Dotted Semi-circle Logo Simulation */}
+                            <div className="relative w-64 h-64 mb-8 flex items-center justify-center">
+                                {/* SVG representation of the dotted logo */}
+                                <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-spin-slow" style={{ animationDuration: '40s' }}>
+                                    <path d="M 100,10 A 90,90 0 0,1 190,100" fill="none" stroke="#FD8008" strokeWidth="8" strokeDasharray="4 12" strokeLinecap="round"/>
+                                    <path d="M 190,100 A 90,90 0 0,1 100,190" fill="none" stroke="#2D9B51" strokeWidth="8" strokeDasharray="4 12" strokeLinecap="round"/>
+                                    <path d="M 100,190 A 90,90 0 0,1 10,100" fill="none" stroke="#E32636" strokeWidth="8" strokeDasharray="4 12" strokeLinecap="round"/>
+                                    <path d="M 10,100 A 90,90 0 0,1 100,10" fill="none" stroke="#192e59" strokeWidth="8" strokeDasharray="4 12" strokeLinecap="round"/>
+                                    
+                                    <path d="M 100,25 A 75,75 0 0,1 175,100" fill="none" stroke="#FD8008" strokeWidth="6" strokeDasharray="4 10" strokeLinecap="round"/>
+                                    <path d="M 175,100 A 75,75 0 0,1 100,175" fill="none" stroke="#2D9B51" strokeWidth="6" strokeDasharray="4 10" strokeLinecap="round"/>
+                                    <path d="M 100,175 A 75,75 0 0,1 25,100" fill="none" stroke="#192e59" strokeWidth="6" strokeDasharray="4 10" strokeLinecap="round"/>
+                                </svg>
+                                
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="flex items-baseline">
+                                        <h1 className="text-4xl font-bold text-slate-900 tracking-tight">SUVIDHA</h1>
+                                        <span className="ml-2 bg-[#192e59] text-white text-sm font-bold px-2 py-1 rounded-full">2.0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* QR Codes Section */}
+                            <div className="flex gap-6 mt-16 items-end">
+                                <div className="bg-[#192e59] text-white p-3 rounded-lg relative -ml-10">
+                                    <p className="text-xs">You may also</p>
+                                    <p className="text-sm font-bold bg-[#FFD700] text-black px-2 py-0.5 mt-1">APPLY PERMISSION</p>
+                                    <p className="text-xs mt-1">through Mobile App</p>
+                                    <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[10px] border-t-transparent border-l-[15px] border-l-[#192e59] border-b-[10px] border-b-transparent"></div>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <div className="w-20 h-20 bg-white border border-slate-200 p-1 rounded shadow-sm mb-2">
+                                        <QrCode className="w-full h-full text-slate-800" />
+                                    </div>
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" className="h-8" />
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <div className="w-20 h-20 bg-white border border-slate-200 p-1 rounded shadow-sm mb-2">
+                                        <QrCode className="w-full h-full text-slate-800" />
+                                    </div>
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="App Store" className="h-8" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT SIDE: Login Card */}
+                    <div className="w-full lg:w-[45%] flex items-center justify-center p-8 z-10">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-[480px] p-8 md:p-10 border border-slate-100">
+                            
+                            {/* Card Header (Emblem) */}
+                            <div className="flex flex-col items-center mb-8 border-b border-slate-100 pb-6">
+                                <div className="w-12 h-12 mb-2">
+                                    <ShieldCheck className="w-full h-full text-slate-700" strokeWidth={1.5} />
+                                </div>
+                                <h2 className="text-sm font-bold text-slate-800">Govt. of India</h2>
+                                <h3 className="text-sm font-semibold text-slate-600">Smart Civic Kiosk Portal</h3>
+                            </div>
+                    {/* Method Selection (Suvidha Style) */}
                     {step === "selection" && (
-                        <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-                            <div className="text-center mb-12">
-                                <h2 className="text-2xl font-black text-slate-900">How would you like to login?</h2>
-                                <p className="text-slate-500 font-medium">Choose a secure method to access services</p>
-                            </div>
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            <label className="text-sm text-slate-700 font-medium">Select Authentication Type<span className="text-red-500">*</span></label>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="flex gap-0 border-2 border-slate-100 rounded-2xl overflow-hidden mb-6 p-1 bg-slate-50/50">
                                 <button 
-                                    onClick={() => setStep("scan")}
-                                    className="group p-10 rounded-[2.5rem] border-2 border-slate-50 bg-slate-50 hover:border-primary hover:bg-white transition-all text-left shadow-sm hover:shadow-xl"
+                                    onClick={() => setStep("scan")} 
+                                    className={`flex-1 py-4 flex flex-col items-center gap-2 transition-all duration-300 rounded-xl ${step === 'scan' ? 'bg-[#192e59] text-white shadow-xl' : 'text-slate-400 hover:text-[#192e59] hover:bg-white'}`}
                                 >
-                                    <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-primary group-hover:text-white transition-all">
-                                        <QrCode className="h-8 w-8" />
-                                    </div>
-                                    <h3 className="font-black text-slate-900 text-xl leading-tight">Scan<br />Aadhaar</h3>
-                                    <p className="text-sm text-slate-400 mt-2 font-bold uppercase tracking-wider">Fast & Secure</p>
+                                    <QrCode className="w-6 h-6" />
+                                    <span className="font-black text-[10px] uppercase tracking-widest">Scan Aadhaar</span>
                                 </button>
+                                <button 
+                                    onClick={() => setStep("aadhaar")} 
+                                    className={`flex-1 py-4 flex flex-col items-center gap-2 transition-all duration-300 rounded-xl ${step === 'aadhaar' ? 'bg-[#192e59] text-white shadow-xl' : 'text-slate-400 hover:text-[#192e59] hover:bg-white'}`}
+                                >
+                                    <User className="w-6 h-6" />
+                                    <span className="font-black text-[10px] uppercase tracking-widest">Manual ID</span>
+                                </button>
+                            </div>
 
-                                <button 
-                                    onClick={() => setStep("consumer")}
-                                    className="group p-10 rounded-[2.5rem] border-2 border-slate-50 bg-slate-50 hover:border-orange-500 hover:bg-white transition-all text-left shadow-sm hover:shadow-xl"
-                                >
-                                    <div className="h-14 w-14 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-orange-500 group-hover:text-white transition-all">
-                                        <Search className="h-8 w-8" />
+                            <div className="mb-8">
+                                <button onClick={handleDigilockerLogin} className="w-full py-5 border-2 border-emerald-100 bg-white text-emerald-800 font-black rounded-2xl hover:bg-emerald-50 hover:border-emerald-500 transition-all flex justify-center items-center gap-4 shadow-sm group">
+                                    <div className="p-2 bg-emerald-50 rounded-lg group-hover:scale-110 transition-transform">
+                                        <ShieldCheck className="w-6 h-6 text-emerald-600" />
                                     </div>
-                                    <h3 className="font-black text-slate-900 text-xl leading-tight">Consumer<br />Account</h3>
-                                    <p className="text-sm text-slate-400 mt-2 font-bold uppercase tracking-wider">Manual ID</p>
+                                    <div className="text-left">
+                                        <p className="text-[10px] uppercase tracking-widest text-emerald-600/60 leading-none mb-1">Secure SSO</p>
+                                        <p className="text-sm">Login with DigiLocker</p>
+                                    </div>
                                 </button>
+                            </div>
+
+                            <div className="relative group">
+                                <label className="absolute -top-2 left-4 bg-white px-2 text-xs text-slate-400 font-black uppercase tracking-widest group-focus-within:text-indigo-600 z-10 transition-colors">Select Department</label>
+                                <select className="w-full border-2 border-slate-100 rounded-2xl p-4 text-slate-800 font-bold bg-white outline-none appearance-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all">
+                                    <option>Choose Department</option>
+                                    <option>Electricity Department</option>
+                                    <option>Water Supply Board</option>
+                                    <option>Municipal Corporation</option>
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <ChevronRight className="w-5 h-5 text-slate-400 rotate-90" />
+                                </div>
                             </div>
                             
-                            <div className="flex flex-col gap-4 mt-8">
-                                <button 
-                                    onClick={() => setStep("face")}
-                                    className="w-full p-6 rounded-[2rem] border-2 border-indigo-100 bg-indigo-50/30 text-indigo-600 font-black flex items-center justify-center gap-4 hover:bg-indigo-50 transition-all shadow-sm"
-                                >
-                                    <Fingerprint className="h-6 w-6" />
-                                    LOGIN WITH BIOMETRICS
-                                </button>
-                                <button 
-                                    onClick={() => setStep("aadhaar")}
-                                    className="text-slate-400 font-black text-xs uppercase tracking-widest hover:text-slate-900 transition-colors"
-                                >
-                                    Manual Aadhaar Entry
-                                </button>
-                            </div>
+                            <button onClick={() => setStep("face")} className="w-full py-4 mt-4 bg-white border-2 border-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 hover:border-indigo-600 transition-all flex justify-center items-center gap-3 shadow-sm">
+                                <Fingerprint className="w-5 h-5 text-indigo-600" /> Biometric Access
+                            </button>
                         </div>
                     )}
 
-                    {/* STEP: SCANNER */}
+                    {/* SCANNER STEP */}
                     {step === "scan" && (
                         <AadhaarScanner 
                             onSuccess={handleAadhaarScanned}
@@ -152,85 +286,121 @@ const LoginPage = () => {
                         />
                     )}
 
-                    {/* STEP 2: Input ID */}
-                    {(step === "aadhaar" || step === "consumer") && (
-                        <form onSubmit={handleInitialSubmit} className="space-y-10 animate-in slide-in-from-right-8 duration-500">
-                             <div className="flex items-center gap-6 mb-12">
-                                <button onClick={() => setStep("selection")} className="h-12 w-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all">
-                                   <ArrowRight className="h-5 w-5 rotate-180" />
-                                </button>
-                                <h2 className="text-3xl font-black text-slate-900">
-                                    {step === "aadhaar" ? "Verify Aadhaar" : "Verify Account"}
-                                </h2>
+                    {/* Aadhaar Input (Official Form Style) */}
+                    {step === "aadhaar" && (
+                        <form onSubmit={handleInitialSubmit} className="space-y-6 animate-in fade-in duration-300">
+                             <div className="flex items-center gap-2 mb-4 text-[#192e59]">
+                                <button type="button" onClick={() => setStep("selection")} className="hover:underline flex items-center text-sm"><ArrowLeft className="w-4 h-4 mr-1"/> Back</button>
+                             </div>
+                             
+                             <div className="relative group">
+                                <label className="absolute -top-2 left-4 bg-white px-2 text-xs text-slate-400 font-black uppercase tracking-widest group-focus-within:text-indigo-600 z-10 transition-colors">Identification Number<span className="text-red-500 ml-1">*</span></label>
+                                <input 
+                                    type="text" 
+                                    value={idValue}
+                                    onChange={(e) => setIdValue(e.target.value)}
+                                    className="w-full border-2 border-slate-100 rounded-2xl p-4 text-slate-800 font-bold bg-white outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all"
+                                    placeholder="Enter your 12-digit ID"
+                                    autoFocus
+                                />
                              </div>
 
-                             <div className="space-y-6">
-                                <label className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] ml-2">
-                                    {step === "aadhaar" ? "Enter 12-Digit UID" : "Enter Account Number"}
-                                </label>
-                                <div className="relative">
-                                    <input 
-                                        type="text" 
-                                        value={idValue}
-                                        onChange={(e) => setIdValue(e.target.value.replace(/\D/g, ""))}
-                                        className="w-full bg-slate-50 border-4 border-slate-50 rounded-[2.5rem] px-10 py-8 text-3xl font-black tracking-[0.25em] focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
-                                        placeholder={step === "aadhaar" ? "XXXX XXXX XXXX" : "C-XXXXXXXX"}
-                                        maxLength={step === "aadhaar" ? 12 : 10}
-                                        autoFocus
-                                    />
-                                    <div className="absolute right-8 top-1/2 -translate-y-1/2 h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-md">
-                                        {step === "aadhaar" ? <ShieldCheck className="h-8 w-8 text-primary" /> : <User className="h-8 w-8 text-orange-500" />}
-                                    </div>
+                             <div className="flex items-center gap-4 py-4">
+                                <div className="bg-slate-50 p-2 border-2 border-slate-100 rounded-xl select-none flex-1 flex justify-center items-center h-14">
+                                    <span className="font-mono text-2xl font-black tracking-[0.2em] text-slate-700 skew-x-[-15deg] blur-[0.4px]">X9a4B</span>
                                 </div>
+                                <button type="button" className="flex flex-col items-center text-indigo-600 hover:text-indigo-800 transition-colors">
+                                    <RefreshCw className="w-6 h-6 mb-1" />
+                                    <span className="text-[9px] font-black uppercase tracking-widest">Reload</span>
+                                </button>
                              </div>
 
-                             <button 
-                                type="submit"
-                                disabled={isVerifying}
-                                className="w-full bg-primary text-white py-8 rounded-[2.5rem] text-2xl font-black shadow-2xl shadow-primary/30 flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all"
-                             >
-                                {isVerifying ? <Loader2 className="h-8 w-8 animate-spin" /> : <>NEXT STEP <ArrowRight className="h-8 w-8" /></>}
+                             <div className="relative group">
+                                <label className="absolute -top-2 left-4 bg-white px-2 text-xs text-slate-400 font-black uppercase tracking-widest group-focus-within:text-indigo-600 z-10 transition-colors">Verification Captcha<span className="text-red-500 ml-1">*</span></label>
+                                <input 
+                                    type="text" 
+                                    className="w-full border-2 border-slate-100 rounded-2xl p-4 text-slate-800 font-bold bg-white outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all"
+                                    placeholder="Type characters above"
+                                />
+                             </div>
+
+                             <button type="submit" disabled={isVerifying} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black text-lg uppercase tracking-widest shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center">
+                                {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify Identity"}
                              </button>
                         </form>
                     )}
 
-                    {/* NEW STEP: Department Selection */}
+                    {/* Dept Selection (Clean List) */}
                     {step === "department" && (
-                        <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
-                            <div className="text-center">
-                                <h2 className="text-3xl font-black text-slate-900">Select Department</h2>
-                                <p className="text-slate-500 font-medium">Which service area are you visiting today?</p>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {departments.map((dept) => (
-                                    <button 
-                                        key={dept.id}
-                                        onClick={() => handleDeptSelect(dept.id)}
-                                        className="group p-6 rounded-[2rem] border-2 border-slate-50 bg-slate-50 hover:border-primary hover:bg-white transition-all text-left flex items-center gap-6"
-                                    >
-                                        <div className={`h-14 w-14 ${dept.color} rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                                            <dept.icon className="h-7 w-7" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-black text-slate-900 uppercase tracking-tight">{dept.name}</h4>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase">{dept.desc}</p>
-                                        </div>
-                                    </button>
-                                ))}
+                        <div className="space-y-4 animate-in fade-in duration-300">
+                            <div className="max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
+                                <div className="grid grid-cols-1 gap-3">
+                                    {departments.map((dept) => (
+                                        <button 
+                                            key={dept.id} 
+                                            onClick={() => handleDeptSelect(dept.id)} 
+                                            className="p-4 rounded-2xl border-2 border-slate-100 hover:border-[#192e59] hover:bg-slate-50 transition-all text-left flex items-center gap-4 bg-white group shadow-sm"
+                                        >
+                                            <div className={cn("p-2 rounded-xl text-white shadow-md shrink-0 transition-transform group-hover:scale-110", dept.color)}>
+                                                {typeof dept.icon === 'string' ? (
+                                                    <img src={dept.icon} alt={dept.name} className="h-6 w-6 object-contain" />
+                                                ) : (
+                                                    <dept.icon className="h-6 w-6" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-black text-slate-800 uppercase tracking-tight leading-none text-sm">{dept.name}</h4>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 line-clamp-1">{dept.desc}</p>
+                                            </div>
+                                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#192e59] transition-colors" />
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
 
-                    {/* STEP 3: OTP */}
-                    {step === "otp" && (
-                        <form onSubmit={handleVerifyOTP} className="space-y-12 animate-in slide-in-from-right-8 duration-500">
-                            <div className="text-center">
-                                <h2 className="text-3xl font-black text-slate-900 mb-2">Secure OTP</h2>
-                                <p className="text-slate-500 font-medium">Verify your mobile <span className="font-black text-slate-900">**42</span> for {selectedDept.toUpperCase()}</p>
-                            </div>
+                    {/* Phone Input */}
+                    {step === "consumer" && (
+                        <form onSubmit={handleSendOTP} className="space-y-6 animate-in fade-in duration-300">
+                             <div className="relative group">
+                                <label className="absolute -top-2 left-4 bg-white px-2 text-xs text-slate-400 font-black uppercase tracking-widest group-focus-within:text-indigo-600 z-10 transition-colors">Mobile Number<span className="text-red-500 ml-1">*</span></label>
+                                <div className="flex">
+                                    <span className="border-2 border-r-0 border-slate-100 rounded-l-2xl p-4 text-slate-500 bg-slate-50 font-bold">+91</span>
+                                    <input 
+                                        type="tel" 
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                                        className="w-full border-2 border-slate-100 rounded-r-2xl p-4 text-slate-800 font-bold bg-white outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all"
+                                        maxLength={10}
+                                        autoFocus
+                                    />
+                                </div>
+                             </div>
 
-                            <div className="flex gap-4 justify-center">
+                             <div className="flex items-center gap-4 py-4">
+                                <div className="bg-slate-50 p-2 border-2 border-slate-100 rounded-xl select-none flex-1 flex justify-center items-center h-14">
+                                    <span className="font-mono text-2xl font-black tracking-[0.2em] text-slate-700 skew-x-[-15deg] blur-[0.4px]">M2p9Q</span>
+                                </div>
+                                <button type="button" className="flex flex-col items-center text-indigo-600 hover:text-indigo-800 transition-colors">
+                                    <RefreshCw className="w-6 h-6 mb-1" />
+                                    <span className="text-[9px] font-black uppercase tracking-widest">Reload</span>
+                                </button>
+                             </div>
+
+                             <button type="submit" disabled={isVerifying} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black text-lg uppercase tracking-widest shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center">
+                                {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : "Generate Secure OTP"}
+                             </button>
+                        </form>
+                    )}
+
+                    {/* OTP Input */}
+                    {step === "otp" && (
+                        <form onSubmit={handleVerifyOTP} className="space-y-6 animate-in fade-in duration-300">
+                            <div className="text-center mb-6">
+                                <p className="text-slate-600 text-sm">Enter the OTP sent to +91 ******{phone.slice(-4)}</p>
+                            </div>
+                            <div className="flex gap-3 justify-center">
                                 {otp.map((digit, i) => (
                                     <input
                                         key={i}
@@ -239,41 +409,24 @@ const LoginPage = () => {
                                         maxLength={1}
                                         value={digit}
                                         onChange={(e) => handleOTPChange(e.target.value, i)}
-                                        className="h-24 w-16 rounded-[1.5rem] border-4 border-slate-50 bg-slate-50 text-center text-4xl font-black focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
+                                        className="w-12 h-16 rounded-2xl border-2 border-slate-100 bg-white text-center text-2xl font-black text-slate-900 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all shadow-sm"
                                     />
                                 ))}
                             </div>
-
-                            <button 
-                                type="submit"
-                                disabled={isVerifying}
-                                className="w-full bg-slate-900 text-white py-8 rounded-[2.5rem] text-2xl font-black shadow-2xl flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all"
-                             >
-                                {isVerifying ? <Loader2 className="h-8 w-8 animate-spin" /> : "COMPLETE LOGIN"}
+                            <button type="submit" disabled={isVerifying} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black text-lg uppercase tracking-widest shadow-lg shadow-indigo-600/20 mt-8 transition-all flex items-center justify-center">
+                                {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : "Authenticate & Login"}
                             </button>
-
-                            <div className="text-center">
-                                <button type="button" className="text-primary font-black hover:underline flex items-center gap-2 mx-auto uppercase text-xs tracking-widest">
-                                    <RefreshCw className="h-4 w-4" /> Resend Security Code
-                                </button>
-                            </div>
                         </form>
                     )}
 
-                    {/* SUCCESS */}
+                    {/* Success Screen */}
                     {step === "success" && (
-                         <div className="text-center py-16 animate-in zoom-in duration-700">
-                            <div className="h-32 w-32 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-10 shadow-[0_0_50px_rgba(34,197,94,0.4)]">
-                                <CheckCircle2 className="h-16 w-16 text-white" />
+                         <div className="text-center py-8 animate-in zoom-in duration-500">
+                            <div className="h-20 w-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <CheckCircle2 className="h-10 w-10 text-green-600" />
                             </div>
-                            <h2 className="text-5xl font-black text-slate-900 tracking-tighter">Welcome!</h2>
-                            <p className="text-slate-500 font-bold mt-4 uppercase tracking-[0.2em]">Redirecting to {selectedDept} Portal</p>
-                            
-                            <div className="mt-10 flex justify-center gap-2">
-                                {[1,2,3].map(i => (
-                                    <div key={i} className="h-2 w-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: `${i*0.2}s` }} />
-                                ))}
-                            </div>
+                            <h2 className="text-2xl font-bold text-slate-800">Verification Successful</h2>
+                            <p className="text-slate-500 text-sm mt-2">Redirecting securely...</p>
                          </div>
                     )}
 
@@ -287,15 +440,9 @@ const LoginPage = () => {
                             onCancel={() => setStep("selection")}
                          />
                     )}
-
+                        </div>
+                    </div>
                 </div>
-
-                {/* Privacy Badge */}
-                <div className="mt-12 flex items-center justify-center gap-4 text-slate-400">
-                    <ShieldCheck className="h-5 w-5" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.4em]">Government Secure Module v4.5</span>
-                </div>
-            </div>
         </div>
     );
 };

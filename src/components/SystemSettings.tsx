@@ -1,3 +1,4 @@
+// Trivial edit to trigger ESLint reload
 import { useState } from "react";
 import { Settings, Monitor, Globe, Power, RefreshCw, Smartphone } from "lucide-react";
 import { toast } from "sonner";

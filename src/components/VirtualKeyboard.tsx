@@ -119,13 +119,13 @@ const VirtualKeyboard = () => {
       const newVal = currentVal.substring(0, start) + key + currentVal.substring(end);
       triggerInputEvent(element, newVal);
       element.setSelectionRange(start + key.length, start + key.length);
-      
+
       // If we are in shift mode but not caps locked, revert to default after typing a char
       if (layout === "shift" && !isCapsLocked) {
         setLayout("default");
       }
     }
-    
+
     // Ensure element stays focused
     element.focus();
   };
@@ -143,7 +143,7 @@ const VirtualKeyboard = () => {
             <Keyboard className="w-4 h-4 mr-2" />
             <span>Keyboard</span>
           </div>
-          <button 
+          <button
             onClick={() => setIsOpen(false)}
             className="p-1.5 bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground rounded-full transition-colors"
             onPointerDown={(e) => e.preventDefault()}
@@ -172,14 +172,14 @@ const VirtualKeyboard = () => {
                 } else if (key === "{shift}") {
                   displayKey = <ArrowBigUp className={cn("w-6 h-6", layout === "shift" && !isCapsLocked && "fill-current")} />;
                   flexBasis = "basis-[15%]";
-                  variantClass = layout === "shift" && !isCapsLocked 
-                    ? "bg-primary text-primary-foreground" 
+                  variantClass = layout === "shift" && !isCapsLocked
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted text-foreground hover:bg-muted-foreground/20";
                 } else if (key === "{lock}") {
                   displayKey = "Caps Lock";
                   flexBasis = "basis-[15%]";
-                  variantClass = isCapsLocked 
-                    ? "bg-primary text-primary-foreground font-semibold" 
+                  variantClass = isCapsLocked
+                    ? "bg-primary text-primary-foreground font-semibold"
                     : "bg-muted text-foreground hover:bg-muted-foreground/20";
                 } else if (key === "{space}") {
                   displayKey = <Space className="w-6 h-6 opacity-50" />;

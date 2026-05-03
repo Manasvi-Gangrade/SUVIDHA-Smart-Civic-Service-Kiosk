@@ -4,22 +4,20 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import QueueToken from "@/components/QueueToken";
 import { 
-  Zap, Flame, Building2, Droplets, Trash2, FileText, 
   PlusCircle, Receipt, AlertTriangle, Gauge, PlugZap, 
-  ShieldAlert, Truck, Phone, CloudSun, Lock, Volume2, 
-  ChevronDown, Globe, Search 
+  ShieldAlert, Truck, Phone, CloudSun, Lock, Globe, ChevronRight, Building2, FileText
 } from "lucide-react";
 import { DepartmentExtras } from "@/components/DepartmentExtras";
 
 const departmentData: Record<string, {
   title: string;
-  icon: any;
+  icon: string;
   description: string;
   services: { icon: any; title: string; description: string }[];
 }> = {
   electricity: {
     title: "Electricity Utility Services",
-    icon: Zap,
+    icon: "/images/electricity (2).png",
     description: "Manage your electricity connections, bills, and report issues",
     services: [
       { icon: PlusCircle, title: "New Electricity Connection", description: "Apply for a new domestic or commercial electricity connection" },
@@ -31,7 +29,7 @@ const departmentData: Record<string, {
   },
   gas: {
     title: "Gas Distribution Services",
-    icon: Flame,
+    icon: "/images/gas.png",
     description: "Gas connections, cylinder booking, and safety services",
     services: [
       { icon: PlusCircle, title: "New Gas Connection", description: "Apply for a new LPG gas connection" },
@@ -42,7 +40,7 @@ const departmentData: Record<string, {
   },
   municipal: {
     title: "Municipal Corporation Services",
-    icon: Building2,
+    icon: "/images/municipal.png",
     description: "Property tax, civic grievances, and local governance services",
     services: [
       { icon: FileText, title: "Property Tax Information", description: "View property tax details and payment status" },
@@ -52,7 +50,7 @@ const departmentData: Record<string, {
   },
   water: {
     title: "Water Supply Services",
-    icon: Droplets,
+    icon: "/images/water.png",
     description: "Water connections, billing, and leakage complaints",
     services: [
       { icon: PlusCircle, title: "New Water Connection", description: "Apply for a new water supply connection" },
@@ -62,7 +60,7 @@ const departmentData: Record<string, {
   },
   waste: {
     title: "Waste Management Services",
-    icon: Trash2,
+    icon: "/images/waste.png",
     description: "Garbage collection, sanitation, and cleanliness services",
     services: [
       { icon: Truck, title: "Garbage Collection Issues", description: "Report irregular garbage collection" },
@@ -72,7 +70,7 @@ const departmentData: Record<string, {
   },
   property: {
     title: "Property & Tax Services",
-    icon: FileText,
+    icon: "/images/property.png",
     description: "Property assessment, tax payments, and related services",
     services: [
       { icon: Receipt, title: "Property Tax Payment", description: "Pay your property tax online" },
@@ -100,15 +98,19 @@ const DepartmentPage = () => {
 
   if (!deptData) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <div className="container py-20 text-center">
-          <h2 className="text-2xl font-bold text-slate-900">Department not found</h2>
-        </div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <h2 className="text-2xl font-bold text-slate-900">Department not found</h2>
       </div>
     );
   }
 
-  const Icon = deptData.icon;
+  // Determine theme color based on department
+  const themeColor = id === 'electricity' ? 'amber' : 
+                    id === 'water' ? 'blue' : 
+                    id === 'gas' ? 'orange' : 
+                    id === 'municipal' ? 'teal' : 
+                    id === 'waste' ? 'emerald' : 'indigo';
+
   const titleKey = `dept.${id}.title`;
 
   const handleGetToken = () => {
@@ -121,137 +123,165 @@ const DepartmentPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 z-0 opacity-[0.02] pointer-events-none" 
+           style={{ backgroundImage: 'radial-gradient(#192e59 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
       {/* Premium Navigation Header */}
-      <header className="bg-[#192e59] text-white py-3 px-8 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-6">
-          <div className="h-10 w-10 bg-white rounded-lg flex items-center justify-center font-black text-indigo-900 shadow-lg">S</div>
+      <header className="bg-[#192e59] text-white py-3 px-8 flex items-center justify-between sticky top-0 z-50 shadow-lg">
+        <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
+          <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center font-black text-[#192e59] shadow-md text-xs">S</div>
           <div>
-            <h2 className="text-sm font-black tracking-tight leading-none">SUVIDHA</h2>
-            <p className="text-[8px] font-bold text-white/50 uppercase tracking-[0.2em] mt-0.5">Citizen Connect Hub</p>
+            <h2 className="text-base font-black tracking-tighter leading-none">SUVIDHA</h2>
+            <p className="text-[7px] font-bold text-white/40 uppercase tracking-[0.2em]">Smart City Kiosk</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-10">
-          <div className="hidden md:flex items-center gap-3 pr-6 border-r border-white/10">
-            <span className="text-sm font-black">{time}</span>
-            <span className="text-[10px] font-bold text-white/50">Thu 30 Apr</span>
-            <div className="flex items-center gap-2 ml-2 bg-white/5 px-3 py-1 rounded-full border border-white/10">
-               <CloudSun className="h-4 w-4 text-orange-400" />
-               <span className="text-xs font-bold">32°C</span>
+        <div className="flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-3 pr-6 border-r border-white/10">
+            <span className="text-xs font-black">{time}</span>
+            <div className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+              <CloudSun className="h-4 w-4 text-amber-400" />
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-             <div className="bg-white/5 px-4 py-1.5 rounded-full border border-white/10 text-[10px] font-bold uppercase tracking-widest">New Delhi, IN</div>
-             <div className="flex items-center gap-3 bg-white/5 px-4 py-1.5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
-                <Globe className="h-3.5 w-3.5 text-white/60" />
-                <span className="text-xs font-black">Select Language</span>
-                <ChevronDown className="h-3.5 w-3.5 text-white/40" />
+          <div className="flex items-center gap-3">
+             <div className="flex items-center gap-2 bg-white/5 px-4 py-1.5 rounded-xl border border-white/10">
+                <Globe className="h-3 w-3 text-white/60" />
+                <span className="text-[10px] font-black uppercase tracking-wider">English</span>
              </div>
-             <div className="flex items-center gap-4 ml-2">
-                <Volume2 className="h-5 w-5 text-white/60 cursor-pointer hover:text-white" />
-                <Lock className="h-5 w-5 text-white/60 cursor-pointer hover:text-white" />
-             </div>
+             <button onClick={() => navigate('/')} className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+                <Lock className="h-4 w-4 text-white/80" />
+             </button>
           </div>
         </div>
       </header>
 
-      {/* Hero Accent */}
-      <div className="h-32 bg-[#192e59]" />
+      {/* Hero Banner Area - More Compact */}
+      <div className={`h-40 bg-gradient-to-br from-[#192e59] to-[#243e75] relative overflow-hidden`}>
+          <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+          <div className="container h-full flex flex-col justify-center">
+             <div className="flex items-center gap-5 animate-in slide-in-from-left-4 duration-500">
+                <div className={`h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-xl`}>
+                   <img src={deptData.icon} alt={deptData.title} className="h-10 w-10 object-contain" />
+                </div>
+                <div>
+                   <h1 className="text-3xl font-black text-white tracking-tighter leading-none mb-1">
+                      {t(titleKey)}
+                   </h1>
+                   <p className="text-white/50 font-bold text-[10px] max-w-lg uppercase tracking-widest">
+                      {deptData.description}
+                   </p>
+                </div>
+             </div>
+          </div>
+      </div>
 
-      <div className="container -mt-16 relative z-10">
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Left Column: Quick Actions */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-3 mb-8">
-               <span className="h-8 w-1.5 bg-orange-500 rounded-full" />
-               <h2 className="text-2xl font-black text-slate-900 tracking-tight">Quick Actions</h2>
+      <div className="container -mt-8 relative z-10">
+        <div className="grid gap-6 lg:grid-cols-4">
+          
+          {/* Main Services Area - 3/4 Width */}
+          <div className="lg:col-span-3 space-y-6">
+            <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 border border-white shadow-xl shadow-slate-200/40">
+              <div className="flex items-center justify-between mb-6">
+                 <div className="flex items-center gap-3">
+                    <div className={`w-1.5 h-6 bg-${themeColor}-500 rounded-full`} />
+                    <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Services</h2>
+                 </div>
+              </div>
+              
+              <div className="space-y-3">
+                {deptData.services.map((service, index) => {
+                  const titleStr = t(`dept.${id}.s${index + 1}`).toLowerCase();
+                  let route = "/complaint";
+                  if (titleStr.includes("pay") || titleStr.includes("bill") || titleStr.includes("tax") || titleStr.includes("subsidy")) {
+                    route = "/payment";
+                  } else if (titleStr.includes("new") || titleStr.includes("connection") || titleStr.includes("registration")) {
+                    route = "/application";
+                  }
+
+                  return (
+                    <button 
+                      key={index}
+                      onClick={() => navigate(route, {
+                        state: {
+                          category: t(titleKey),
+                          service: t(`dept.${id}.s${index + 1}`),
+                          description: t(`dept.${id}.s${index + 1}`)
+                        }
+                      })}
+                      className="w-full flex items-center justify-between p-4 bg-white/60 hover:bg-white border border-slate-100 hover:border-indigo-300 rounded-2xl transition-all group shadow-sm hover:shadow-md"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                          <service.icon className={`h-5 w-5 text-${themeColor}-600`} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors uppercase">
+                            {t(`dept.${id}.s${index + 1}`)}
+                          </h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                            Standard Service
+                          </p>
+                        </div>
+                      </div>
+                      <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
+                         <ChevronRight className="h-4 w-4 text-indigo-600" />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            
-            <div className="grid gap-6 sm:grid-cols-2 mb-10">
-              {deptData.services.map((service, index) => {
-                const titleStr = t(`dept.${id}.s${index + 1}`).toLowerCase();
-                let route = "/complaint";
-                if (titleStr.includes("pay") || titleStr.includes("bill") || titleStr.includes("tax") || titleStr.includes("subsidy")) {
-                  route = "/payment";
-                } else if (titleStr.includes("new") || titleStr.includes("connection") || titleStr.includes("registration")) {
-                  route = "/application";
-                }
 
-                return (
-                  <div 
-                    key={index}
-                    onClick={() => navigate(route, {
-                      state: {
-                        category: t(titleKey),
-                        service: t(`dept.${id}.s${index + 1}`),
-                        description: t(`dept.${id}.s${index + 1}`)
-                      }
-                    })}
-                    className="flex items-center gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group hover:-translate-y-1"
-                  >
-                    <div className="h-12 w-12 rounded-2xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <service.icon className="h-6 w-6 text-orange-500" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900 leading-tight">{t(`dept.${id}.s${index + 1}`)}</h4>
-                      <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{t(`dept.${id}.d${index + 1}`).substring(0, 40)}...</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+            <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 border border-white shadow-xl shadow-slate-200/40">
                 <DepartmentExtras departmentId={id || ""} />
             </div>
           </div>
 
-          {/* Right Column: Support Widgets */}
+          {/* Right Support Sidebar - 1/4 Width */}
           <div className="space-y-6">
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm">
-              <h3 className="text-lg font-black text-slate-900 mb-2 uppercase tracking-tight">Walk-in Services</h3>
-              <p className="text-xs text-slate-400 mb-8 font-bold leading-relaxed">
-                Visiting the office? Generate a digital token to skip the manual queue.
+            {/* Token Widget */}
+            <div className="bg-white rounded-3xl border border-white p-6 shadow-xl shadow-slate-200/40 group">
+              <h3 className="text-sm font-black text-slate-900 mb-2 tracking-tighter uppercase">Walk-in</h3>
+              <p className="text-[9px] text-slate-400 mb-6 font-bold leading-relaxed uppercase tracking-wider">
+                Generate token for office visits.
               </p>
               {!token ? (
                 <button
                   onClick={handleGetToken}
-                  className="w-full rounded-2xl bg-[#192e59] py-4 font-black text-white hover:bg-indigo-900 transition-all shadow-lg active:scale-95 uppercase tracking-widest text-sm"
+                  className={`w-full rounded-xl bg-[#192e59] py-3 font-black text-white hover:bg-indigo-900 transition-all active:scale-95 uppercase tracking-widest text-[10px] shadow-lg`}
                 >
-                  Get Digital Token
+                  Get Token
                 </button>
               ) : (
                 <QueueToken token={token} waitTime="10-15 mins" />
               )}
             </div>
 
-            <div className="bg-[#f1f3f7] rounded-[2.5rem] p-8 border border-slate-100">
-              <h4 className="text-base font-black text-slate-900 mb-2 uppercase tracking-tight">Need Help?</h4>
-              <p className="text-xs text-slate-500 font-bold leading-relaxed">
-                Call our helpline for immediate assistance with related issues.
-              </p>
-              <div className="mt-8 flex items-center gap-4 text-[#192e59] font-black text-xl">
-                 <Phone className="h-6 w-6" />
-                 <span className="tracking-tighter">1800-200-1234</span>
-              </div>
+            {/* Helpline Widget */}
+            <div className="bg-[#192e59] rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+               <div className="absolute bottom-0 right-0 opacity-5"><Building2 className="h-20 w-20" /></div>
+               <h4 className="text-[9px] font-black uppercase tracking-[0.2em] mb-3 text-white/40">Helpline</h4>
+               <div className="flex items-center gap-3 py-3 px-4 bg-white/5 rounded-xl border border-white/5 group cursor-pointer hover:bg-white/10">
+                  <Phone className="h-4 w-4 text-amber-400" />
+                  <span className="text-base font-black tracking-tighter">1800-200-1234</span>
+               </div>
+            </div>
+
+            {/* Safety/Alert Widget */}
+            <div className="bg-rose-50 rounded-3xl p-5 border border-rose-100 flex items-center gap-4">
+                <div className="h-10 w-10 bg-rose-500 rounded-xl flex items-center justify-center shadow-lg">
+                   <AlertTriangle className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                   <h4 className="text-[10px] font-black text-rose-900 uppercase">Emergency</h4>
+                   <p className="text-[8px] font-bold text-rose-500 uppercase tracking-widest">Call SOS</p>
+                </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Floating SOS */}
-      <button className="fixed bottom-8 left-8 bg-rose-500 text-white px-8 py-4 rounded-full font-black flex items-center gap-3 shadow-2xl hover:scale-105 active:scale-95 transition-all z-50">
-         <AlertTriangle className="h-5 w-5" />
-         SOS
-      </button>
-
-      {/* Accessibility Fab */}
-      <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
-         <button className="h-14 w-14 bg-indigo-600 rounded-full flex items-center justify-center shadow-2xl text-white">
-            <Search className="h-6 w-6" />
-         </button>
       </div>
     </div>
   );

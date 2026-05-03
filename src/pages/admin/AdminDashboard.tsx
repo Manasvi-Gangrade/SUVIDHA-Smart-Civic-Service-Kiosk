@@ -75,318 +75,397 @@ const AdminDashboard = () => {
   // Fetch live data from local database
   const records = useMemo(() => db.getAllRecords(), []);
   const statsData = useMemo(() => db.getStats(), [records]);
+  
+  const resolvedCount = useMemo(() => 
+    records.filter(r => r.status === 'Resolved' || r.status === 'Approved').length, 
+    [records]
+  );
 
-  // Specific presentation stats requested by user
-  const displayStats = [
-    { label: "Total Complaints", value: "4", icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-50" },
-    { label: "Total Applications", value: "3", icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Resolved", value: "1", icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Critical", value: "0", icon: Shield, color: "text-slate-600", bg: "bg-slate-50" },
+  const stats = [
+    { label: "Total Complaints", value: statsData.complaints.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" },
+    { label: "Total Applications", value: statsData.applications.toString(), icon: FileText, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: "Resolved Services", value: resolvedCount.toString(), icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
+    { label: "Active Kiosks", value: "24", icon: Globe, color: "text-blue-600", bg: "bg-blue-50" },
   ];
 
-  // Specific Activity requested by user
-  const requestedActivity = [
-    { name: "manasvi", service: "Electricity Utility Services", id: "APP-5765", type: "App", status: "Under Review", time: "Just now" },
-    { name: "Manasvi", service: "Electricity", id: "CMP-5422", type: "Comp", status: "Pending", time: "5m ago" },
-    { name: "Rahul S.", service: "Electricity", id: "CMP-1024", type: "Comp", status: "In Progress", time: "12m ago" },
-    { name: "Priya K.", service: "Water", id: "APP-5521", type: "App", status: "Approved", time: "1h ago" },
-    { name: "Amit M.", service: "Waste", id: "CMP-8812", type: "Comp", status: "New" }
-  ];
-
-  // Map real DB records to presentation format
   const liveActivity = records.slice(0, 5).map(r => ({
     name: r.name,
-    service: r.service || r.category,
+    service: r.service || r.category || "General Service",
     id: r.id,
     type: r.type === 'application' ? 'App' : 'Comp',
     status: r.status,
     time: "Live"
   }));
 
-  // Combine live and requested for maximum "Wow"
-  const combinedActivity = [...liveActivity, ...requestedActivity].slice(0, 7);
-
-  // Chart Data
-  const complaintsByDept = [
-    { name: 'Electricity', total: 2, resolved: 1 },
-    { name: 'Water', total: 1, resolved: 0 },
-    { name: 'Waste', total: 1, resolved: 0 },
-    { name: 'Property', total: 0, resolved: 0 },
-  ];
-
-  const statusDistribution = [
-    { name: 'Resolved', value: 1 },
-    { name: 'Pending', value: 3 },
-    { name: 'Critical', value: 0 },
-  ];
-
-  const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
+  const COLORS = ['#4f46e5', '#f59e0b', '#10b981', '#ef4444'];
 
   const renderContent = () => {
     switch (activeTab) {
       case "dash":
         return (
-          <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Header Welcome */}
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden">
-               <div className="relative z-10">
-                 <h3 className="text-2xl font-black text-slate-900 mb-2">Welcome back, Admin.</h3>
-                 <p className="text-sm font-bold text-slate-400">Here's what's happening today in your city nodes.</p>
-               </div>
-               <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-indigo-50/50 to-transparent pointer-events-none" />
-            </div>
-
+          <div className="space-y-6 animate-in fade-in duration-500">
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {displayStats.map((stat, i) => (
-                <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-                  <div className={`${stat.bg} ${stat.color} p-3 w-fit rounded-2xl mb-4 group-hover:scale-110 transition-transform`}>
-                    <stat.icon className="h-6 w-6" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {stats.map((stat, i) => (
+                <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
+                      <stat.icon className="h-5 w-5" />
+                    </div>
+                    <span className="text-xs font-medium text-green-600 flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" /> +12%
+                    </span>
                   </div>
-                  <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">{stat.label}</h3>
-                  <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.value}</p>
+                  <h3 className="text-slate-500 text-sm font-medium">{stat.label}</h3>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
                 </div>
               ))}
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8">
-              {/* Recent Activity */}
-              <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-indigo-600" /> Recent Activity
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Updates</span>
-                  </div>
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Activity Chart */}
+              <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-bold text-slate-900">Service Activity Trends</h3>
+                  <select className="text-xs border border-slate-200 rounded-lg px-2 py-1 outline-none">
+                    <option>Last 7 Days</option>
+                    <option>Last 30 Days</option>
+                  </select>
                 </div>
-                <div className="space-y-4">
-                  {combinedActivity.map((act, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-100 transition-all">
-                      <div className="flex items-center gap-4">
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-black text-xs ${act.type === 'App' ? 'bg-blue-100 text-blue-600' : 'bg-rose-100 text-rose-600'}`}>
-                          {act.type === 'App' ? <FileText className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-slate-900">{act.name}</span>
-                            <span className="text-[10px] font-bold text-slate-400 truncate max-w-[150px]">• {act.service}</span>
-                          </div>
-                          <div className="text-[10px] font-bold text-slate-500">{act.id}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`text-[9px] font-black uppercase mb-1 ${act.status === 'Approved' || act.status === 'Resolved' ? 'text-green-600' : 'text-amber-600'}`}>{act.status}</div>
-                        <div className="text-[9px] font-bold text-slate-400">{act.time}</div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={[
+                      { name: 'Mon', apps: 40, comps: 24 },
+                      { name: 'Tue', apps: 30, comps: 13 },
+                      { name: 'Wed', apps: 20, comps: 98 },
+                      { name: 'Thu', apps: 27, comps: 39 },
+                      { name: 'Fri', apps: 18, comps: 48 },
+                      { name: 'Sat', apps: 23, comps: 38 },
+                      { name: 'Sun', apps: 34, comps: 43 },
+                    ]}>
+                      <defs>
+                        <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
+                          <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                      <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} />
+                      <Area type="monotone" dataKey="apps" stroke="#4f46e5" strokeWidth={2} fillOpacity={1} fill="url(#colorApps)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
-              {/* Status Distribution */}
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-8">Overall Status Distribution</h3>
-                <div className="h-[200px]">
-                   <ResponsiveContainer width="100%" height="100%">
+              {/* Status Breakdown */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 className="font-bold text-slate-900 mb-6">Status Breakdown</h3>
+                <div className="h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={statusDistribution} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                        {statusDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Pie
+                        data={[
+                          { name: 'Approved', value: 400 },
+                          { name: 'Pending', value: 300 },
+                          { name: 'In Progress', value: 300 },
+                          { name: 'Rejected', value: 200 },
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {COLORS.map((color, index) => (
+                          <Cell key={`cell-${index}`} fill={color} />
                         ))}
                       </Pie>
                       <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="space-y-4 mt-6">
-                  {statusDistribution.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between">
+                <div className="space-y-2 mt-4">
+                  {[
+                    { label: 'Approved', color: 'bg-indigo-600' },
+                    { label: 'Pending', color: 'bg-amber-500' },
+                    { label: 'In Progress', color: 'bg-emerald-500' },
+                    { label: 'Rejected', color: 'bg-rose-500' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                        <span className="text-[10px] font-black uppercase text-slate-500">{item.name}</span>
+                        <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                        <span className="text-slate-600">{item.label}</span>
                       </div>
-                      <span className="text-[10px] font-black text-slate-900">{item.value} Units</span>
+                      <span className="font-bold text-slate-900">{25 * (i+1)}%</span>
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="font-bold text-slate-900">Recent Activity</h3>
+                <button className="text-xs font-semibold text-indigo-600 hover:underline">View All</button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b border-slate-100">
+                    <tr>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Citizen</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Service</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {liveActivity.map((act, i) => (
+                      <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
+                              {act.name[0]}
+                            </div>
+                            <span className="text-sm font-semibold text-slate-900">{act.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">{act.service}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${act.type === 'App' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
+                            {act.type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${act.status === 'Approved' || act.status === 'Resolved' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>
+                            {act.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-400">
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         );
       case "analytics":
         return (
-          <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-               <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Analytics & Reports</h3>
-               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">Detailed insights into system performance and citizen satisfaction.</p>
-               
-               <div className="grid lg:grid-cols-1 gap-12">
-                 <div>
-                   <h4 className="text-[11px] font-black text-slate-900 uppercase mb-6 flex items-center gap-2">
-                     <BarChartIcon className="h-4 w-4 text-indigo-600" /> Complaints by Department
-                   </h4>
-                   <div className="h-[350px]">
-                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={complaintsByDept} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8'}} />
-                          <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8'}} domain={[0, 2]} ticks={[0, 0.5, 1, 1.5, 2]} />
-                          <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
-                          <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', paddingTop: '20px'}} />
-                          <Bar dataKey="total" name="Total Complaints" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={50} />
-                          <Bar dataKey="resolved" name="Resolved" fill="#10b981" radius={[4, 4, 0, 0]} barSize={50} />
-                        </BarChart>
-                     </ResponsiveContainer>
-                   </div>
-                 </div>
-               </div>
+          <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm animate-in fade-in duration-500">
+            <h3 className="font-bold text-slate-900 mb-8">Department Performance</h3>
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[
+                  { name: 'Electricity', total: 120, resolved: 85 },
+                  { name: 'Water', total: 80, resolved: 70 },
+                  { name: 'Gas', total: 60, resolved: 55 },
+                  { name: 'Municipal', total: 200, resolved: 110 },
+                  { name: 'Waste', total: 45, resolved: 40 },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                  <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '12px', border: 'none'}} />
+                  <Bar dataKey="total" name="Total Requests" fill="#cbd5e1" radius={[4, 4, 0, 0]} barSize={40} />
+                  <Bar dataKey="resolved" name="Resolved" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={40} />
+                  <Legend />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         );
       case "settings":
         return (
-          <div className="grid lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
-            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
-              <h3 className="text-sm font-black text-slate-900 uppercase mb-10 flex items-center gap-3"><Smartphone className="h-5 w-5 text-indigo-600" /> Kiosk Hardware</h3>
-              <div className="space-y-10">
+          <div className="grid lg:grid-cols-2 gap-6 animate-in fade-in duration-500">
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <Smartphone className="h-5 w-5 text-indigo-600" /> Kiosk Configuration
+              </h3>
+              <div className="space-y-8">
                 <div>
-                  <div className="flex justify-between mb-4"><span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Audio Level</span><span className="text-xs font-black text-indigo-600">{settingsState.volume}%</span></div>
-                  <input type="range" className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" value={settingsState.volume} onChange={(e) => setSettingsState({ ...settingsState, volume: parseInt(e.target.value) })} />
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-slate-600">Volume Level</span>
+                    <span className="text-sm font-bold text-indigo-600">{settingsState.volume}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    className="w-full h-1.5 bg-slate-100 rounded-full appearance-none cursor-pointer accent-indigo-600" 
+                    value={settingsState.volume} 
+                    onChange={(e) => setSettingsState({ ...settingsState, volume: parseInt(e.target.value) })} 
+                  />
                 </div>
                 <div>
-                  <div className="flex justify-between mb-4"><span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Brightness</span><span className="text-xs font-black text-indigo-600">{settingsState.brightness}%</span></div>
-                  <input type="range" className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" value={settingsState.brightness} onChange={(e) => setSettingsState({ ...settingsState, brightness: parseInt(e.target.value) })} />
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-slate-600">Screen Brightness</span>
+                    <span className="text-sm font-bold text-indigo-600">{settingsState.brightness}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    className="w-full h-1.5 bg-slate-100 rounded-full appearance-none cursor-pointer accent-indigo-600" 
+                    value={settingsState.brightness} 
+                    onChange={(e) => setSettingsState({ ...settingsState, brightness: parseInt(e.target.value) })} 
+                  />
                 </div>
-                <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
-                   <div className="flex items-center gap-4">
-                     <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><Shield className="h-5 w-5" /></div>
-                     <div><span className="text-[11px] font-black uppercase text-slate-900">Pro-Kiosk Mode</span><p className="text-[9px] font-bold text-slate-400">Restricts unauthorized apps</p></div>
-                   </div>
-                   <button onClick={() => setSettingsState({...settingsState, kioskMode: !settingsState.kioskMode})} className={`w-12 h-6 rounded-full transition-all relative ${settingsState.kioskMode ? 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.4)]' : 'bg-slate-200'}`}>
-                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settingsState.kioskMode ? 'right-1' : 'left-1'}`} />
-                   </button>
+                <div className="flex items-center justify-between pt-4">
+                  <div>
+                    <span className="text-sm font-bold text-slate-900">Enterprise Kiosk Mode</span>
+                    <p className="text-xs text-slate-500">Restricts system access to app only</p>
+                  </div>
+                  <button 
+                    onClick={() => setSettingsState({...settingsState, kioskMode: !settingsState.kioskMode})}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${settingsState.kioskMode ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${settingsState.kioskMode ? 'translate-x-7' : 'translate-x-1'}`} />
+                  </button>
                 </div>
               </div>
             </div>
-            <div className="space-y-8">
-              <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
-                <h3 className="text-sm font-black text-slate-900 uppercase mb-8 flex items-center gap-3"><Languages className="h-5 w-5 text-indigo-600" /> Regional Config</h3>
-                <div className="space-y-3">
-                  {["English", "Hindi", "Marathi"].map((lang) => (
-                    <button key={lang} onClick={() => setSettingsState({ ...settingsState, language: lang })} className={`w-full flex items-center justify-between p-5 rounded-2xl font-black transition-all ${settingsState.language === lang ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "bg-slate-50 text-slate-400 hover:bg-slate-100"}`}>
-                      <span className="text-xs uppercase tracking-widest">{lang}</span>
-                      {settingsState.language === lang && <CheckCircle2 className="h-4 w-4" />}
-                    </button>
-                  ))}
-                </div>
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <Languages className="h-5 w-5 text-indigo-600" /> Language Protocol
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {["English", "Hindi", "Marathi", "Gujarati", "Bengali", "Tamil"].map((lang) => (
+                  <button 
+                    key={lang} 
+                    onClick={() => setSettingsState({ ...settingsState, language: lang })}
+                    className={`p-4 rounded-xl font-bold transition-all text-sm ${
+                      settingsState.language === lang 
+                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200" 
+                        : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         );
       default:
         return (
-          <div className="bg-white p-12 rounded-[2.5rem] border border-slate-100 text-center shadow-sm">
-             <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Activity className="h-10 w-10 text-slate-300" />
-             </div>
-             <h3 className="text-xl font-black text-slate-900 uppercase">Module Under Maintenance</h3>
-             <p className="text-sm font-bold text-slate-400 mt-2">Integrating high-density datasets for this sector.</p>
+          <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center">
+            <Database className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-900 uppercase">Module Under Construction</h3>
+            <p className="text-sm text-slate-500 mt-1">We are currently migrating this section to the new database.</p>
           </div>
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex font-sans overflow-hidden">
+    <div className="h-screen w-screen bg-slate-50 flex font-sans overflow-hidden">
       {/* SIDEBAR */}
-      <div className="w-64 border-r border-slate-200 bg-white flex flex-col p-6 sticky top-0 h-screen z-50">
-        <div className="flex items-center gap-3 mb-10 group cursor-pointer" onClick={() => navigate("/")}>
-          <div className="h-10 w-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 group-hover:rotate-12 transition-all">
+      <aside className="w-64 bg-slate-900 flex flex-col h-full z-50 flex-shrink-0">
+        <div className="p-8 flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+          <div className="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-900/50">
             <ShieldCheck className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h2 className="text-sm font-black tracking-tighter text-slate-900 uppercase leading-none">SUVIDHA</h2>
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Command Center</p>
+            <h2 className="text-lg font-black text-white tracking-tighter uppercase leading-none">SUVIDHA</h2>
+            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Admin Portal</p>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-2">
+        <nav className="flex-1 px-4 space-y-1">
           {[
             { label: "Dashboard", icon: LayoutDashboard, id: "dash" },
             { label: "Analytics", icon: BarChart3, id: "analytics" },
             { label: "Applications", icon: FileText, id: "apps" },
             { label: "Complaints", icon: AlertCircle, id: "complaints" },
-            { label: "Users", icon: Users, id: "users" },
+            { label: "Kiosk Status", icon: Globe, id: "users" },
             { label: "Settings", icon: SettingsIcon, id: "settings" },
           ].map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl font-black transition-all text-[10px] uppercase tracking-[0.1em] ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all text-sm ${
                 activeTab === item.id 
-                  ? "bg-indigo-600 text-white shadow-xl shadow-indigo-100" 
-                  : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" 
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
               }`}
             >
-              <item.icon className={`h-4 w-4 ${activeTab === item.id ? 'text-white' : 'text-slate-300'}`} />
+              <item.icon className="h-5 w-5" />
               {item.label}
             </button>
           ))}
         </nav>
 
-        <button
-          onClick={() => navigate("/")}
-          className="mt-auto flex items-center gap-4 px-4 py-3.5 text-rose-600 font-black text-[10px] uppercase tracking-[0.1em] hover:bg-rose-50 rounded-2xl transition-all"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </button>
-      </div>
+        <div className="p-4 border-t border-slate-800">
+          <button
+            onClick={() => navigate("/")}
+            className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 font-bold text-sm rounded-xl hover:bg-rose-500/10 hover:text-rose-500 transition-all"
+          >
+            <LogOut className="h-5 w-5" />
+            Logout
+          </button>
+        </div>
+      </aside>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <header className="h-20 bg-white border-b border-slate-100 px-10 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex items-center gap-6">
-            <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100"><Calendar className="h-4 w-4 text-slate-400" /></div>
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Network Status</p>
-              <h1 className="text-xs font-black text-slate-900 uppercase flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-500" /> Active Nodes (24/24)</h1>
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {/* Top Header */}
+        <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between z-40 flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-bold text-slate-900 capitalize">
+              {activeTab === 'dash' ? 'Overview' : activeTab}
+            </h1>
+            <div className="h-4 w-[1px] bg-slate-200 mx-2" />
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+              <div className="w-2 h-2 rounded-full bg-green-500" /> System Online
             </div>
           </div>
+          
           <div className="flex items-center gap-6">
-             <div className="relative group">
-                <button className="p-2.5 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100">
-                  <Bell className="h-5 w-5 text-slate-400" />
-                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white" />
-                </button>
-             </div>
-             <div className="h-10 w-10 rounded-2xl bg-slate-100 border-2 border-white shadow-sm overflow-hidden">
-               <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin" />
-             </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Global Search..." 
+                className="bg-slate-100 border-none rounded-xl py-2 pl-10 pr-4 text-xs w-64 focus:ring-2 focus:ring-indigo-600/20 transition-all"
+              />
+            </div>
+            <button className="relative p-2 text-slate-400 hover:bg-slate-50 rounded-xl transition-all">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
+            </button>
+            <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
+              <div className="text-right">
+                <p className="text-xs font-bold text-slate-900">Admin User</p>
+                <p className="text-[10px] font-medium text-slate-500">Super Admin</p>
+              </div>
+              <div className="h-10 w-10 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin" />
+              </div>
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-10 bg-slate-50/30">
+        {/* Scrollable Area */}
+        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
-                  {activeTab === 'dash' ? 'Dashboard Overview' : activeTab}
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                  Welcome back, Admin!
                 </h2>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Suvidha Intelligence</span>
-                  <div className="w-1 h-1 rounded-full bg-slate-300" />
-                  <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Live Node 04</span>
-                </div>
+                <p className="text-sm text-slate-500">Monitor and manage city services in real-time.</p>
               </div>
-              <div className="flex gap-4">
-                <button className="flex items-center gap-2.5 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
-                  <Download className="h-3.5 w-3.5" /> Export Data
+              <div className="flex gap-3">
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                  <Download className="h-4 w-4" /> Export Data
                 </button>
-                <button className="flex items-center gap-2.5 px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100">
-                  <Database className="h-3.5 w-3.5" /> Force Backup
+                <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20">
+                  <Plus className="h-4 w-4" /> New Service
                 </button>
               </div>
             </div>

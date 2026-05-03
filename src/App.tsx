@@ -17,7 +17,7 @@ import CivicMapPage from "./pages/CivicMapPage";
 import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 import { OrganizationAuth } from "./pages/OrganizationAuth";
-import PaymentPage from "./pages/PaymentPage";
+import PaymentPortal from "./pages/PaymentPortal";
 import VirtualQueuePage from "./pages/VirtualQueuePage";
 import EditProfile from "./pages/EditProfile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -124,7 +124,7 @@ const AppContent = () => {
             <Route path="/application" element={<ApplicationFormPage />} />
             <Route path="/map" element={<CivicMapPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/payment" element={<PaymentPortal />} />
             <Route path="/queue" element={<VirtualQueuePage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />

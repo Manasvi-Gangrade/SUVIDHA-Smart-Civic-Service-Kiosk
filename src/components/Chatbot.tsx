@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, X, Send, Bot, User, PhoneCall, Mic, MicOff } from "lucide-react";
+import { MessageSquare, X, Send, Bot, User, PhoneCall, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { getCurrentLanguage } from "../i18n";
 
 interface Message {
     id: string;
@@ -24,15 +26,15 @@ const RESPONSES: Record<string, Record<string, string>> = {
         hi: "बहुत स्वागत है! यदि आपको और कुछ मदद चाहिए तो बताएं।",
         mr: "तुमचे खूप स्वागत आहे! इतर कशातही मदत लागली तर सांगा.",
         ta: "மிகவும் வரவேற்கிறோம்! வேறு ஏதாவது உதவி தேவைப்பட்டால் தெரியப்படுத்துங்கள்.",
-        gu: "ખૂબ સ્વાગત છે! બીજી કોઈ મદદ જોઈએ તો જણાવો.",
-        bn: "ખૂબ স্বাগতম! আর কোনো সাহায্যের দরকার হলে জানান।",
+        gu: "ખૂબ સ્વાગત છે! બીજી કોઈ મદદ જોઈએ તો જણાવो.",
+        bn: "স্বাগতম! আর কোনো সাহায্যের দরকার হলে জানান।",
     },
     bill: {
         en: "To pay bills, go to 'Departments' on the Home page and select your utility (Electricity, Water, or Gas).",
         hi: "बिल भुगतान के लिए होम पेज पर 'विभाग' पर जाएं और संबंधित उपयोगिता (बिजली, पानी या गैस) चुनें।",
         mr: "बिल भरण्यासाठी, मुख्यपृष्ठावर 'विभाग' मध्ये जा आणि संबंधित सेवा निवडा (वीज, पाणी किंवा गॅस).",
         ta: "பில் செலுத்த, முகப்புப் பக்கத்தில் 'துறைகள்' என்பதற்குச் சென்று தொடர்புடைய சேவையை (மின்சாரம், தண்ணீர் அல்லது எரிவாயு) தேர்ந்தெடுக்கவும்.",
-        gu: "બિલ ભરવા માટે, હોમ પેજ પર 'વિભાગ' માં જાઓ અને સંબંધિત સેવા (વીજળી, પાણી અથવા ગેસ) પસંદ કરો.",
+        gu: "બિલ ભરવા માટે, હોમ પેજ પર 'વિભાગ' માં જાઓ અને સંબંધित सेवा (વીજળી, પાણી અથવા ગેસ) પસંદ કરો.",
         bn: "বিল পরিশোধের জন্য হোম পেজে 'বিভাগ' এ যান এবং সংশ্লিষ্ট পরিষেবা (বিদ্যুৎ, জল বা গ্যাস) নির্বাচন করুন।",
     },
     complaint: {
@@ -41,21 +43,21 @@ const RESPONSES: Record<string, Record<string, string>> = {
         mr: "मुख्यपृष्ठावर 'तक्रार नोंदवा' वर क्लिक करून तुम्ही तक्रार नोंदवू शकता. यास 2 मिनिटांपेक्षा कमी वेळ लागतो!",
         ta: "முகப்புப் பக்கத்தில் 'புகார் பதிவு' என்பதைக் கிளிக் செய்வதன் மூலம் புகாரை பதிவு செய்யலாம். இது 2 நிமிடத்திற்கும் குறைவான நேரம் எடுக்கும்!",
         gu: "હોમ પેજ પર 'ફરિયાદ નોંધો' પર ક્લિક કરીને ઓ ફરિયાદ નોંધાવી શકો. 2 મિનિટ કરતા ઓછો સમય લાગે!",
-        bn: "হোમ পেজে 'অভিযোগ নিবন্ধন' এ ক্লিক করে অভিযোগ দাখিল করতে পারেন। মাত্র ২ মিনিট লাগে!",
+        bn: "হোম পেজে 'অভিযোগ নিবন্ধন' এ ক্লিক করে অভিযোগ দাখিল করতে পারেন। মাত্র ২ মিনিট লাগে!",
     },
     track: {
         en: "To check your application status, use 'Track Request'. You'll need your Request ID (e.g., SVD-2026-XXXX).",
         hi: "अपने आवेदन की स्थिति जांचने के लिए 'अनुरोध ट्रैक करें' का उपयोग करें। आपको रिक्वेस्ट आईडी (जैसे SVD-2026-XXXX) की आवश्यकता होगी।",
         mr: "तुमच्या अर्जाची स्थिती तपासण्यासाठी 'विनंती ट्रॅक करा' वापरा. तुम्हाला Request ID (उदा. SVD-2026-XXXX) आवश्यक आहे.",
         ta: "உங்கள் விண்ணப்ப நிலையை சரிபார்க்க 'கோரிக்கையை கண்காணி' பயன்படுத்தவும். உங்களுக்கு Request ID (எ.கா. SVD-2026-XXXX) தேவைப்படும்.",
-        gu: "અરજીની સ્થિતિ ચેક કરવા 'ટ્રૅક રિક્વેસ્ટ' ઉપયોગ કરો. Request ID (દા.ત. SVD-2026-XXXX) ની જરૂર પડશે.",
+        gu: "અરજીની સ્થિતિ ચેક કરવા 'ટ્રૅક રિક્વેસ્ટ' उपयोग करो. Request ID (દા.ત. SVD-2026-XXXX) ની જરૂર પડશે.",
         bn: "আবেদনের অবস্থা দেখতে 'ট্র্যাক রিকোয়েস্ট' ব্যবহার করুন। আপনার Request ID (যেমন SVD-2026-XXXX) প্রয়োজন হবে।",
     },
     token: {
         en: "Skip the queue! Generate a digital token for walk-in services directly from any Department page.",
         hi: "लाइन छोड़ें! किसी भी विभाग पृष्ठ से सीधे वॉक-इन सेवाओं के लिए डिजिटल टोकन जेनरेट करें।",
         mr: "रांग सोडा! कोणत्याही विभाग पृष्ठावरून थेट walk-in सेवांसाठी डिजिटल टोकन तयार करा.",
-        ta: "வரிசையைத் தவிர்க்கவும்! எந்த துறை பக்கத்திலிருந்தும் நேரடியாக walk-in சேவைகளுக்கான டிஜிட்டல் டோக்கனை உருவாக்குங்கள்.",
+        ta: "வரிசையைத் தவிர்க்கவும்! எந்த துறை பக்கத்திலிருந்தும் நேரடியாக walk-in சேவைகளுக்கான டிजிட்டல் டோக்கனை உருவாக்குங்கள்.",
         gu: "લાઇન ન ઊભા! ડિપાર્ટ્મેન્ટ પેજ પ walk-in સેવા માટે ડિજiટ ટોકન બનાવો.",
         bn: "লাইনে দাঁড়াবেন না! যেকোনো বিভাগের পেজ থেকে walk-in সেবার ডিজিটাল টোকন তৈরি করুন।",
     },
@@ -64,9 +66,21 @@ const RESPONSES: Record<string, Record<string, string>> = {
         hi: "मुझे यकीन नहीं है। मैं आपको बिल भुगतान, अनुरोध ट्रैकिंग या शिकायत दर्ज करने में मदद कर सकता हूँ।",
         mr: "मला खात्री नाही. मी तुम्हाला बिल भरणे, विनंती ट्रॅक करणे किंवा तक्रार नोंदवणे यात मदत करू शकतो.",
         ta: "எனக்கு நிச்சயமில்லை. பில் செலுத்துதல், கோரிக்கை கண்காணிப்பு அல்லது புகார் பதிவு செய்ய உதவ முடியும்.",
-        gu: "ખાતrી નથી. બil ભрванu, viનti ટreking, ywu rvad ફriyd nondawnwn mdad kri shkn.",
+        gu: "ખાતrી નથી. બil ભрવાનu, viનti ટreking, ywu rvad ફriyd nondawnwn mdad kri shkn.",
         bn: "নিশ্চিত না। বিল পরিশোধ, ট্র্যাকিং বা অভিযোগ নিবন্ধনে সাহায্য করতে পারি।",
     },
+};
+
+const ACKNOWLEDGEMENTS: Record<string, string> = {
+    en: "Language changed to English.",
+    hi: "भाषा बदलकर हिंदी हो गई है।",
+    mr: "भाषा बदलून मराठी झाली आहे.",
+    bn: "ভাষা পরিবর্তন করে বাংলা করা হয়েছে।"
+};
+
+const SPEECH_LANG_MAP: Record<string, string> = {
+    hi: "hi-IN", mr: "mr-IN", ta: "ta-IN", te: "te-IN",
+    gu: "gu-IN", bn: "bn-IN", en: "en-IN",
 };
 
 function getResponse(input: string, lang: string): string {
@@ -83,52 +97,131 @@ function getResponse(input: string, lang: string): string {
     return RESPONSES.fallback[l];
 }
 
-const SPEECH_LANG_MAP: Record<string, string> = {
-    hi: "hi-IN", mr: "mr-IN", ta: "ta-IN", te: "te-IN",
-    gu: "gu-IN", bn: "bn-IN", en: "en-IN",
-};
-
 const Chatbot = () => {
     const { i18n } = useTranslation();
-    const currentLang = i18n.language?.split("-")[0] || "en";
+    
+    // Use centralized language detection
+    const currentLang = getCurrentLanguage();
 
     const [isOpen, setIsOpen] = useState(false);
+    
+    // Voice enabled state initialized with session persistence (Requirement 3.4)
+    const [voiceEnabled, setVoiceEnabled] = useState(() => {
+        return sessionStorage.getItem("chatbot_voice_enabled") !== "false";
+    });
+
     const [messages, setMessages] = useState<Message[]>([
-        { id: "1", text: "Namaste! I am Sahayak, your civic assistant. How can I help you today?", isBot: true, sender: "bot", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+        { 
+            id: "1", 
+            text: RESPONSES.greeting[currentLang] || RESPONSES.greeting.en, 
+            isBot: true, 
+            sender: "bot", 
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        }
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const langRef = useRef(currentLang);
+    const langRef = useRef(""); // Initialize empty to trigger load on mount
+
+    useEffect(() => {
+        sessionStorage.setItem("chatbot_voice_enabled", String(voiceEnabled));
+    }, [voiceEnabled]);
+
+    // Language change synchronizer (Requirement 1.1 / 1.5)
+    useEffect(() => {
+        const lang = getCurrentLanguage();
+        if (lang === langRef.current) return;
+        
+        const isFirstMount = langRef.current === "";
+        langRef.current = lang;
+        const greetingLang = RESPONSES.greeting[lang] ? lang : "en";
+        const welcomeText = RESPONSES.greeting[greetingLang];
+        
+        setMessages([{ 
+            id: Date.now().toString(), 
+            text: welcomeText, 
+            sender: "bot", 
+            isBot: true,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        }]);
+
+        if (isOpen) {
+            if (!isFirstMount) {
+                const ackText = ACKNOWLEDGEMENTS[lang] || ACKNOWLEDGEMENTS.en;
+                speak(ackText);
+            } else {
+                speak(welcomeText);
+            }
+        }
+    }, [i18n.language, isOpen]);
 
     useEffect(() => {
         if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isOpen]);
 
-    useEffect(() => {
-        const lang = i18n.language?.split("-")[0] || "en";
-        if (lang === langRef.current) return;
-        langRef.current = lang;
-        const greetingLang = RESPONSES.greeting[lang] ? lang : "en";
-        setMessages([{ id: Date.now().toString(), text: RESPONSES.greeting[greetingLang], sender: "bot", isBot: true }]);
-    }, [i18n.language]);
-
+    // Centralized speak synthesis with fallback and robust error handling (Requirement 1.3 / 1.4 / 3.5)
     const speak = (text: string) => {
-        if (!("speechSynthesis" in window)) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        const lang = i18n.language?.split("-")[0] || "en";
-        const speechLang = SPEECH_LANG_MAP[lang] || "en-IN";
-        utterance.lang = speechLang;
+        if (!voiceEnabled) return;
+        
+        if (!("speechSynthesis" in window)) {
+            setVoiceEnabled(false);
+            toast.error("Speech Synthesis is not supported in this browser.");
+            return;
+        }
 
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find(v => v.lang === speechLang) ||
-            voices.find(v => v.lang.startsWith(speechLang.split("-")[0])) ||
-            voices.find(v => v.name.includes("India"));
+        try {
+            window.speechSynthesis.cancel();
+            const cleanText = text.replace(/<[^>]*>/g, '').substring(0, 150);
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            
+            const lang = getCurrentLanguage();
+            const speechLang = SPEECH_LANG_MAP[lang] || "en-IN";
+            utterance.lang = speechLang;
 
-        if (preferred) utterance.voice = preferred;
-        window.speechSynthesis.speak(utterance);
+            const voices = window.speechSynthesis.getVoices();
+            let preferred = voices.find(v => v.lang.toLowerCase() === speechLang.toLowerCase()) ||
+                voices.find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase())) ||
+                voices.find(v => v.lang.toLowerCase().startsWith(speechLang.split("-")[0].toLowerCase()));
+
+            let usingFallback = false;
+
+            // Voice Fallback Strategy (Requirement 1.4)
+            if (!preferred) {
+                // Try Indian accent first
+                preferred = voices.find(v => v.lang.toLowerCase().includes("in") || v.name.toLowerCase().includes("india"));
+                if (!preferred) {
+                    // Try general English fallback
+                    preferred = voices.find(v => v.lang.toLowerCase().startsWith("en")) || voices[0];
+                    usingFallback = true;
+                }
+            }
+
+            if (preferred) {
+                utterance.voice = preferred;
+                utterance.lang = preferred.lang;
+            }
+
+            if (usingFallback) {
+                toast.info(`Voice for "${lang.toUpperCase()}" not found. Using English fallback.`, { id: "tts-fallback" });
+            }
+
+            // Utterance Error Handler (Requirement 3.5)
+            utterance.onerror = (e) => {
+                console.error("SpeechSynthesis utterance error:", e);
+                if (e.error !== "interrupted" && e.error !== "canceled") {
+                    setVoiceEnabled(false);
+                    toast.error("Voice output failed. Chatbot voice has been disabled.");
+                }
+            };
+
+            window.speechSynthesis.speak(utterance);
+        } catch (error) {
+            console.error("Speech synthesis failed with exception:", error);
+            setVoiceEnabled(false);
+            toast.error("Voice output failed. Chatbot voice has been disabled.");
+        }
     };
 
     const sendMessage = (text: string) => {
@@ -139,7 +232,7 @@ const Chatbot = () => {
         setIsTyping(true);
 
         setTimeout(() => {
-            const lang = i18n.language?.split("-")[0] || "en";
+            const lang = getCurrentLanguage();
             const botText = getResponse(text, lang);
             setMessages(prev => [...prev, { id: Date.now().toString(), text: botText, sender: "bot", isBot: true }]);
             setIsTyping(false);
@@ -155,7 +248,7 @@ const Chatbot = () => {
 
         const SpeechRecogn = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (!SpeechRecogn) {
-            alert("Voice recognition is not supported in this browser.");
+            toast.error("Voice recognition is not supported in this browser.");
             return;
         }
 
@@ -190,7 +283,13 @@ const Chatbot = () => {
         <>
             {!isOpen && (
                 <button
-                    onClick={() => setIsOpen(true)}
+                    onClick={() => {
+                        setIsOpen(true);
+                        // Speak greeting on initial open
+                        const lang = getCurrentLanguage();
+                        const welcomeText = RESPONSES.greeting[lang] || RESPONSES.greeting.en;
+                        setTimeout(() => speak(welcomeText), 500);
+                    }}
                     className="group flex h-14 items-center justify-center rounded-full bg-amber-500 text-slate-900 shadow-lg shadow-amber-500/30 transition-all duration-300 hover:scale-105 border-2 border-white/20 overflow-hidden px-3.5 hover:px-5"
                     aria-label="Open Chatbot"
                 >
@@ -203,6 +302,7 @@ const Chatbot = () => {
 
             {isOpen && (
                 <div className="fixed bottom-6 right-6 z-50 w-80 flex flex-col rounded-2xl border border-border bg-card shadow-2xl sm:w-96 h-[500px] overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 select-none">
+                    {/* Chatbot Header */}
                     <div className="flex items-center justify-between bg-primary p-4 text-primary-foreground">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
@@ -210,45 +310,45 @@ const Chatbot = () => {
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg leading-none">Sahayak</h3>
-                                <div className="flex items-center gap-1.5 mt-1">
-                                    <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-                                    <span className="text-xs font-medium opacity-90">
-                                        {SPEECH_LANG_MAP[currentLang] ? `${currentLang.toUpperCase()} Mode Active` : "Online Assistant"}
-                                    </span>
-                                </div>
                             </div>
                         </div>
-                        <button onClick={() => setIsOpen(false)} className="rounded-full p-2 hover:bg-white/20 transition-colors" aria-label="Close Chat">
-                            <X className="h-5 w-5" />
-                        </button>
-                    </div>
-
-                    {/* AI Avatar Video Area */}
-                    <div className="w-full h-40 bg-black relative overflow-hidden border-b border-border shrink-0">
-                        <img 
-                            src="https://images.unsplash.com/photo-1573164713988-8665fc963095?w=800&q=80" 
-                            alt="AI Avatar Placeholder" 
-                            className={`w-full h-full object-cover transition-transform duration-[2000ms] ${isTyping ? 'scale-110' : 'scale-100'}`}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-3">
-                            <div className="flex items-center gap-2">
-                                {isTyping ? (
-                                    <div className="flex gap-1 items-center bg-black/50 px-2 py-1 rounded-md backdrop-blur-sm">
-                                        <div className="w-1.5 h-3 bg-green-400 rounded-full animate-bounce"></div>
-                                        <div className="w-1.5 h-4 bg-green-400 rounded-full animate-bounce [animation-delay:-0.2s]"></div>
-                                        <div className="w-1.5 h-2 bg-green-400 rounded-full animate-bounce [animation-delay:-0.4s]"></div>
-                                        <span className="text-xs text-green-400 font-bold ml-1 tracking-wider">SPEAKING...</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-md backdrop-blur-sm">
-                                        <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
-                                        <span className="text-xs text-white font-bold tracking-wider">LISTENING</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="absolute top-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[10px] text-white/70 backdrop-blur-sm border border-white/10">
-                            LIVE FEED
+                        <div className="flex items-center gap-1">
+                            {/* Voice Output Toggle Button (Requirement 3.1 / 3.2 / 3.3) */}
+                            <button 
+                                onClick={() => {
+                                    const nextState = !voiceEnabled;
+                                    setVoiceEnabled(nextState);
+                                    if (nextState) {
+                                        // Resume speaking the last bot response (Requirement 3.3)
+                                        const botMessages = messages.filter(m => m.sender === "bot");
+                                        if (botMessages.length > 0) {
+                                            const lastBotMsg = botMessages[botMessages.length - 1].text;
+                                            setTimeout(() => {
+                                                speak(lastBotMsg);
+                                            }, 50);
+                                        }
+                                        toast.success("Chatbot voice enabled");
+                                    } else {
+                                        window.speechSynthesis.cancel();
+                                        toast.success("Chatbot voice disabled (Muted)");
+                                    }
+                                }} 
+                                className="rounded-full p-2 hover:bg-white/20 transition-colors"
+                                title={voiceEnabled ? "Mute Voice" : "Unmute Voice"}
+                                aria-label="Toggle chatbot voice"
+                            >
+                                {voiceEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    window.speechSynthesis.cancel();
+                                    setIsOpen(false);
+                                }} 
+                                className="rounded-full p-2 hover:bg-white/20 transition-colors" 
+                                aria-label="Close Chat"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
                         </div>
                     </div>
 
@@ -314,12 +414,6 @@ const Chatbot = () => {
                                 <Send className="h-5 w-5 ml-0.5" />
                             </button>
                         </form>
-
-                        {isListening && (
-                            <p className="text-[10px] text-center text-red-500 font-medium mt-2 animate-pulse">
-                                Listening... Speak now.
-                            </p>
-                        )}
                     </div>
                 </div>
             )}
