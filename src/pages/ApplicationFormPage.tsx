@@ -14,14 +14,20 @@ const ApplicationFormPage = () => {
 
     const state = location.state as { category?: string; service?: string } | null;
     const serviceType = state?.service?.toLowerCase() || "";
+    const isElectricityService = state?.category?.toLowerCase().includes("electric") || serviceType.includes("connection") || serviceType.includes("load");
+
+    const [localServiceType, setLocalServiceType] = useState(
+        serviceType.includes("load") ? "load extension" : "new connection"
+    );
 
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
     const [referenceId, setReferenceId] = useState("");
     const [showScanner, setShowScanner] = useState(false);
     const [isDigilockerConnecting, setIsDigilockerConnecting] = useState(false);
     const [isDigilockerVerified, setIsDigilockerVerified] = useState(false);
-    
+
     const [formData, setFormData] = useState({
         // Step 1: Personal
         name: "", aadhaar: "", phone: "",
@@ -35,6 +41,24 @@ const ApplicationFormPage = () => {
         // Step 3: Docs
         docFile: null as File | null
     });
+
+    const mockAddresses = [
+        "Zoo Road, Guwahati, Assam 781005",
+        "Ganeshguri, Guwahati, Assam 781006",
+        "Dispur, Guwahati, Assam 781005",
+        "Paltan Bazaar, Guwahati, Assam 781008",
+        "Chandmari, Guwahati, Assam 781003",
+        "Uzan Bazaar, Guwahati, Assam 781001",
+        "Six Mile, Guwahati, Assam 781022",
+        "Maligaon, Guwahati, Assam 781011",
+        "Jalukbari, Guwahati, Assam 781013",
+        "Fancy Bazaar, Guwahati, Assam 781001",
+        "Beltola, Guwahati, Assam 781028"
+    ];
+
+    const filteredAddresses = formData.address.length > 2
+        ? mockAddresses.filter(addr => addr.toLowerCase().includes(formData.address.toLowerCase()))
+        : [];
 
     const handleNext = () => setStep(prev => prev + 1);
     const handleBack = () => setStep(prev => prev - 1);
@@ -67,7 +91,7 @@ const ApplicationFormPage = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        
+
         const id = db.addApplication({
             category: state?.category || "General",
             service: state?.service || "Application",
@@ -91,7 +115,7 @@ const ApplicationFormPage = () => {
     if (step === 4) {
         return (
             <div className="min-h-screen bg-[#0f172a]/95 flex items-center justify-center p-6 backdrop-blur-sm">
-                <Receipt 
+                <Receipt
                     transactionId={referenceId}
                     type={state?.service || "Service Application"}
                     date={new Date().toLocaleDateString()}
@@ -146,7 +170,7 @@ const ApplicationFormPage = () => {
                 </div>
 
                 <div className="bg-[#1e2e50]/40 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden p-8 md:p-12">
-                    
+
                     {/* Step 1: Personal Details */}
                     {step === 1 && (
                         <div className="animate-in slide-in-from-right fade-in duration-500">
@@ -168,30 +192,38 @@ const ApplicationFormPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-white/70 ml-1">Full Legal Name</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={formData.name}
-                                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                         placeholder="Enter name as on ID"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-white/70 ml-1">Aadhaar Number</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={formData.aadhaar}
-                                        onChange={(e) => setFormData({...formData, aadhaar: e.target.value})}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            if (val.length <= 12) setFormData({ ...formData, aadhaar: val });
+                                        }}
+                                        maxLength={12}
                                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none font-mono"
                                         placeholder="XXXX-XXXX-XXXX"
                                     />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
                                     <label className="text-sm font-bold text-white/70 ml-1">Mobile Number</label>
-                                    <input 
-                                        type="tel" 
+                                    <input
+                                        type="tel"
                                         value={formData.phone}
-                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            if (val.length <= 10) setFormData({ ...formData, phone: val });
+                                        }}
+                                        maxLength={10}
                                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                         placeholder="+91 XXXXX XXXXX"
                                     />
@@ -199,9 +231,9 @@ const ApplicationFormPage = () => {
                             </div>
 
                             <div className="mt-12 flex justify-end">
-                                <button 
+                                <button
                                     onClick={handleNext}
-                                    disabled={!formData.name || !formData.aadhaar}
+                                    disabled={!formData.name || formData.aadhaar.length !== 12 || formData.phone.length !== 10}
                                     className="bg-primary text-primary-foreground px-10 py-5 rounded-2xl font-black text-lg flex items-center gap-3 shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
                                 >
                                     Proceed <ChevronRight className="h-6 w-6" />
@@ -213,29 +245,79 @@ const ApplicationFormPage = () => {
                     {/* Step 2: Service Specific Details */}
                     {step === 2 && (
                         <div className="animate-in slide-in-from-right fade-in duration-500">
-                             <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3 mb-10">
+                            <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3 mb-10">
                                 <div className="w-1.5 h-8 bg-secondary rounded-full" /> {state?.service} Details
                             </h2>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2 md:col-span-2">
+                                <div className="space-y-2 md:col-span-2 relative">
                                     <label className="text-sm font-bold text-white/70 ml-1">Service Location / Address</label>
-                                    <textarea 
+                                    <textarea
                                         rows={3}
                                         value={formData.address}
-                                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, address: e.target.value });
+                                            setShowAddressSuggestions(true);
+                                        }}
+                                        onFocus={() => setShowAddressSuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
                                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-none"
                                         placeholder="House No, Street, Landmark..."
                                     />
+                                    {showAddressSuggestions && filteredAddresses.length > 0 && (
+                                        <div className="absolute top-full left-0 w-full mt-2 bg-[#1e2e50] border border-white/10 rounded-2xl overflow-hidden shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] z-50">
+                                            {filteredAddresses.map((addr, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    onClick={() => {
+                                                        setFormData({ ...formData, address: addr });
+                                                        setShowAddressSuggestions(false);
+                                                    }}
+                                                    className="px-6 py-4 hover:bg-white/10 cursor-pointer transition-all flex items-center gap-3 border-b border-white/5 last:border-0"
+                                                >
+                                                    <MapPin className="h-5 w-5 text-primary shrink-0" />
+                                                    <span className="text-white text-sm font-medium">{addr}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
-                                {serviceType.includes("new connection") && (
+                                {isElectricityService && (
+                                    <div className="space-y-4 md:col-span-2">
+                                        <label className="text-sm font-bold text-white/70 ml-1">Select Service Type</label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <label className={`cursor-pointer border border-white/10 rounded-2xl p-4 flex items-center gap-3 transition-all ${localServiceType === 'new connection' ? 'bg-primary/20 border-primary' : 'bg-white/5 hover:bg-white/10'}`}>
+                                                <input type="radio" name="serviceType" value="new connection" checked={localServiceType === 'new connection'} onChange={(e) => setLocalServiceType(e.target.value)} className="hidden" />
+                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${localServiceType === 'new connection' ? 'border-primary' : 'border-white/30'}`}>
+                                                    {localServiceType === 'new connection' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                                                </div>
+                                                <div>
+                                                    <p className="text-white font-bold">New Connection</p>
+                                                    <p className="text-white/50 text-xs">Apply for a new electricity meter</p>
+                                                </div>
+                                            </label>
+                                            <label className={`cursor-pointer border border-white/10 rounded-2xl p-4 flex items-center gap-3 transition-all ${localServiceType === 'load extension' ? 'bg-primary/20 border-primary' : 'bg-white/5 hover:bg-white/10'}`}>
+                                                <input type="radio" name="serviceType" value="load extension" checked={localServiceType === 'load extension'} onChange={(e) => setLocalServiceType(e.target.value)} className="hidden" />
+                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${localServiceType === 'load extension' ? 'border-primary' : 'border-white/30'}`}>
+                                                    {localServiceType === 'load extension' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                                                </div>
+                                                <div>
+                                                    <p className="text-white font-bold">Load Extension</p>
+                                                    <p className="text-white/50 text-xs">Increase load for heavy appliances</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {(!isElectricityService ? serviceType.includes("new connection") : localServiceType === "new connection") && (
                                     <>
                                         <div className="space-y-2">
                                             <label className="text-sm font-bold text-white/70 ml-1">Premises Type</label>
-                                            <select 
+                                            <select
                                                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none"
-                                                onChange={(e) => setFormData({...formData, premisesType: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, premisesType: e.target.value })}
                                             >
                                                 <option className="bg-slate-900">Domestic</option>
                                                 <option className="bg-slate-900">Commercial</option>
@@ -244,9 +326,9 @@ const ApplicationFormPage = () => {
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-sm font-bold text-white/70 ml-1">Requested Load</label>
-                                            <select 
+                                            <select
                                                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none"
-                                                onChange={(e) => setFormData({...formData, requestedLoad: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, requestedLoad: e.target.value })}
                                             >
                                                 <option className="bg-slate-900">1 kW</option>
                                                 <option className="bg-slate-900">2 kW</option>
@@ -257,8 +339,8 @@ const ApplicationFormPage = () => {
                                     </>
                                 )}
 
-                                {serviceType.includes("load") && (
-                                     <>
+                                {(!isElectricityService ? serviceType.includes("load") : localServiceType === "load extension") && (
+                                    <>
                                         <div className="space-y-2">
                                             <label className="text-sm font-bold text-white/70 ml-1">Current Sanctioned Load</label>
                                             <input type="text" disabled value="2 kW" className="w-full bg-white/5 border border-white/5 opacity-50 rounded-2xl px-6 py-4 text-white" />
@@ -267,13 +349,13 @@ const ApplicationFormPage = () => {
                                             <label className="text-sm font-bold text-white/70 ml-1">Proposed New Load</label>
                                             <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none" placeholder="e.g. 5 kW" />
                                         </div>
-                                     </>
+                                    </>
                                 )}
                             </div>
 
                             <div className="mt-12 flex justify-between">
                                 <button onClick={handleBack} className="text-white/50 hover:text-white font-bold px-4 transition-all">Back</button>
-                                <button 
+                                <button
                                     onClick={handleNext}
                                     className="bg-primary text-primary-foreground px-10 py-5 rounded-2xl font-black text-lg flex items-center gap-3 shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
                                 >
@@ -286,7 +368,7 @@ const ApplicationFormPage = () => {
                     {/* Step 3: Documents */}
                     {step === 3 && (
                         <div className="animate-in slide-in-from-right fade-in duration-500">
-                             <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3 mb-10">
+                            <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3 mb-10">
                                 <div className="w-1.5 h-8 bg-secondary rounded-full" /> Document Verification
                             </h2>
 
@@ -299,7 +381,7 @@ const ApplicationFormPage = () => {
                                         <h3 className="text-xl font-bold text-white">Digital Document Locker</h3>
                                         <p className="text-white/50 mt-1">Connect your verified government locker to auto-import Identity and Address proof instantly.</p>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={handleDigilockerConnect}
                                         disabled={isDigilockerVerified || isDigilockerConnecting}
                                         className={`px-8 py-4 rounded-2xl font-black transition-all shadow-xl
@@ -310,22 +392,24 @@ const ApplicationFormPage = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-10 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
-                                        <UploadCloud className="h-10 w-10 text-white/30 mb-4" />
-                                        <p className="text-white font-bold">Manual Upload</p>
-                                        <p className="text-white/30 text-xs mt-1">PDF, JPG up to 10MB</p>
+                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-primary/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                        <UploadCloud className="h-10 w-10 text-white/30 mb-4 group-hover:text-primary transition-colors" />
+                                        <p className="text-white font-bold relative z-10">Upload ID Proof</p>
+                                        <p className="text-white/30 text-xs mt-1 text-center relative z-10">Aadhaar, PAN, Voter ID<br />(PDF, JPG up to 10MB)</p>
                                     </div>
-                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-10 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
-                                        <ScanFace className="h-10 w-10 text-white/30 mb-4" />
-                                        <p className="text-white font-bold">Physical Scan</p>
-                                        <p className="text-white/30 text-xs mt-1">Use Kiosk Scanner Bed</p>
+                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-primary/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                        <UploadCloud className="h-10 w-10 text-white/30 mb-4 group-hover:text-primary transition-colors" />
+                                        <p className="text-white font-bold relative z-10">Upload Address Proof</p>
+                                        <p className="text-white/30 text-xs mt-1 text-center relative z-10">Electricity Bill, Ration Card<br />(PDF, JPG up to 10MB)</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="mt-12 flex justify-between items-center">
                                 <button onClick={handleBack} className="text-white/50 hover:text-white font-bold px-4 transition-all">Back</button>
-                                <button 
+                                <button
                                     onClick={handleSubmit}
                                     disabled={isSubmitting}
                                     className="bg-secondary text-secondary-foreground px-12 py-5 rounded-2xl font-black text-xl flex items-center gap-3 shadow-xl shadow-secondary/40 hover:scale-105 active:scale-95 transition-all"
