@@ -21,6 +21,8 @@ import PaymentPage from "./pages/PaymentPage";
 import VirtualQueuePage from "./pages/VirtualQueuePage";
 import EditProfile from "./pages/EditProfile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import LoadChangeRequestPage from "./pages/LoadChangeRequestPage";
+import MeterComplaintPage from "./pages/MeterComplaintPage";
 
 import Chatbot from "./components/Chatbot";
 import KioskHeader from "./components/KioskHeader";
@@ -130,6 +132,8 @@ const AppContent = () => {
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/load-change" element={<LoadChangeRequestPage />} />
+            <Route path="/meter-complaint" element={<MeterComplaintPage />} />
             <Route path="/profile" element={<EditProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

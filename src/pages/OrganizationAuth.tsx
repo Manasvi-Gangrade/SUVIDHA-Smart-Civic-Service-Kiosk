@@ -5,17 +5,31 @@ import { ShieldCheck, ArrowRight, Loader2, KeyRound } from "lucide-react";
 export const OrganizationAuth = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [authMethod, setAuthMethod] = useState<"consumer" | "aadhaar">("consumer");
+  const [authMethod, setAuthMethod] = useState<"consumer" | "aadhaar" | "mobile">("consumer");
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
+  const [otp, setOtp] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API Auth verification
+    // Simulate API Auth verification and sending OTP
     setTimeout(() => {
       setIsLoading(false);
+      setShowOtp(true);
+    }, 1500);
+  };
+
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      setIsLoading(false);
+      // Simulate JWT fetch and store
+      localStorage.setItem("session_token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_token");
       // Route to the actual department portal upon success
       navigate(`/department/${id}`);
     }, 1500);
@@ -58,9 +72,9 @@ export const OrganizationAuth = () => {
             </p>
           </div>
 
-          <div className="flex bg-muted rounded-xl p-1 mb-8">
+          <div className="flex bg-muted rounded-xl p-1 mb-8 gap-1">
             <button
-              onClick={() => setAuthMethod("consumer")}
+              onClick={() => { setAuthMethod("consumer"); setShowOtp(false); setInputValue(""); }}
               className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
                 authMethod === "consumer" 
                   ? "bg-card text-foreground shadow-sm" 
@@ -70,7 +84,17 @@ export const OrganizationAuth = () => {
               Consumer ID
             </button>
             <button
-              onClick={() => setAuthMethod("aadhaar")}
+              onClick={() => { setAuthMethod("mobile"); setShowOtp(false); setInputValue(""); }}
+              className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
+                authMethod === "mobile" 
+                  ? "bg-card text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Mobile No
+            </button>
+            <button
+              onClick={() => { setAuthMethod("aadhaar"); setShowOtp(false); setInputValue(""); }}
               className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
                 authMethod === "aadhaar" 
                   ? "bg-card text-foreground shadow-sm" 
@@ -81,19 +105,20 @@ export const OrganizationAuth = () => {
             </button>
           </div>
 
+          {!showOtp ? (
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-foreground mb-2">
-                {authMethod === "consumer" ? "Enter 10-digit Consumer Number" : "Enter 12-digit Aadhaar Number"}
+                {authMethod === "consumer" ? "Enter 10-digit Consumer ID" : authMethod === "mobile" ? "Enter 10-digit Mobile Number" : "Enter 12-digit Aadhaar Number"}
               </label>
               <div className="relative">
                 <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
                 <input
                   type="text"
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value.replace(/\D/g, '').slice(0, authMethod === "consumer" ? 10 : 12))}
+                  onChange={(e) => setInputValue(e.target.value.replace(/\D/g, '').slice(0, authMethod === "aadhaar" ? 12 : 10))}
                   className="kiosk-touch-target w-full rounded-2xl border-2 border-input bg-background pl-14 pr-4 py-5 text-2xl tracking-[0.2em] font-mono focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all"
-                  placeholder={authMethod === "consumer" ? "1234567890" : "XXXX XXXX XXXX"}
+                  placeholder={authMethod === "aadhaar" ? "XXXX XXXX XXXX" : "1234567890"}
                   required
                 />
               </div>
@@ -101,20 +126,59 @@ export const OrganizationAuth = () => {
 
             <button
               type="submit"
-              disabled={isLoading || inputValue.length < (authMethod === "consumer" ? 10 : 12)}
+              disabled={isLoading || inputValue.length < 10}
               className="kiosk-touch-target w-full flex items-center justify-center gap-3 bg-primary text-primary-foreground py-5 rounded-2xl text-xl font-bold transition-all hover:brightness-110 disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-primary/20"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="h-6 w-6 animate-spin" /> Authenticating...
+                  <Loader2 className="h-6 w-6 animate-spin" /> Sending OTP...
                 </>
               ) : (
                 <>
-                  Verify & Proceed <ArrowRight className="h-6 w-6" />
+                  Request OTP <ArrowRight className="h-6 w-6" />
                 </>
               )}
             </button>
           </form>
+          ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-6 animate-in slide-in-from-right fade-in duration-500">
+            <div>
+              <label className="block text-sm font-bold text-foreground mb-2 text-center">
+                Enter 4 or 6-digit Secure OTP
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="kiosk-touch-target w-full rounded-2xl border-2 border-input bg-background px-4 py-5 text-4xl tracking-[0.5em] font-mono text-center focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all"
+                  placeholder="------"
+                  autoFocus
+                  required
+                />
+              </div>
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                OTP sent to {authMethod === "consumer" ? "your registered number" : authMethod === "mobile" ? "your mobile number" : "Aadhaar linked number"}
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || otp.length < 4}
+              className="kiosk-touch-target w-full flex items-center justify-center gap-3 bg-primary text-primary-foreground py-5 rounded-2xl text-xl font-bold transition-all hover:brightness-110 disabled:opacity-50 disabled:pointer-events-none shadow-xl shadow-primary/20"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin" /> Verifying...
+                </>
+              ) : (
+                <>
+                  Verify & Secure Login <ArrowRight className="h-6 w-6" />
+                </>
+              )}
+            </button>
+          </form>
+          )}
           
           <div className="mt-8 text-center">
             <button 

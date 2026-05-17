@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PlusCircle, FileText, CheckCircle2, ChevronRight, User, Home, UploadCloud, ScanFace, FileKey, ShieldCheck, Loader2, Gauge, MapPin, Zap } from "lucide-react";
+import { PlusCircle, FileText, CheckCircle2, ChevronRight, User, Home, UploadCloud, ScanFace, FileKey, ShieldCheck, Loader2, Gauge, MapPin, Zap, QrCode } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ScannerOverlay from "../components/ScannerOverlay";
@@ -30,11 +30,12 @@ const ApplicationFormPage = () => {
 
     const [formData, setFormData] = useState({
         // Step 1: Personal
-        name: "", aadhaar: "", phone: "",
+        firstName: "", lastName: "", fatherHusbandName: "", aadhaar: "", phone: "",
         // Step 2: Service Specific
         address: "", pincode: "", city: "Guwahati",
-        premisesType: "Domestic",
-        requestedLoad: "2 kW",
+        occupancyType: "Owned",
+        connectionCategory: "Domestic",
+        requestedLoad: "",
         currentLoad: "2 kW",
         extensionReason: "",
         shiftingReason: "",
@@ -66,7 +67,7 @@ const ApplicationFormPage = () => {
     const handleVoiceData = (data: any) => {
         setFormData(prev => ({
             ...prev,
-            ...(data.name && { name: data.name }),
+            ...(data.name && { firstName: data.name.split(' ')[0] || '', lastName: data.name.split(' ').slice(1).join(' ') || '' }),
             ...(data.phone && { phone: data.phone }),
             ...(data.aadhaar && { aadhaar: data.aadhaar }),
             ...(data.pincode && { pincode: data.pincode })
@@ -95,7 +96,7 @@ const ApplicationFormPage = () => {
         const id = db.addApplication({
             category: state?.category || "General",
             service: state?.service || "Application",
-            name: formData.name,
+            name: `${formData.firstName} ${formData.lastName}`.trim(),
             aadhaar: formData.aadhaar,
             phone: formData.phone,
             city: formData.city,
@@ -119,13 +120,15 @@ const ApplicationFormPage = () => {
                     transactionId={referenceId}
                     type={state?.service || "Service Application"}
                     date={new Date().toLocaleDateString()}
-                    userName={formData.name}
+                    userName={`${formData.firstName} ${formData.lastName}`.trim()}
                     details={[
                         { label: "Category", value: state?.category || "Civic" },
                         { label: "Phone", value: formData.phone },
-                        { label: "Location", value: formData.city },
-                        ...(serviceType.includes("load") ? [{ label: "New Load", value: formData.requestedLoad }] : []),
-                        { label: "Status", value: "Awaiting Processing" }
+                        { label: "Address", value: formData.city },
+                        ...(formData.connectionCategory ? [{ label: "Connection Type", value: formData.connectionCategory }] : []),
+                        ...(formData.occupancyType ? [{ label: "Occupancy", value: formData.occupancyType }] : []),
+                        ...(formData.requestedLoad ? [{ label: "Sanctioned Load", value: `${formData.requestedLoad} kW` }] : []),
+                        { label: "Status", value: "Under Review" }
                     ]}
                     onClose={() => navigate("/")}
                 />
@@ -191,13 +194,33 @@ const ApplicationFormPage = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-white/70 ml-1">Full Legal Name</label>
+                                    <label className="text-sm font-bold text-white/70 ml-1">First Name</label>
                                     <input
                                         type="text"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        value={formData.firstName}
+                                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
                                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                                        placeholder="Enter name as on ID"
+                                        placeholder="First Name"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-white/70 ml-1">Last Name</label>
+                                    <input
+                                        type="text"
+                                        value={formData.lastName}
+                                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                                        placeholder="Last Name"
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-sm font-bold text-white/70 ml-1">Father / Mother Name</label>
+                                    <input
+                                        type="text"
+                                        value={formData.fatherHusbandName}
+                                        onChange={(e) => setFormData({ ...formData, fatherHusbandName: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                                        placeholder="Enter Father or Mother Name"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -233,7 +256,7 @@ const ApplicationFormPage = () => {
                             <div className="mt-12 flex justify-end">
                                 <button
                                     onClick={handleNext}
-                                    disabled={!formData.name || formData.aadhaar.length !== 12 || formData.phone.length !== 10}
+                                    disabled={!formData.firstName || !formData.lastName || formData.aadhaar.length !== 12 || formData.phone.length !== 10}
                                     className="bg-primary text-primary-foreground px-10 py-5 rounded-2xl font-black text-lg flex items-center gap-3 shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
                                 >
                                     Proceed <ChevronRight className="h-6 w-6" />
@@ -283,74 +306,39 @@ const ApplicationFormPage = () => {
                                     )}
                                 </div>
 
-                                {isElectricityService && (
-                                    <div className="space-y-4 md:col-span-2">
-                                        <label className="text-sm font-bold text-white/70 ml-1">Select Service Type</label>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <label className={`cursor-pointer border border-white/10 rounded-2xl p-4 flex items-center gap-3 transition-all ${localServiceType === 'new connection' ? 'bg-primary/20 border-primary' : 'bg-white/5 hover:bg-white/10'}`}>
-                                                <input type="radio" name="serviceType" value="new connection" checked={localServiceType === 'new connection'} onChange={(e) => setLocalServiceType(e.target.value)} className="hidden" />
-                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${localServiceType === 'new connection' ? 'border-primary' : 'border-white/30'}`}>
-                                                    {localServiceType === 'new connection' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
-                                                </div>
-                                                <div>
-                                                    <p className="text-white font-bold">New Connection</p>
-                                                    <p className="text-white/50 text-xs">Apply for a new electricity meter</p>
-                                                </div>
-                                            </label>
-                                            <label className={`cursor-pointer border border-white/10 rounded-2xl p-4 flex items-center gap-3 transition-all ${localServiceType === 'load extension' ? 'bg-primary/20 border-primary' : 'bg-white/5 hover:bg-white/10'}`}>
-                                                <input type="radio" name="serviceType" value="load extension" checked={localServiceType === 'load extension'} onChange={(e) => setLocalServiceType(e.target.value)} className="hidden" />
-                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${localServiceType === 'load extension' ? 'border-primary' : 'border-white/30'}`}>
-                                                    {localServiceType === 'load extension' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
-                                                </div>
-                                                <div>
-                                                    <p className="text-white font-bold">Load Extension</p>
-                                                    <p className="text-white/50 text-xs">Increase load for heavy appliances</p>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {(!isElectricityService ? serviceType.includes("new connection") : localServiceType === "new connection") && (
-                                    <>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white/70 ml-1">Premises Type</label>
-                                            <select
-                                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none"
-                                                onChange={(e) => setFormData({ ...formData, premisesType: e.target.value })}
-                                            >
-                                                <option className="bg-slate-900">Domestic</option>
-                                                <option className="bg-slate-900">Commercial</option>
-                                                <option className="bg-slate-900">Industrial</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white/70 ml-1">Requested Load</label>
-                                            <select
-                                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none"
-                                                onChange={(e) => setFormData({ ...formData, requestedLoad: e.target.value })}
-                                            >
-                                                <option className="bg-slate-900">1 kW</option>
-                                                <option className="bg-slate-900">2 kW</option>
-                                                <option className="bg-slate-900">5 kW</option>
-                                                <option className="bg-slate-900">10 kW+</option>
-                                            </select>
-                                        </div>
-                                    </>
-                                )}
-
-                                {(!isElectricityService ? serviceType.includes("load") : localServiceType === "load extension") && (
-                                    <>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white/70 ml-1">Current Sanctioned Load</label>
-                                            <input type="text" disabled value="2 kW" className="w-full bg-white/5 border border-white/5 opacity-50 rounded-2xl px-6 py-4 text-white" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white/70 ml-1">Proposed New Load</label>
-                                            <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none" placeholder="e.g. 5 kW" />
-                                        </div>
-                                    </>
-                                )}
+                                {/* New Connection specific fields — always shown here */}
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-white/70 ml-1">Type of Occupancy</label>
+                                    <select
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none"
+                                        value={formData.occupancyType}
+                                        onChange={(e) => setFormData({ ...formData, occupancyType: e.target.value })}
+                                    >
+                                        <option className="bg-slate-900">Owned</option>
+                                        <option className="bg-slate-900">Rented</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-white/70 ml-1">Connection Category</label>
+                                    <select
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none"
+                                        value={formData.connectionCategory}
+                                        onChange={(e) => setFormData({ ...formData, connectionCategory: e.target.value })}
+                                    >
+                                        <option className="bg-slate-900">Domestic</option>
+                                        <option className="bg-slate-900">Commercial</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-sm font-bold text-white/70 ml-1">Sanctioned Load Requirement (kW)</label>
+                                    <input 
+                                        type="text"
+                                        value={formData.requestedLoad}
+                                        onChange={(e) => setFormData({ ...formData, requestedLoad: e.target.value.replace(/[^0-9.]/g, '') })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none"
+                                        placeholder="Enter load in kW (e.g. 5)"
+                                    />
+                                </div>
                             </div>
 
                             <div className="mt-12 flex justify-between">
@@ -392,17 +380,19 @@ const ApplicationFormPage = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer relative overflow-hidden group">
+                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer relative overflow-hidden group text-center">
                                         <div className="absolute inset-0 bg-primary/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                                        <UploadCloud className="h-10 w-10 text-white/30 mb-4 group-hover:text-primary transition-colors" />
-                                        <p className="text-white font-bold relative z-10">Upload ID Proof</p>
-                                        <p className="text-white/30 text-xs mt-1 text-center relative z-10">Aadhaar, PAN, Voter ID<br />(PDF, JPG up to 10MB)</p>
+                                        <QrCode className="h-12 w-12 text-white/30 mb-4 group-hover:text-primary transition-colors" />
+                                        <p className="text-white font-bold relative z-10">Scan QR to Upload Identity Proof</p>
+                                        <p className="text-white/40 text-xs mt-2 relative z-10 font-medium leading-relaxed">Aadhaar / PAN<br />(Secure Mobile Upload)</p>
+                                        <button className="mt-6 bg-white/10 px-6 py-2 rounded-xl text-xs font-bold text-white hover:bg-primary transition-colors shadow-sm">Show QR Code</button>
                                     </div>
-                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer relative overflow-hidden group">
+                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer relative overflow-hidden group text-center">
                                         <div className="absolute inset-0 bg-primary/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                                        <UploadCloud className="h-10 w-10 text-white/30 mb-4 group-hover:text-primary transition-colors" />
-                                        <p className="text-white font-bold relative z-10">Upload Address Proof</p>
-                                        <p className="text-white/30 text-xs mt-1 text-center relative z-10">Electricity Bill, Ration Card<br />(PDF, JPG up to 10MB)</p>
+                                        <QrCode className="h-12 w-12 text-white/30 mb-4 group-hover:text-primary transition-colors" />
+                                        <p className="text-white font-bold relative z-10">Scan QR to Upload Ownership Proof</p>
+                                        <p className="text-white/40 text-xs mt-2 relative z-10 font-medium leading-relaxed">Registry Papers / Tax Receipt<br />(Secure Mobile Upload)</p>
+                                        <button className="mt-6 bg-white/10 px-6 py-2 rounded-xl text-xs font-bold text-white hover:bg-primary transition-colors shadow-sm">Show QR Code</button>
                                     </div>
                                 </div>
                             </div>
@@ -428,7 +418,7 @@ const ApplicationFormPage = () => {
                     scanType="aadhaar"
                     onClose={() => setShowScanner(false)}
                     onSuccess={(data) => {
-                        setFormData(prev => ({ ...prev, name: data.name, aadhaar: data.aadhaar, address: data.address }));
+                        setFormData(prev => ({ ...prev, firstName: data.name?.split(' ')[0] || "", lastName: data.name?.split(' ').slice(1).join(' ') || "", aadhaar: data.aadhaar, address: data.address }));
                         setShowScanner(false);
                     }}
                 />

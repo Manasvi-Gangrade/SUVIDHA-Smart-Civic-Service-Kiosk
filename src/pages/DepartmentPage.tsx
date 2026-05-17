@@ -7,7 +7,7 @@ import {
   Zap, Flame, Building2, Droplets, Trash2, FileText, 
   PlusCircle, Receipt, AlertTriangle, Gauge, PlugZap, 
   ShieldAlert, Truck, Phone, CloudSun, Lock, Volume2, 
-  ChevronDown, Globe, Search 
+  ChevronDown, Globe, Search, User, Activity 
 } from "lucide-react";
 import { DepartmentExtras } from "@/components/DepartmentExtras";
 
@@ -182,13 +182,23 @@ const DepartmentPage = () => {
                 return (
                   <div 
                     key={index}
-                    onClick={() => navigate(route, {
-                      state: {
-                        category: t(titleKey),
-                        service: t(`dept.${id}.s${index + 1}`),
-                        description: t(`dept.${id}.s${index + 1}`)
+                    onClick={() => {
+                      if (service.title === "Load Change Request") {
+                        navigate('/load-change');
+                        return;
                       }
-                    })}
+                      if (service.title === "Meter-Related Complaints") {
+                        navigate('/meter-complaint');
+                        return;
+                      }
+                      navigate(route, {
+                        state: {
+                          category: t(titleKey),
+                          service: t(`dept.${id}.s${index + 1}`),
+                          description: t(`dept.${id}.s${index + 1}`)
+                        }
+                      });
+                    }}
                     className="flex items-center gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group hover:-translate-y-1"
                   >
                     <div className="h-12 w-12 rounded-2xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -201,6 +211,32 @@ const DepartmentPage = () => {
                   </div>
                 );
               })}
+
+              <div 
+                onClick={() => navigate('/track')}
+                className="flex items-center gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group hover:-translate-y-1"
+              >
+                <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Activity className="h-6 w-6 text-indigo-500" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 leading-tight">Track Requests</h4>
+                  <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">STATUS OF APPLICATIONS & COMPLAINTS</p>
+                </div>
+              </div>
+
+              <div 
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group hover:-translate-y-1"
+              >
+                <div className="h-12 w-12 rounded-2xl bg-teal-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <User className="h-6 w-6 text-teal-500" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 leading-tight">Update Profile</h4>
+                  <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">MANAGE PERSONAL DETAILS</p>
+                </div>
+              </div>
             </div>
 
             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
