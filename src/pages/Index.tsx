@@ -92,9 +92,9 @@ const Index = () => {
               </span>
             </div>
 
-            <h1 className="flex flex-col text-[4rem] lg:text-[5.5rem] xl:text-[6.5rem] font-[900] leading-[0.9] tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-slate-400 drop-shadow-2xl uppercase">
+            <h1 className="flex flex-col text-[4rem] lg:text-[5.5rem] xl:text-[6.5rem] font-[900] leading-[1.15] tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-slate-400 drop-shadow-2xl uppercase">
                 <span>SUVIDHA</span>
-                <span className="text-[1.4rem] lg:text-[1.8rem] xl:text-[2.1rem] leading-[1.2] text-[#38bdf8] drop-shadow-lg tracking-normal font-bold mt-1">
+                <span className="text-[1.4rem] lg:text-[1.8rem] xl:text-[2.1rem] leading-[1.45] text-[#38bdf8] drop-shadow-lg tracking-normal font-bold mt-4">
                     Smart Urban Virtual Interactive<br />
                     Digital Helpdesk Assistant
                 </span>

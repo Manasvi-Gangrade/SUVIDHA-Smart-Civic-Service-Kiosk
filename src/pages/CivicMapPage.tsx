@@ -54,21 +54,34 @@ const CivicMapPage = () => {
     const [activeCenter, setActiveCenter] = useState<[number, number]>(center);
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans overflow-hidden relative">
-            <div className="absolute inset-0 bg-[#0f172a] pointer-events-none" />
+        <div className="min-h-screen bg-[#192e59] text-white flex flex-col font-sans overflow-hidden relative">
+            
+            {/* 🎥 THE DYNAMIC BACKGROUND VIDEO */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover opacity-15 mix-blend-overlay"
+                >
+                    <source src="/videos/14904045_3840_2160_30fps.mp4" type="video/mp4" />
+                </video>
+                <div className="absolute inset-0 bg-gradient-to-b from-[#192e59]/80 via-[#192e59]/95 to-[#192e59]" />
+            </div>
 
             {/* Header */}
-            <div className="relative z-10 flex items-center justify-between p-6 border-b border-white/10 bg-black/40 backdrop-blur-md shadow-xl">
+            <div className="relative z-10 flex items-center justify-between p-6 border-b border-white/10 bg-[#122242]/85 backdrop-blur-md shadow-xl">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate(-1)} className="p-3 hover:bg-white/10 rounded-full transition-colors">
+                    <button onClick={() => navigate(-1)} className="p-3 bg-[#FD8008] hover:bg-[#e67000] border border-[#FD8008] text-white rounded-xl transition-all shadow-[0_4px_12px_rgba(253,128,8,0.3)] hover:scale-105 active:scale-95">
                         <ArrowLeft className="w-6 h-6" />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-black tracking-widest text-emerald-400 uppercase">Live Map Radar</h1>
-                        <p className="text-sm text-slate-400">Interactive geographic tracking of civic centers</p>
+                        <h1 className="text-2xl font-black tracking-widest text-[#FD8008] uppercase">SUVIDHA GIS RADAR</h1>
+                        <p className="text-sm text-blue-200">Interactive geographic tracking of civic centers</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                <div className="flex items-center gap-2 bg-[#FD8008]/10 text-[#FD8008] px-4 py-2 rounded-full border border-[#FD8008]/30 shadow-[0_0_15px_rgba(253,128,8,0.3)]">
                     <Crosshair className="w-4 h-4 animate-pulse" />
                     <span className="text-sm font-bold tracking-wider">SYSTEM ACTIVE</span>
                 </div>
@@ -77,25 +90,25 @@ const CivicMapPage = () => {
             <div className="flex-1 flex p-6 gap-6 relative z-10">
                 {/* Sidebar Controls */}
                 <div className="w-80 flex flex-col gap-4">
-                    <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-5 backdrop-blur-md shadow-xl">
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><MapPin className="h-5 w-5 text-emerald-400" /> Focus Target</h2>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-md shadow-xl">
+                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><MapPin className="h-5 w-5 text-[#FD8008]" /> Focus Target</h2>
                         <div className="space-y-3">
                             <button
                                 onClick={() => setActiveCenter(center)}
-                                className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm font-semibold flex items-center justify-between"
+                                className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 transition-colors text-sm font-semibold flex items-center justify-between"
                             >
                                 Reset to Center
-                                <Crosshair className="h-4 w-4 text-emerald-400" />
+                                <Crosshair className="h-4 w-4 text-[#FD8008]" />
                             </button>
                             {mapNodes.map(node => (
                                 <button
                                     key={node.id}
                                     onClick={() => setActiveCenter([node.lat, node.lng])}
-                                    className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm relative overflow-hidden group"
+                                    className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 transition-colors text-sm relative overflow-hidden group"
                                 >
                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-opacity-80" style={{ backgroundColor: node.color }} />
-                                    <div className="font-bold text-slate-200">{node.type}</div>
-                                    <div className="text-slate-400 text-xs mt-1 truncate">{node.label}</div>
+                                    <div className="font-bold text-white">{node.type}</div>
+                                    <div className="text-slate-300 text-xs mt-1 truncate">{node.label}</div>
                                 </button>
                             ))}
                         </div>
@@ -147,7 +160,7 @@ const CivicMapPage = () => {
 
                     {/* Decorative radar sweep overlay */}
                     <div className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden z-10 opacity-30 mix-blend-screen">
-                        <div className="absolute top-1/2 left-1/2 w-[200%] h-[200%] origin-top-left -translate-x-1/2 -translate-y-1/2" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, rgba(52,211,153,0.1) 60deg, rgba(52,211,153,0.4) 90deg, transparent 90deg)', animation: 'spin 4s linear infinite' }} />
+                        <div className="absolute top-1/2 left-1/2 w-[200%] h-[200%] origin-top-left -translate-x-1/2 -translate-y-1/2" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, rgba(253,128,8,0.1) 60deg, rgba(253,128,8,0.4) 90deg, transparent 90deg)', animation: 'spin 4s linear infinite' }} />
                     </div>
                     <style>{`
             .custom-popup .leaflet-popup-content-wrapper { background: rgba(255,255,255,0.9); border-radius: 8px; }

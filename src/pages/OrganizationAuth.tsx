@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ShieldCheck, ArrowRight, Loader2, Smartphone, Fingerprint, QrCode, RefreshCw, X, ArrowLeft } from "lucide-react";
 import { AadhaarScanner } from "../components/AadhaarScanner";
 import { toast } from "sonner";
@@ -7,6 +7,18 @@ import { toast } from "sonner";
 export const OrganizationAuth = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get redirection target from state
+  const redirectState = location.state as {
+    redirectTo?: string;
+    serviceState?: {
+      category: string;
+      service: string;
+      description: string;
+    };
+  } | null;
+
   const [authMethod, setAuthMethod] = useState<"aadhaar" | "mobile" | "digilocker">("aadhaar");
   const [isLoading, setIsLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -51,7 +63,24 @@ export const OrganizationAuth = () => {
     setTimeout(() => {
       setIsLoading(false);
       toast.success("Authentication Successful");
-      navigate(`/department/${id}`);
+      if (redirectState && redirectState.redirectTo) {
+        navigate(redirectState.redirectTo, { state: redirectState.serviceState });
+      } else {
+        navigate(`/department/${id}`);
+      }
+    }, 1500);
+  };
+
+  const handleDigiLockerLogin = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      toast.success("DigiLocker Authentication Successful!");
+      if (redirectState && redirectState.redirectTo) {
+        navigate(redirectState.redirectTo, { state: redirectState.serviceState });
+      } else {
+        navigate(`/department/${id}`);
+      }
     }, 1500);
   };
 
@@ -186,8 +215,17 @@ export const OrganizationAuth = () => {
                     <img src="https://img.etimg.com/thumb/msid-70764789,width-1200,height-900,resizemode-4,imgsize-29367/digilocker.jpg" alt="DigiLocker" className="h-16 mx-auto mb-4 rounded-xl grayscale opacity-80" />
                     <h3 className="text-[#192e59] font-bold text-lg">Login with DigiLocker</h3>
                     <p className="text-slate-500 text-sm mb-6">Access your verified documents instantly</p>
-                    <button type="button" className="bg-[#0066FF] hover:bg-[#0055DD] text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 mx-auto transition-all shadow-lg shadow-[#0066FF]/20">
-                      Sign In to DigiLocker <ArrowRight className="w-4 h-4" />
+                    <button 
+                      type="button" 
+                      onClick={handleDigiLockerLogin}
+                      disabled={isLoading}
+                      className="bg-[#0066FF] hover:bg-[#0055DD] text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 mx-auto transition-all shadow-lg shadow-[#0066FF]/20 disabled:opacity-50"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>Sign In to DigiLocker <ArrowRight className="w-4 h-4" /></>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -261,4 +299,3 @@ export const OrganizationAuth = () => {
     </div>
   );
 };
-

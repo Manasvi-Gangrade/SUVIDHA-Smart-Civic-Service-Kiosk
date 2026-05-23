@@ -11,6 +11,36 @@ export const AadhaarScanner = ({ onSuccess, onCancel }: AadhaarScannerProps) => 
     const [status, setStatus] = useState<"initializing" | "scanning" | "error">("initializing");
     const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
+    const handleCancel = async () => {
+        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+            try {
+                await html5QrCodeRef.current.stop();
+            } catch (err) {
+                console.error("Failed to stop scanner on cancel", err);
+            }
+        }
+        const el = document.getElementById("reader");
+        if (el) el.innerHTML = "";
+        setTimeout(() => {
+            onCancel();
+        }, 50);
+    };
+
+    const handleScanSuccess = async (data: string) => {
+        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+            try {
+                await html5QrCodeRef.current.stop();
+            } catch (err) {
+                console.error("Failed to stop scanner on success", err);
+            }
+        }
+        const el = document.getElementById("reader");
+        if (el) el.innerHTML = "";
+        setTimeout(() => {
+            onSuccess(data);
+        }, 50);
+    };
+
     useEffect(() => {
         let html5QrCode: Html5Qrcode | null = null;
         
@@ -26,7 +56,7 @@ export const AadhaarScanner = ({ onSuccess, onCancel }: AadhaarScannerProps) => 
                     { facingMode: "user" },
                     { fps: 10, qrbox: { width: 280, height: 280 } },
                     (decodedText) => {
-                        stopAndSuccess(decodedText);
+                        handleScanSuccess(decodedText);
                     },
                     () => {}
                 );
@@ -37,13 +67,6 @@ export const AadhaarScanner = ({ onSuccess, onCancel }: AadhaarScannerProps) => 
             }
         };
 
-        const stopAndSuccess = async (data: string) => {
-            if (html5QrCode && html5QrCode.isScanning) {
-                await html5QrCode.stop().catch(() => {});
-            }
-            onSuccess(data);
-        };
-
         const timer = setTimeout(startScanner, 300);
 
         return () => {
@@ -51,7 +74,7 @@ export const AadhaarScanner = ({ onSuccess, onCancel }: AadhaarScannerProps) => 
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().catch(() => {}).finally(() => {
                     const el = document.getElementById("reader");
-                    if (el) el.innerHTML = ""; // Force clear DOM to prevent React crash
+                    if (el) el.innerHTML = "";
                 });
             } else {
                 const el = document.getElementById("reader");
@@ -75,7 +98,7 @@ export const AadhaarScanner = ({ onSuccess, onCancel }: AadhaarScannerProps) => 
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">AI-Powered Identity Verification</p>
                         </div>
                     </div>
-                    <button onClick={onCancel} className="h-14 w-14 flex items-center justify-center hover:bg-slate-100 rounded-full transition-all">
+                    <button onClick={handleCancel} className="h-14 w-14 flex items-center justify-center hover:bg-slate-100 rounded-full transition-all">
                         <X className="h-7 w-7 text-slate-400" />
                     </button>
                 </div>
@@ -125,7 +148,7 @@ export const AadhaarScanner = ({ onSuccess, onCancel }: AadhaarScannerProps) => 
 
                         <div className="pt-6 border-t border-slate-100">
                              <button 
-                                onClick={() => onSuccess("<?xml version=\"1.0\" encoding=\"UTF-8\"?><PrintLetterBarcodeData uid=\"987654321012\" name=\"MANASVI GANGRADE\" gender=\"M\" yob=\"2004\" co=\"S/O: ...\" vtc=\"...\" po=\"...\" dist=\"...\" state=\"...\" pc=\"...\"/>")}
+                                onClick={() => handleScanSuccess("<?xml version=\"1.0\" encoding=\"UTF-8\"?><PrintLetterBarcodeData uid=\"987654321012\" name=\"MANASVI GANGRADE\" gender=\"M\" yob=\"2004\" co=\"S/O: ...\" vtc=\"...\" po=\"...\" dist=\"...\" state=\"...\" pc=\"...\"/>")}
                                 className="w-full py-5 bg-indigo-50 text-indigo-600 font-black rounded-2xl hover:bg-indigo-100 transition-all uppercase text-[11px] tracking-widest border-2 border-dashed border-indigo-200 flex items-center justify-center gap-3 shadow-sm active:scale-95"
                             >
                                 <Camera className="h-4 w-4" /> Use Virtual Scan (Demo Mode)

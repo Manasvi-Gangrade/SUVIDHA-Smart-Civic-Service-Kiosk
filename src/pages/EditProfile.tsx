@@ -54,7 +54,7 @@ const EditProfile = () => {
             {/* Header */}
             <div className="border-b border-white/10 bg-[#1e2e50] py-12">
                 <div className="container flex items-center gap-6">
-                    <button onClick={() => navigate(-1)} className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+                    <button onClick={() => navigate(-1)} className="p-4 rounded-2xl bg-[#FD8008] hover:bg-[#e67000] border border-[#FD8008] text-white transition-all shadow-[0_4px_12px_rgba(253,128,8,0.3)] hover:scale-105 active:scale-95">
                         <ArrowLeft className="h-8 w-8 text-white" />
                     </button>
                     <div>

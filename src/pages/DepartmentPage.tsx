@@ -2,10 +2,9 @@ import ServiceItem from "@/components/ServiceItem";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
-import QueueToken from "@/components/QueueToken";
 import { 
   PlusCircle, Receipt, AlertTriangle, Gauge, PlugZap, 
-  ShieldAlert, Truck, Phone, CloudSun, Lock, Globe, ChevronRight, Building2, FileText
+  ShieldAlert, Truck, Phone, ArrowLeft, Building2, ChevronRight, FileText
 } from "lucide-react";
 import { DepartmentExtras } from "@/components/DepartmentExtras";
 
@@ -80,209 +79,305 @@ const departmentData: Record<string, {
   },
 };
 
+// 🏛️ DYNAMIC THEME PALETTE RESOLVER
+const themeColors: Record<
+  string,
+  {
+    primary: string;
+    gradientFrom: string;
+    gradientTo: string;
+    lightBg: string;
+    iconBg: string;
+    borderFocus: string;
+    video: string;
+    marqueeImages: string[];
+  }
+> = {
+  electricity: {
+    primary: "#FF9933",
+    gradientFrom: "from-[#FF9933]",
+    gradientTo: "to-[#cc7a29]",
+    lightBg: "bg-amber-50",
+    iconBg: "bg-[#FF9933]/10 text-[#FF9933]",
+    borderFocus: "focus:border-[#FF9933] focus:ring-[#FF9933]/15",
+    video: "/videos/electricity.mp4",
+    marqueeImages: [
+      "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1548549303-7cfbbd5e7146?w=600&auto=format&fit=crop&q=80"
+    ]
+  },
+  gas: {
+    primary: "#E3000F",
+    gradientFrom: "from-[#E3000F]",
+    gradientTo: "to-[#b3000c]",
+    lightBg: "bg-red-50",
+    iconBg: "bg-[#E3000F]/10 text-[#E3000F]",
+    borderFocus: "focus:border-[#E3000F] focus:ring-[#E3000F]/15",
+    video: "/videos/gas.mp4",
+    marqueeImages: [
+      "https://images.unsplash.com/photo-1581094288338-2314dddb7ecc?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1526253038957-bbe54e05968e?w=600&auto=format&fit=crop&q=80"
+    ]
+  },
+  municipal: {
+    primary: "#008080",
+    gradientFrom: "from-[#008080]",
+    gradientTo: "to-[#005c5c]",
+    lightBg: "bg-teal-50",
+    iconBg: "bg-[#008080]/10 text-[#008080]",
+    borderFocus: "focus:border-[#008080] focus:ring-[#008080]/15",
+    video: "/videos/Municipal.mp4",
+    marqueeImages: [
+      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80"
+    ]
+  },
+  water: {
+    primary: "#0066FF",
+    gradientFrom: "from-[#0066FF]",
+    gradientTo: "to-[#0052cc]",
+    lightBg: "bg-blue-50",
+    iconBg: "bg-[#0066FF]/10 text-[#0066FF]",
+    borderFocus: "focus:border-[#0066FF] focus:ring-[#0066FF]/15",
+    video: "/videos/Water.mp4",
+    marqueeImages: [
+      "https://images.unsplash.com/photo-1581093588401-f3c22d75ba21?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1548826873-e82943e248b5?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1488330890490-c408188e25da?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1482862549707-f63cb32c5fd9?w=600&auto=format&fit=crop&q=80"
+    ]
+  },
+  waste: {
+    primary: "#138808",
+    gradientFrom: "from-[#138808]",
+    gradientTo: "to-[#0f6c06]",
+    lightBg: "bg-emerald-50",
+    iconBg: "bg-[#138808]/10 text-[#138808]",
+    borderFocus: "focus:border-[#138808] focus:ring-[#138808]/15",
+    video: "/videos/Waste Management.mp4",
+    marqueeImages: [
+      "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1605600611283-cdeb34440c9c?w=600&auto=format&fit=crop&q=80"
+    ]
+  },
+  property: {
+    primary: "#4F46E5",
+    gradientFrom: "from-[#4F46E5]",
+    gradientTo: "to-[#3b32c4]",
+    lightBg: "bg-indigo-50",
+    iconBg: "bg-[#4F46E5]/10 text-[#4F46E5]",
+    borderFocus: "focus:border-[#4F46E5] focus:ring-[#4F46E5]/15",
+    video: "/videos/Property.mp4",
+    marqueeImages: [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&auto=format&fit=crop&q=80"
+    ]
+  },
+};
+
+// 🌈 MULTI-COLOR SOLID VIBRANT THEMES FOR EACH SQUARE ACCORDING TO REFERENCE LAYOUT!
+const squareColors = [
+  "bg-[#FF9933] shadow-[#FF9933]/20 hover:shadow-[#FF9933]/40", // saffron gold
+  "bg-[#0066FF] shadow-[#0066FF]/20 hover:shadow-[#0066FF]/40", // royal blue
+  "bg-[#138808] shadow-[#138808]/20 hover:shadow-[#138808]/40", // forest green
+  "bg-[#E3000F] shadow-[#E3000F]/20 hover:shadow-[#E3000F]/40", // red
+  "bg-[#8B5CF6] shadow-[#8B5CF6]/20 hover:shadow-[#8B5CF6]/40", // purple
+  "bg-[#008080] shadow-[#008080]/20 hover:shadow-[#008080]/40", // teal
+];
+
 const DepartmentPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [token, setToken] = useState<string | null>(null);
-  const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   const deptData = departmentData[id || ""];
 
   if (!deptData) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <h2 className="text-2xl font-bold text-slate-900">Department not found</h2>
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+        <h2 className="text-2xl font-bold text-slate-800">Department not found</h2>
       </div>
     );
   }
 
-  // Determine theme color based on department
-  const themeColor = id === 'electricity' ? 'amber' : 
-                    id === 'water' ? 'blue' : 
-                    id === 'gas' ? 'orange' : 
-                    id === 'municipal' ? 'teal' : 
-                    id === 'waste' ? 'emerald' : 'indigo';
-
+  const theme = themeColors[id || ""] || themeColors.property;
   const titleKey = `dept.${id}.title`;
 
-  const handleGetToken = () => {
-    const deptPrefix = t(titleKey).substring(0, 1).toUpperCase() || id?.substring(0, 1).toUpperCase();
-    const newToken = `${deptPrefix}-${Math.floor(Math.random() * 900 + 100)}`;
-    setToken(newToken);
-    setTimeout(() => {
-      navigate(`/queue?token=${newToken}&dept=${encodeURIComponent(t(titleKey))}`);
-    }, 600);
-  };
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 z-0 opacity-[0.02] pointer-events-none" 
-           style={{ backgroundImage: 'radial-gradient(#192e59 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-
-      {/* Premium Navigation Header */}
-      <header className="bg-[#192e59] text-white py-3 px-8 flex items-center justify-between sticky top-0 z-50 shadow-lg">
-        <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center font-black text-[#192e59] shadow-md text-xs">S</div>
-          <div>
-            <h2 className="text-base font-black tracking-tighter leading-none">SUVIDHA</h2>
-            <p className="text-[7px] font-bold text-white/40 uppercase tracking-[0.2em]">Smart City Kiosk</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <div className="hidden lg:flex items-center gap-3 pr-6 border-r border-white/10">
-            <span className="text-xs font-black">{time}</span>
-            <div className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-              <CloudSun className="h-4 w-4 text-amber-400" />
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-             <div className="flex items-center gap-2 bg-white/5 px-4 py-1.5 rounded-xl border border-white/10">
-                <Globe className="h-3 w-3 text-white/60" />
-                <span className="text-[10px] font-black uppercase tracking-wider">English</span>
-             </div>
-             <button onClick={() => navigate('/')} className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-                <Lock className="h-4 w-4 text-white/80" />
-             </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Banner Area - More Compact */}
-      <div className={`h-40 bg-gradient-to-br from-[#192e59] to-[#243e75] relative overflow-hidden`}>
-          <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-          <div className="container h-full flex flex-col justify-center">
-             <div className="flex items-center gap-5 animate-in slide-in-from-left-4 duration-500">
-                <div className={`h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-xl`}>
-                   <img src={deptData.icon} alt={deptData.title} className="h-10 w-10 object-contain" />
-                </div>
-                <div>
-                   <h1 className="text-3xl font-black text-white tracking-tighter leading-none mb-1">
-                      {t(titleKey)}
-                   </h1>
-                   <p className="text-white/50 font-bold text-[10px] max-w-lg uppercase tracking-widest">
-                      {deptData.description}
-                   </p>
-                </div>
-             </div>
-          </div>
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar font-display relative flex flex-col justify-between bg-[#192e59] text-white pb-2">
+      
+      {/* 🎥 THE UNIFIED BACKGROUND BACKGROUND VIDEO FOR DEPARTMENT PAGE */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <video
+          key="/videos/14904045_3840_2160_30fps.mp4"
+          src="/videos/14904045_3840_2160_30fps.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover opacity-20"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#192e59]/45 via-[#192e59]/25 to-[#192e59]/75" />
       </div>
 
-      <div className="container -mt-8 relative z-10">
-        <div className="grid gap-6 lg:grid-cols-4">
-          
-          {/* Main Services Area - 3/4 Width */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 border border-white shadow-xl shadow-slate-200/40">
-              <div className="flex items-center justify-between mb-6">
-                 <div className="flex items-center gap-3">
-                    <div className={`w-1.5 h-6 bg-${themeColor}-500 rounded-full`} />
-                    <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Services</h2>
-                 </div>
-              </div>
-              
-              <div className="space-y-3">
-                {deptData.services.map((service, index) => {
-                  const titleStr = t(`dept.${id}.s${index + 1}`).toLowerCase();
-                  let route = "/complaint";
-                  if (titleStr.includes("pay") || titleStr.includes("bill") || titleStr.includes("tax") || titleStr.includes("subsidy")) {
-                    route = "/payment";
-                  } else if (titleStr.includes("new") || titleStr.includes("connection") || titleStr.includes("registration")) {
-                    route = "/application";
-                  }
+      {/* Background Dotted Canvas Pattern */}
+      <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" 
+           style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }} />
 
-                  return (
-                    <button 
-                      key={index}
-                      onClick={() => navigate(route, {
-                        state: {
-                          category: t(titleKey),
-                          service: t(`dept.${id}.s${index + 1}`),
-                          description: t(`dept.${id}.s${index + 1}`)
-                        }
-                      })}
-                      className="w-full flex items-center justify-between p-4 bg-white/60 hover:bg-white border border-slate-100 hover:border-indigo-300 rounded-2xl transition-all group shadow-sm hover:shadow-md"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                          <service.icon className={`h-5 w-5 text-${themeColor}-600`} />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors uppercase">
-                            {t(`dept.${id}.s${index + 1}`)}
-                          </h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                            Standard Service
-                          </p>
-                        </div>
-                      </div>
-                      <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
-                         <ChevronRight className="h-4 w-4 text-indigo-600" />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+      <div className="relative z-10 w-full">
+        
+        {/* 🏛️ FLOATING COMPACT TOP BACK ACTION DECK */}
+        <div className="container pt-2 pb-0 flex justify-end shrink-0 relative z-50">
+          <button
+            onClick={() => navigate('/departments')}
+            className="flex items-center gap-2 bg-[#FD8008] hover:bg-[#e67000] border border-[#FD8008] px-4 py-2 rounded-xl text-[10px] font-black text-white transition-all shadow-[0_4px_12px_rgba(253,128,8,0.3)] uppercase tracking-wider hover:scale-105 active:scale-95"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-white" />
+            Back to Grid
+          </button>
+        </div>
 
-            <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 border border-white shadow-xl shadow-slate-200/40">
-                <DepartmentExtras departmentId={id || ""} />
-            </div>
+        {/* 🏛️ 2. CENTERED MAJESTIC DEPARTMENT BRAND HEADER */}
+        <div className="flex flex-col items-center mt-0 mb-3 text-center px-4 animate-slide-up relative z-10">
+          <div 
+            className="px-8 py-3.5 rounded-[2rem] flex items-center justify-center inline-flex shadow-2xl transition-transform hover:scale-105 duration-300 bg-white"
+            style={{ 
+              boxShadow: '0 15px 35px -5px rgba(25, 46, 89, 0.4)' 
+            }}
+          >
+            <span className="text-xl lg:text-2xl font-[900] uppercase tracking-[0.15em] text-[#192e59]">
+              {t(titleKey)}
+            </span>
           </div>
+        </div>
 
-          {/* Right Support Sidebar - 1/4 Width */}
-          <div className="space-y-6">
-            {/* Token Widget */}
-            <div className="bg-white rounded-3xl border border-white p-6 shadow-xl shadow-slate-200/40 group">
-              <h3 className="text-sm font-black text-slate-900 mb-2 tracking-tighter uppercase">Walk-in</h3>
-              <p className="text-[9px] text-slate-400 mb-6 font-bold leading-relaxed uppercase tracking-wider">
-                Generate token for office visits.
-              </p>
-              {!token ? (
-                <button
-                  onClick={handleGetToken}
-                  className={`w-full rounded-xl bg-[#192e59] py-3 font-black text-white hover:bg-indigo-900 transition-all active:scale-95 uppercase tracking-widest text-[10px] shadow-lg`}
+        {/* 📑 3. BRAND NEW ROUNDED-SQUARE ICON SERVICE TABS GRID */}
+        <div className="container mt-0 mb-1">
+          
+          {/* Centered horizontal flexbox of features floating directly on the page! */}
+          <div className="flex flex-wrap items-start justify-center gap-6 lg:gap-10 py-6">
+            {deptData.services.map((service, index) => {
+              const englishTitle = service.title.toLowerCase();
+              let route = "/complaint";
+              if (englishTitle.includes("pay") || englishTitle.includes("bill") || englishTitle.includes("tax") || englishTitle.includes("subsidy")) {
+                route = "/payment";
+              } else if (englishTitle.includes("new") || englishTitle.includes("connection") || englishTitle.includes("registration")) {
+                route = "/application";
+              } else if (englishTitle.includes("load") || englishTitle.includes("change")) {
+                route = "/load-change";
+              } else if (englishTitle.includes("meter")) {
+                route = "/meter-complaint";
+              }
+
+              // Dynamic vibrant colors matching the dynamic theme colors or individual palette
+              const squareBg = squareColors[index % squareColors.length];
+
+              return (
+                <button 
+                  key={index}
+                  onClick={() => navigate(`/auth/${id}`, {
+                    state: {
+                      redirectTo: route,
+                      serviceState: {
+                        category: t(titleKey),
+                        service: t(`dept.${id}.s${index + 1}`),
+                        description: t(`dept.${id}.s${index + 1}`)
+                      }
+                    }
+                  })}
+                  className={`h-40 w-40 lg:h-48 lg:w-48 rounded-[2rem] flex flex-col items-center justify-center p-4 text-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg relative overflow-hidden group focus:outline-none ${squareBg}`}
                 >
-                  Get Token
+                  
+                  {/* Circle enclosing the thin crisp icon matching the reference style exactly! */}
+                  <div className="mb-4 h-12 w-12 rounded-full border-2 border-white flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0">
+                    <service.icon className="h-6 w-6 text-white stroke-[2.2]" />
+                  </div>
+                  
+                  {/* Centered Bold White Title inside the flat solid card */}
+                  <h4 className="text-[12px] lg:text-[14px] font-[900] text-white uppercase tracking-normal leading-snug line-clamp-3 px-1 relative z-10">
+                    {t(`dept.${id}.s${index + 1}`)}
+                  </h4>
+
+                  {/* Subtle micro hover accent */}
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
                 </button>
-              ) : (
-                <QueueToken token={token} waitTime="10-15 mins" />
-              )}
+              );
+            })}
+          </div>
+
+        </div>
+
+        {/* 🎬 4. CINEMATIC INFINITE-SCROLLING DYNAMIC IMAGE MARQUEE */}
+        <div className="container mt-8">
+          <div className="overflow-hidden relative py-2">
+
+            <div className="flex w-max animate-img-marquee gap-8">
+              {[...theme.marqueeImages, ...theme.marqueeImages, ...theme.marqueeImages].map((imgUrl, idx) => (
+                <div key={idx} className="h-36 w-48 lg:h-48 lg:w-60 shrink-0 relative overflow-hidden rounded-xl border border-white/10 shadow-2xl group bg-white/5 transition-transform duration-300 hover:scale-105">
+                  <img 
+                    src={imgUrl} 
+                    alt="Department Activity" 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-80" />
+                </div>
+              ))}
             </div>
 
-            {/* Helpline Widget */}
-            <div className="bg-[#192e59] rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
-               <div className="absolute bottom-0 right-0 opacity-5"><Building2 className="h-20 w-20" /></div>
-               <h4 className="text-[9px] font-black uppercase tracking-[0.2em] mb-3 text-white/40">Helpline</h4>
-               <div className="flex items-center gap-3 py-3 px-4 bg-white/5 rounded-xl border border-white/5 group cursor-pointer hover:bg-white/10">
-                  <Phone className="h-4 w-4 text-amber-400" />
-                  <span className="text-base font-black tracking-tighter">1800-200-1234</span>
-               </div>
-            </div>
+            <style>{`
+              @keyframes imgMarquee {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-33.3333%); }
+              }
+              .animate-img-marquee {
+                animation: imgMarquee 75s linear infinite;
+              }
+              .animate-img-marquee:hover {
+                animation-play-state: paused;
+              }
+            `}</style>
+          </div>
+        </div>
 
-            {/* Safety/Alert Widget */}
-            <div className="bg-rose-50 rounded-3xl p-5 border border-rose-100 flex items-center gap-4">
-                <div className="h-10 w-10 bg-rose-500 rounded-xl flex items-center justify-center shadow-lg">
-                   <AlertTriangle className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                   <h4 className="text-[10px] font-black text-rose-900 uppercase">Emergency</h4>
-                   <p className="text-[8px] font-bold text-rose-500 uppercase tracking-widest">Call SOS</p>
-                </div>
+        </div>
+
+      {/* 🏛️ Lower Extras Grid */}
+      {["gas", "water", "waste", "property"].includes(id || "") && (
+        <div className="container mt-8 relative z-10 shrink-0">
+          <div className="w-full">
+            <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/10 shadow-2xl h-full text-white [&>div]:mt-0 [&>div]:bg-transparent [&>div]:border-none [&>div]:p-0 [&>div]:shadow-none">
+              <DepartmentExtras departmentId={id || ""} />
             </div>
           </div>
         </div>
+      )}
+
+      {/* 📞 FLOATING CORNER ACTIONS DECK (Bottom Left Corner, matching Accessibility docks!) */}
+      <div className="fixed bottom-6 left-6 z-50 flex items-center gap-4 pointer-events-auto">
+         {/* Department Helpline Capsule - Flat & Solid Slate-Midnight */}
+         <div className="flex items-center gap-3 py-3 px-5 bg-[#0f172a] border border-white/20 rounded-full hover:bg-slate-800 active:scale-95 transition-all text-white shadow-2xl cursor-pointer group">
+            <Phone className="h-4.5 w-4.5 text-[#FD8008] group-hover:animate-bounce shrink-0" />
+            <span className="text-[12px] font-black uppercase tracking-wider text-slate-300">Support: <span className="text-white">1800-200-1234</span></span>
+         </div>
+
+         {/* Emergency SOS Capsule - Flat & Solid Vibrant Crimson */}
+         <div className="flex items-center gap-3 py-3 px-5 bg-red-600 border border-red-500 rounded-full hover:bg-red-700 active:scale-95 transition-all text-white shadow-2xl shadow-red-600/30 cursor-pointer group">
+            <AlertTriangle className="h-4.5 w-4.5 text-white animate-pulse shrink-0" />
+            <span className="text-[12px] font-black uppercase tracking-widest text-white">Emergency SOS</span>
+         </div>
       </div>
+
     </div>
   );
 };

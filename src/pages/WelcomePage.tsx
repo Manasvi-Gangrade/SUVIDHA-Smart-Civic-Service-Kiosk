@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Globe, Search, ChevronRight, CheckCircle2 } from "lucide-react";
-import heroBanner from "@/assets/hero-banner.jpg"; // Using the existing banner
 
 const PRIMARY_LANGUAGES = [
   { code: "en", name: "English", nativeName: "English" },
@@ -10,10 +9,9 @@ const PRIMARY_LANGUAGES = [
   { code: "as", name: "Assamese", nativeName: "অসমীয়া" },
 ];
 
-// Mocking a few out of 230+ for the UI demonstration
 const OTHER_LANGUAGES = [
   { code: "bn", name: "Bengali", nativeName: "বাংলা" },
-  { code: "mr", name: "Marathi", nativeName: "मराठी" },
+  { code: "mr", name: "Marathi", nativeName: "মরাঠি" },
   { code: "gu", name: "Gujarati", nativeName: "ગુજરાતી" },
   { code: "ta", name: "Tamil", nativeName: "தமிழ்" },
   { code: "te", name: "Telugu", nativeName: "తెలుగు" },
@@ -40,9 +38,8 @@ const WelcomePage = () => {
     setSelectedLang(code);
     i18n.changeLanguage(code);
     
-    // Add a tiny delay for visual feedback (Kiosk UX)
     setTimeout(() => {
-      navigate("/home");
+      navigate("/departments"); // Navigate straight to departments grid
     }, 600);
   };
 
@@ -53,35 +50,44 @@ const WelcomePage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background relative flex flex-col items-center justify-center overflow-hidden">
-      {/* Background with overlay */}
-      <div className="absolute inset-0 z-0">
-        <img src={heroBanner} alt="Background" className="w-full h-full object-cover opacity-15" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background to-background" />
+    <div className="min-h-screen bg-[#192e59] relative flex flex-col items-center justify-center overflow-hidden">
+      
+      {/* 🎥 THE DYNAMIC BACKGROUND VIDEO FOR LANDING WELCOME PAGE */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover opacity-15"
+        >
+          <source src="/videos/14904045_3840_2160_30fps.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#192e59]/80 via-[#192e59] to-[#192e59]" />
       </div>
 
       <div className="z-10 w-full max-w-5xl px-6 flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-10 duration-700">
         
         {/* Kiosk Identity / Logos */}
         <div className="mb-12 flex flex-col items-center">
-          <div className="h-24 w-24 bg-primary rounded-3xl rotate-12 flex items-center justify-center shadow-2xl shadow-primary/40 mb-8 border-4 border-primary-foreground/20">
-            <Globe className="h-12 w-12 text-primary-foreground -rotate-12" />
+          <div className="h-24 w-24 bg-[#FD8008] rounded-3xl rotate-12 flex items-center justify-center shadow-2xl shadow-[#FD8008]/40 mb-8 border-4 border-white/20">
+            <Globe className="h-12 w-12 text-white -rotate-12" />
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-foreground tracking-tight mb-4">
-            SUVIDHA <span className="text-primary">Kiosk</span>
+          <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight mb-4">
+            SUVIDHA <span className="text-[#FD8008]">Kiosk</span>
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground font-medium">
+          <p className="text-xl md:text-2xl text-blue-200 font-medium">
             Smart Civic Service Delivery Platform
           </p>
         </div>
 
         {/* Language Selection Box */}
-        <div className="bg-card/80 backdrop-blur-xl border border-border/50 p-8 md:p-12 rounded-[3rem] shadow-2xl w-full max-w-4xl relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-primary via-secondary to-kiosk-green" />
+        <div className="bg-white/95 backdrop-blur-xl border border-white/10 p-8 md:p-12 rounded-[3rem] shadow-2xl w-full max-w-4xl relative overflow-hidden">
+          <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-[#192e59] via-[#FD8008] to-emerald-500" />
           
-          <h2 className="text-3xl font-bold text-foreground mb-8 flex flex-col gap-2">
+          <h2 className="text-3xl font-bold text-slate-800 mb-8 flex flex-col gap-2">
             <span>Please select your preferred language</span>
-            <span className="text-xl text-muted-foreground font-normal">
+            <span className="text-xl text-slate-500 font-normal">
               कृपया अपनी पसंदीदा भाषा चुनें / অনুগ্ৰহ কৰি আপোনাৰ পছন্দৰ ভাষা বাছনি কৰক
             </span>
           </h2>
@@ -94,42 +100,42 @@ const WelcomePage = () => {
                 onClick={() => handleLanguageSelect(lang.code)}
                 className={`kiosk-touch-target relative overflow-hidden group flex flex-col items-center justify-center gap-3 p-8 rounded-3xl border-2 transition-all duration-300 ${
                   selectedLang === lang.code 
-                    ? "border-primary bg-primary/10 scale-105" 
-                    : "border-border bg-background hover:border-primary/50 hover:bg-muted"
+                    ? "border-[#192e59] bg-[#192e59]/10 scale-105" 
+                    : "border-slate-200 bg-white hover:border-[#192e59]/50 hover:bg-slate-50"
                 }`}
               >
                 {selectedLang === lang.code && (
-                  <div className="absolute top-4 right-4 text-primary animate-in zoom-in">
+                  <div className="absolute top-4 right-4 text-[#192e59] animate-in zoom-in">
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
                 )}
-                <span className="text-3xl font-bold text-foreground">{lang.nativeName}</span>
-                <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">{lang.name}</span>
+                <span className="text-3xl font-bold text-slate-800">{lang.nativeName}</span>
+                <span className="text-sm font-semibold text-slate-500 uppercase tracking-widest">{lang.name}</span>
               </button>
             ))}
           </div>
 
           <div className="relative flex py-5 items-center">
-            <div className="flex-grow border-t border-border"></div>
-            <span className="flex-shrink-0 mx-4 text-muted-foreground text-sm font-semibold uppercase tracking-wider">Or</span>
-            <div className="flex-grow border-t border-border"></div>
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink-0 mx-4 text-slate-400 text-sm font-semibold uppercase tracking-wider">Or</span>
+            <div className="flex-grow border-t border-slate-200"></div>
           </div>
 
           {/* 230+ Languages Wow Factor Button */}
           <button
             onClick={() => setShowMore(true)}
-            className="kiosk-touch-target w-full flex items-center justify-between p-6 rounded-3xl border-2 border-secondary/30 bg-secondary/5 hover:bg-secondary/10 transition-all group"
+            className="kiosk-touch-target w-full flex items-center justify-between p-6 rounded-3xl border-2 border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all group"
           >
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center">
+              <div className="h-12 w-12 rounded-full bg-[#192e59] text-white flex items-center justify-center">
                 <Globe className="h-6 w-6" />
               </div>
               <div className="text-left">
-                <div className="text-xl font-bold text-foreground">Explore 230+ Global Languages</div>
-                <div className="text-sm text-muted-foreground">Powered by advanced AI translation</div>
+                <div className="text-xl font-bold text-slate-800">Explore 230+ Global Languages</div>
+                <div className="text-sm text-slate-500 font-medium">Powered by advanced AI translation</div>
               </div>
             </div>
-            <ChevronRight className="h-8 w-8 text-secondary group-hover:translate-x-2 transition-transform" />
+            <ChevronRight className="h-8 w-8 text-[#192e59] group-hover:translate-x-2 transition-transform" />
           </button>
         </div>
       </div>

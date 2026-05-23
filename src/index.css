@@ -479,3 +479,24 @@
 .animation-delay-4000 {
   animation-delay: 4s;
 }
+
+/* Sleek custom scrollbar for the kiosk components */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(253, 128, 8, 0.3); /* Transparent saffron accent */
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(253, 128, 8, 0.6); /* Vibrant saffron on hover */
+}

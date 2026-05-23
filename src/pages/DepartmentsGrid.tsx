@@ -7,7 +7,7 @@ const allDepartments = [
     icon: "/images/electricity (2).png",
     title: "Electricity Board",
     description: "Report power outages, pay bills, and request new connections.",
-    path: "/auth/electricity",
+    path: "/department/electricity", // Reverted to /department/:id to show services first!
     color: "saffron" as const,
     serviceCount: 5,
     status: "Online" as const,
@@ -17,7 +17,7 @@ const allDepartments = [
     icon: "/images/gas.png",
     title: "Gas Distribution",
     description: "Book cylinders, report leakage, and check subsidies.",
-    path: "/auth/gas",
+    path: "/department/gas", // Reverted to /department/:id to show services first!
     color: "rose" as const,
     serviceCount: 4,
     status: "Online" as const,
@@ -27,7 +27,7 @@ const allDepartments = [
     icon: "/images/municipal.png",
     title: "Municipal Corp.",
     description: "Civic grievances, contact officials, and local ward info.",
-    path: "/auth/municipal",
+    path: "/department/municipal", // Reverted to /department/:id to show services first!
     color: "teal" as const,
     serviceCount: 3,
     status: "High Load" as const,
@@ -37,7 +37,7 @@ const allDepartments = [
     icon: "/images/water.png",
     title: "Water Supply",
     description: "New connections, water tanker booking, and leakage reporting.",
-    path: "/auth/water",
+    path: "/department/water", // Reverted to /department/:id to show services first!
     color: "blue" as const,
     serviceCount: 3,
     status: "Online" as const,
@@ -47,7 +47,7 @@ const allDepartments = [
     icon: "/images/waste.png",
     title: "Waste Management",
     description: "Garbage pickup schedules, sanitation, and cleanliness tracking.",
-    path: "/auth/waste",
+    path: "/department/waste", // Reverted to /department/:id to show services first!
     color: "green" as const,
     serviceCount: 3,
     status: "Online" as const,
@@ -57,7 +57,7 @@ const allDepartments = [
     icon: "/images/property.png",
     title: "Property & Tax",
     description: "Report property tax, registration, and secure payment.",
-    path: "/auth/property",
+    path: "/department/property", // Reverted to /department/:id to show services first!
     color: "indigo" as const,
     serviceCount: 3,
     status: "Online" as const,
@@ -69,42 +69,42 @@ const quickTabs = [
   {
     icon: Zap,
     label: "Electricity",
-    path: "/auth/electricity",
+    path: "/department/electricity",
     colorClass: "bg-[#FF9933]",
     shadowClass: "shadow-[0_0_15px_rgba(255,153,51,0.3)] hover:shadow-[0_0_25px_rgba(255,153,51,0.55)]",
   },
   {
     icon: Flame,
     label: "Gas",
-    path: "/auth/gas",
+    path: "/department/gas",
     colorClass: "bg-[#E3000F]",
     shadowClass: "shadow-[0_0_15px_rgba(227,0,15,0.3)] hover:shadow-[0_0_25px_rgba(227,0,15,0.55)]",
   },
   {
     icon: Landmark,
     label: "Municipal",
-    path: "/auth/municipal",
+    path: "/department/municipal",
     colorClass: "bg-[#008080]",
     shadowClass: "shadow-[0_0_15px_rgba(0,128,128,0.3)] hover:shadow-[0_0_25px_rgba(0,128,128,0.55)]",
   },
   {
     icon: Droplet,
     label: "Water",
-    path: "/auth/water",
+    path: "/department/water",
     colorClass: "bg-[#0066FF]",
     shadowClass: "shadow-[0_0_15px_rgba(0,102,255,0.3)] hover:shadow-[0_0_25px_rgba(0,102,255,0.55)]",
   },
   {
     icon: Trash2,
     label: "Sanitation",
-    path: "/auth/waste",
+    path: "/department/waste",
     colorClass: "bg-[#138808]",
     shadowClass: "shadow-[0_0_15px_rgba(19,136,8,0.3)] hover:shadow-[0_0_25px_rgba(19,136,8,0.55)]",
   },
   {
     icon: FileText,
     label: "Property",
-    path: "/auth/property",
+    path: "/department/property",
     colorClass: "bg-[#4F46E5]",
     shadowClass: "shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.55)]",
   },
@@ -140,7 +140,7 @@ const DepartmentsGrid = () => {
       {/* Floating Back Button */}
       <button
         onClick={() => navigate("/")}
-        className="kiosk-touch-target absolute top-4 right-6 z-50 flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 px-5 py-2.5 rounded-xl text-[10px] font-black text-white transition-all shadow-lg uppercase tracking-widest"
+        className="kiosk-touch-target absolute top-4 right-6 z-50 flex items-center gap-2 bg-[#FD8008] hover:bg-[#e67000] border border-[#FD8008] px-5 py-2.5 rounded-xl text-[10px] font-black text-white transition-all shadow-[0_4px_12px_rgba(253,128,8,0.3)] uppercase tracking-widest hover:scale-105 active:scale-95"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         BACK HOME
@@ -178,7 +178,7 @@ const DepartmentsGrid = () => {
         </h2>
       </div>
 
-      {/* 🎬 DYNAMIC INF-SCROLL CINEMATIC MARQUEE FOR SQUARE DEPT CARDS (Reverted cards back to perfect sleek smaller size!) */}
+      {/* 🎬 DYNAMIC INF-SCROLL CINEMATIC MARQUEE FOR SQUARE DEPT CARDS */}
       <div className="relative w-full overflow-hidden py-2 z-10 animate-slide-up shrink-0 pb-4 flex-1 flex items-center justify-center">
         {/* Soft edge blur masks for premium transitions */}
         <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#192e59] via-[#192e59]/75 to-transparent z-20 pointer-events-none" />

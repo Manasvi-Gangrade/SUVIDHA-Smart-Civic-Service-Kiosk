@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PlusCircle, FileText, CheckCircle2, ChevronRight, User, Home, UploadCloud, ScanFace, FileKey, ShieldCheck, Loader2, Gauge, MapPin, Zap } from "lucide-react";
+import { ArrowLeft, PlusCircle, FileText, CheckCircle2, ChevronRight, User, Home, UploadCloud, ScanFace, FileKey, ShieldCheck, Loader2, Gauge, MapPin, Zap, QrCode } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ScannerOverlay from "../components/ScannerOverlay";
@@ -14,21 +14,28 @@ const ApplicationFormPage = () => {
 
     const state = location.state as { category?: string; service?: string } | null;
     const serviceType = state?.service?.toLowerCase() || "";
+    const isElectricityService = state?.category?.toLowerCase().includes("electric") || serviceType.includes("connection") || serviceType.includes("load");
+
+    const [localServiceType, setLocalServiceType] = useState(
+        serviceType.includes("load") ? "load extension" : "new connection"
+    );
 
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
     const [referenceId, setReferenceId] = useState("");
     const [showScanner, setShowScanner] = useState(false);
     const [isDigilockerConnecting, setIsDigilockerConnecting] = useState(false);
     const [isDigilockerVerified, setIsDigilockerVerified] = useState(false);
-    
+
     const [formData, setFormData] = useState({
         // Step 1: Personal
-        name: "", aadhaar: "", phone: "",
+        firstName: "", lastName: "", fatherHusbandName: "", aadhaar: "", phone: "",
         // Step 2: Service Specific
         address: "", pincode: "", city: "Guwahati",
-        premisesType: "Domestic",
-        requestedLoad: "2 kW",
+        occupancyType: "Owned",
+        connectionCategory: "Domestic",
+        requestedLoad: "",
         currentLoad: "2 kW",
         extensionReason: "",
         shiftingReason: "",
@@ -36,13 +43,31 @@ const ApplicationFormPage = () => {
         docFile: null as File | null
     });
 
+    const mockAddresses = [
+        "Zoo Road, Guwahati, Assam 781005",
+        "Ganeshguri, Guwahati, Assam 781006",
+        "Dispur, Guwahati, Assam 781005",
+        "Paltan Bazaar, Guwahati, Assam 781008",
+        "Chandmari, Guwahati, Assam 781003",
+        "Uzan Bazaar, Guwahati, Assam 781001",
+        "Six Mile, Guwahati, Assam 781022",
+        "Maligaon, Guwahati, Assam 781011",
+        "Jalukbari, Guwahati, Assam 781013",
+        "Fancy Bazaar, Guwahati, Assam 781001",
+        "Beltola, Guwahati, Assam 781028"
+    ];
+
+    const filteredAddresses = formData.address.length > 2
+        ? mockAddresses.filter(addr => addr.toLowerCase().includes(formData.address.toLowerCase()))
+        : [];
+
     const handleNext = () => setStep(prev => prev + 1);
     const handleBack = () => setStep(prev => prev - 1);
 
     const handleVoiceData = (data: any) => {
         setFormData(prev => ({
             ...prev,
-            ...(data.name && { name: data.name }),
+            ...(data.name && { firstName: data.name.split(' ')[0] || '', lastName: data.name.split(' ').slice(1).join(' ') || '' }),
             ...(data.phone && { phone: data.phone }),
             ...(data.aadhaar && { aadhaar: data.aadhaar }),
             ...(data.pincode && { pincode: data.pincode })
@@ -67,11 +92,11 @@ const ApplicationFormPage = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        
+
         const id = db.addApplication({
             category: state?.category || "General",
             service: state?.service || "Application",
-            name: formData.name,
+            name: `${formData.firstName} ${formData.lastName}`.trim(),
             aadhaar: formData.aadhaar,
             phone: formData.phone,
             city: formData.city,
@@ -87,255 +112,332 @@ const ApplicationFormPage = () => {
         }, 2000);
     };
 
-    // Step 4: Success & Receipt View
+    // Step 4: Success & Receipt View (Wrapped in beautiful custom layout)
     if (step === 4) {
         return (
-            <div className="min-h-screen bg-[#0f172a]/95 flex items-center justify-center p-6 backdrop-blur-sm">
-                <Receipt 
-                    transactionId={referenceId}
-                    type={state?.service || "Service Application"}
-                    date={new Date().toLocaleDateString()}
-                    userName={formData.name}
-                    details={[
-                        { label: "Category", value: state?.category || "Civic" },
-                        { label: "Phone", value: formData.phone },
-                        { label: "Location", value: formData.city },
-                        ...(serviceType.includes("load") ? [{ label: "New Load", value: formData.requestedLoad }] : []),
-                        { label: "Status", value: "Awaiting Processing" }
-                    ]}
-                    onClose={() => navigate("/")}
-                />
+            <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
+                {/* Background Video Overlay */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30 mix-blend-overlay">
+                        <source src="/videos/14904045_3840_2160_30fps.mp4" type="video/mp4" />
+                    </video>
+                    <div className="absolute inset-0 bg-[#192e59]/20" />
+                </div>
+
+                <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+                    <div className="w-full max-w-lg bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+                        <Receipt
+                            transactionId={referenceId}
+                            type={state?.service || "Service Application"}
+                            date={new Date().toLocaleDateString()}
+                            userName={`${formData.firstName} ${formData.lastName}`.trim()}
+                            details={[
+                                { label: "Category", value: state?.category || "Civic" },
+                                { label: "Phone", value: formData.phone },
+                                { label: "Address", value: formData.city },
+                                ...(formData.connectionCategory ? [{ label: "Connection Type", value: formData.connectionCategory }] : []),
+                                ...(formData.occupancyType ? [{ label: "Occupancy", value: formData.occupancyType }] : []),
+                                ...(formData.requestedLoad ? [{ label: "Sanctioned Load", value: `${formData.requestedLoad} kW` }] : []),
+                                { label: "Status", value: "Under Review" }
+                            ]}
+                            onClose={() => navigate("/")}
+                        />
+                    </div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#0f172a] pb-20">
-            {/* Header */}
-            <div className="border-b border-white/10 bg-[#1e2e50] py-10">
-                <div className="container flex items-center gap-6">
-                    <div className="rounded-3xl bg-white/10 p-5 backdrop-blur-md border border-white/20">
-                        <PlusCircle className="h-10 w-10 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-black text-white tracking-tight">{state?.service || "New Application"}</h1>
-                        <p className="text-white/60 font-medium">{state?.category || "Department Service"}</p>
-                    </div>
-                </div>
+        <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
+            
+            {/* Background Video Overlay */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30 mix-blend-overlay">
+                    <source src="/videos/14904045_3840_2160_30fps.mp4" type="video/mp4" />
+                </video>
+                <div className="absolute inset-0 bg-[#192e59]/20" />
             </div>
 
-            <div className="container max-w-4xl py-12">
-                {/* Stepper */}
-                <div className="flex items-center justify-between mb-16 px-4">
-                    {[1, 2, 3].map((num) => (
-                        <div key={num} className="flex flex-col items-center gap-3 flex-1 relative">
-                            {num < 3 && (
-                                <div className={`absolute left-1/2 right-[-50%] top-6 h-1 -z-10 ${step > num ? 'bg-primary' : 'bg-white/10'}`} />
-                            )}
-                            <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 shadow-xl border-4 border-[#0f172a]
-                                ${step >= num ? "bg-primary text-primary-foreground scale-110 shadow-primary/40" : "bg-white/5 text-white/40 border-white/5"}`}>
-                                {num === 1 && <User className="h-5 w-5" />}
-                                {num === 2 && <Zap className="h-5 w-5" />}
-                                {num === 3 && <UploadCloud className="h-5 w-5" />}
-                            </div>
-                            <span className={`text-xs font-bold uppercase tracking-widest ${step >= num ? "text-white" : "text-white/30"}`}>
-                                {num === 1 ? "Personal" : num === 2 ? "Details" : "Documents"}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="bg-[#1e2e50]/40 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden p-8 md:p-12">
+            <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+                <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
                     
-                    {/* Step 1: Personal Details */}
-                    {step === 1 && (
-                        <div className="animate-in slide-in-from-right fade-in duration-500">
-                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
-                                <div>
-                                    <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
-                                        <div className="w-1.5 h-8 bg-secondary rounded-full" /> Applicant Information
-                                    </h2>
-                                    <p className="text-white/50 font-medium mt-2">Enter your identification details below.</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <VoiceDictation onExtractedData={handleVoiceData} targetFields={['name', 'phone', 'aadhaar', 'pincode']} />
-                                    <button onClick={() => setShowScanner(true)} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-2xl flex items-center gap-2 border border-white/10 transition-all font-bold">
-                                        <ScanFace className="h-5 w-5" /> AI Scan
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-white/70 ml-1">Full Legal Name</label>
-                                    <input 
-                                        type="text" 
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                                        placeholder="Enter name as on ID"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-white/70 ml-1">Aadhaar Number</label>
-                                    <input 
-                                        type="text" 
-                                        value={formData.aadhaar}
-                                        onChange={(e) => setFormData({...formData, aadhaar: e.target.value})}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none font-mono"
-                                        placeholder="XXXX-XXXX-XXXX"
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-2">
-                                    <label className="text-sm font-bold text-white/70 ml-1">Mobile Number</label>
-                                    <input 
-                                        type="tel" 
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                                        placeholder="+91 XXXXX XXXXX"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mt-12 flex justify-end">
-                                <button 
-                                    onClick={handleNext}
-                                    disabled={!formData.name || !formData.aadhaar}
-                                    className="bg-primary text-primary-foreground px-10 py-5 rounded-2xl font-black text-lg flex items-center gap-3 shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
-                                >
-                                    Proceed <ChevronRight className="h-6 w-6" />
-                                </button>
-                            </div>
+                    {/* Header Section */}
+                    <div className="bg-[#192e59] p-8 text-white relative flex-shrink-0">
+                        <button 
+                            onClick={() => navigate(-1)} 
+                            className="absolute left-6 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </button>
+                        <div className="text-center">
+                            <h1 className="text-3xl font-[900] tracking-tight uppercase leading-none">{state?.service || "New Application"}</h1>
+                            <p className="text-blue-200 text-xs font-bold mt-2 tracking-[0.3em] uppercase">{state?.category || "Department Service"}</p>
                         </div>
-                    )}
+                    </div>
 
-                    {/* Step 2: Service Specific Details */}
-                    {step === 2 && (
-                        <div className="animate-in slide-in-from-right fade-in duration-500">
-                             <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3 mb-10">
-                                <div className="w-1.5 h-8 bg-secondary rounded-full" /> {state?.service} Details
-                            </h2>
+                    <div className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar bg-white">
+                        
+                        {/* Stepper */}
+                        <div className="flex items-center justify-between mb-12 px-4">
+                            {[1, 2, 3].map((num) => (
+                                <div key={num} className="flex flex-col items-center gap-3 flex-1 relative">
+                                    {num < 3 && (
+                                        <div className={`absolute left-1/2 right-[-50%] top-6 h-1 -z-10 ${step > num ? 'bg-[#FD8008]' : 'bg-slate-100'}`} />
+                                    )}
+                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 shadow-xl border-4 border-white
+                                        ${step >= num ? "bg-[#FD8008] text-white scale-110 shadow-[#FD8008]/40" : "bg-slate-50 text-slate-400 border-slate-100"}`}>
+                                        {num === 1 && <User className="h-5 w-5" />}
+                                        {num === 2 && <Zap className="h-5 w-5" />}
+                                        {num === 3 && <UploadCloud className="h-5 w-5" />}
+                                    </div>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${step >= num ? "text-slate-700" : "text-slate-300"}`}>
+                                        {num === 1 ? "Personal" : num === 2 ? "Details" : "Documents"}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2 md:col-span-2">
-                                    <label className="text-sm font-bold text-white/70 ml-1">Service Location / Address</label>
-                                    <textarea 
-                                        rows={3}
-                                        value={formData.address}
-                                        onChange={(e) => setFormData({...formData, address: e.target.value})}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-none"
-                                        placeholder="House No, Street, Landmark..."
-                                    />
+                        {/* Step 1: Personal Details */}
+                        {step === 1 && (
+                            <div className="animate-in slide-in-from-right fade-in duration-500">
+                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
+                                    <div>
+                                        <h2 className="text-xl font-black text-[#192e59] uppercase tracking-wider flex items-center gap-2">
+                                            <div className="w-1.5 h-6 bg-[#FD8008] rounded-full" /> Applicant Information
+                                        </h2>
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mt-2">Enter your identification details below.</p>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <VoiceDictation onExtractedData={handleVoiceData} targetFields={['name', 'phone', 'aadhaar', 'pincode']} />
+                                        <button onClick={() => setShowScanner(true)} className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3 rounded-2xl flex items-center gap-2 border border-slate-200 transition-all font-bold">
+                                            <ScanFace className="h-5 w-5 text-[#FD8008]" /> AI Scan
+                                        </button>
+                                    </div>
                                 </div>
 
-                                {serviceType.includes("new connection") && (
-                                    <>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white/70 ml-1">Premises Type</label>
-                                            <select 
-                                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none"
-                                                onChange={(e) => setFormData({...formData, premisesType: e.target.value})}
-                                            >
-                                                <option className="bg-slate-900">Domestic</option>
-                                                <option className="bg-slate-900">Commercial</option>
-                                                <option className="bg-slate-900">Industrial</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white/70 ml-1">Requested Load</label>
-                                            <select 
-                                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none"
-                                                onChange={(e) => setFormData({...formData, requestedLoad: e.target.value})}
-                                            >
-                                                <option className="bg-slate-900">1 kW</option>
-                                                <option className="bg-slate-900">2 kW</option>
-                                                <option className="bg-slate-900">5 kW</option>
-                                                <option className="bg-slate-900">10 kW+</option>
-                                            </select>
-                                        </div>
-                                    </>
-                                )}
-
-                                {serviceType.includes("load") && (
-                                     <>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white/70 ml-1">Current Sanctioned Load</label>
-                                            <input type="text" disabled value="2 kW" className="w-full bg-white/5 border border-white/5 opacity-50 rounded-2xl px-6 py-4 text-white" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white/70 ml-1">Proposed New Load</label>
-                                            <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none" placeholder="e.g. 5 kW" />
-                                        </div>
-                                     </>
-                                )}
-                            </div>
-
-                            <div className="mt-12 flex justify-between">
-                                <button onClick={handleBack} className="text-white/50 hover:text-white font-bold px-4 transition-all">Back</button>
-                                <button 
-                                    onClick={handleNext}
-                                    className="bg-primary text-primary-foreground px-10 py-5 rounded-2xl font-black text-lg flex items-center gap-3 shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
-                                >
-                                    Continue <ChevronRight className="h-6 w-6" />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Step 3: Documents */}
-                    {step === 3 && (
-                        <div className="animate-in slide-in-from-right fade-in duration-500">
-                             <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3 mb-10">
-                                <div className="w-1.5 h-8 bg-secondary rounded-full" /> Document Verification
-                            </h2>
-
-                            <div className="space-y-8">
-                                <div className="p-8 rounded-[2rem] bg-gradient-to-br from-primary/20 to-secondary/20 border border-white/10 flex flex-col md:flex-row gap-8 items-center">
-                                    <div className="bg-white/10 p-5 rounded-3xl backdrop-blur-md border border-white/20">
-                                        <FileKey className="h-12 w-12 text-primary" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
+                                        <input
+                                            type="text"
+                                            value={formData.firstName}
+                                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
+                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-lg text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:ring-[#FD8008]/10 focus:border-[#FD8008] transition-all outline-none font-bold"
+                                            placeholder="Enter First Name"
+                                        />
                                     </div>
-                                    <div className="flex-1 text-center md:text-left">
-                                        <h3 className="text-xl font-bold text-white">Digital Document Locker</h3>
-                                        <p className="text-white/50 mt-1">Connect your verified government locker to auto-import Identity and Address proof instantly.</p>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Last Name</label>
+                                        <input
+                                            type="text"
+                                            value={formData.lastName}
+                                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
+                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-lg text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:ring-[#FD8008]/10 focus:border-[#FD8008] transition-all outline-none font-bold"
+                                            placeholder="Enter Last Name"
+                                        />
                                     </div>
-                                    <button 
-                                        onClick={handleDigilockerConnect}
-                                        disabled={isDigilockerVerified || isDigilockerConnecting}
-                                        className={`px-8 py-4 rounded-2xl font-black transition-all shadow-xl
-                                            ${isDigilockerVerified ? 'bg-green-500 text-white' : 'bg-white text-slate-900 hover:scale-105'}`}
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Father / Husband Name</label>
+                                        <input
+                                            type="text"
+                                            value={formData.fatherHusbandName}
+                                            onChange={(e) => setFormData({ ...formData, fatherHusbandName: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
+                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-lg text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:ring-[#FD8008]/10 focus:border-[#FD8008] transition-all outline-none font-bold"
+                                            placeholder="Enter Father or Husband Name"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Number (12 Digits)</label>
+                                        <input
+                                            type="text"
+                                            value={formData.aadhaar}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                if (val.length <= 12) setFormData({ ...formData, aadhaar: val });
+                                            }}
+                                            maxLength={12}
+                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-slate-800 focus:ring-4 focus:ring-[#FD8008]/10 focus:border-[#FD8008] transition-all outline-none font-mono text-xl font-bold placeholder:text-slate-300 tracking-wider"
+                                            placeholder="XXXX-XXXX-XXXX"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Mobile Number</label>
+                                        <input
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                if (val.length <= 10) setFormData({ ...formData, phone: val });
+                                            }}
+                                            maxLength={10}
+                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-slate-800 focus:ring-4 focus:ring-[#FD8008]/10 focus:border-[#FD8008] transition-all outline-none font-mono text-xl font-bold placeholder:text-slate-300 tracking-widest"
+                                            placeholder="+91 XXXXX XXXXX"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-12 flex justify-end">
+                                    <button
+                                        onClick={handleNext}
+                                        disabled={!formData.firstName || !formData.lastName || formData.aadhaar.length !== 12 || formData.phone.length !== 10}
+                                        className="bg-[#FD8008] hover:bg-[#e67300] text-white px-10 py-5 rounded-2xl font-black text-lg flex items-center gap-3 shadow-xl shadow-[#FD8008]/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider"
                                     >
-                                        {isDigilockerConnecting ? "Linking..." : isDigilockerVerified ? "Verified ✅" : "Connect Locker"}
+                                        Proceed <ChevronRight className="h-6 w-6 animate-pulse" />
                                     </button>
                                 </div>
+                            </div>
+                        )}
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-10 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
-                                        <UploadCloud className="h-10 w-10 text-white/30 mb-4" />
-                                        <p className="text-white font-bold">Manual Upload</p>
-                                        <p className="text-white/30 text-xs mt-1">PDF, JPG up to 10MB</p>
+                        {/* Step 2: Service Specific Details */}
+                        {step === 2 && (
+                            <div className="animate-in slide-in-from-right fade-in duration-500">
+                                <h2 className="text-xl font-black text-[#192e59] uppercase tracking-wider flex items-center gap-2 mb-10">
+                                    <div className="w-1.5 h-6 bg-[#FD8008] rounded-full" /> {state?.service} Details
+                                </h2>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-2 md:col-span-2 relative">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Service Location / Address</label>
+                                        <textarea
+                                            rows={3}
+                                            value={formData.address}
+                                            onChange={(e) => {
+                                                setFormData({ ...formData, address: e.target.value });
+                                                setShowAddressSuggestions(true);
+                                            }}
+                                            onFocus={() => setShowAddressSuggestions(true)}
+                                            onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
+                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-slate-800 focus:ring-4 focus:ring-[#FD8008]/10 focus:border-[#FD8008] transition-all outline-none resize-none font-bold"
+                                            placeholder="House No, Street, Landmark..."
+                                        />
+                                        {showAddressSuggestions && filteredAddresses.length > 0 && (
+                                            <div className="absolute top-full left-0 w-full mt-2 bg-white border-2 border-slate-200 rounded-2xl overflow-hidden shadow-2xl z-50 animate-slide-up">
+                                                {filteredAddresses.map((addr, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        onClick={() => {
+                                                            setFormData({ ...formData, address: addr });
+                                                            setShowAddressSuggestions(false);
+                                                        }}
+                                                        className="px-6 py-4 hover:bg-slate-50 cursor-pointer transition-all flex items-center gap-3 border-b border-slate-100 last:border-0"
+                                                    >
+                                                        <MapPin className="h-5 w-5 text-[#FD8008] shrink-0 animate-bounce" />
+                                                        <span className="text-slate-700 text-sm font-bold">{addr}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="border-2 border-dashed border-white/10 rounded-[2rem] p-10 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
-                                        <ScanFace className="h-10 w-10 text-white/30 mb-4" />
-                                        <p className="text-white font-bold">Physical Scan</p>
-                                        <p className="text-white/30 text-xs mt-1">Use Kiosk Scanner Bed</p>
+
+                                    {/* occupancy fields */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Type of Occupancy</label>
+                                        <select
+                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-slate-700 focus:ring-4 focus:ring-[#FD8008]/10 outline-none font-bold"
+                                            value={formData.occupancyType}
+                                            onChange={(e) => setFormData({ ...formData, occupancyType: e.target.value })}
+                                        >
+                                            <option className="bg-white text-slate-700">Owned</option>
+                                            <option className="bg-white text-slate-700">Rented</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Connection Category</label>
+                                        <select
+                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-slate-700 focus:ring-4 focus:ring-[#FD8008]/10 outline-none font-bold"
+                                            value={formData.connectionCategory}
+                                            onChange={(e) => setFormData({ ...formData, connectionCategory: e.target.value })}
+                                        >
+                                            <option className="bg-white text-slate-700">Domestic</option>
+                                            <option className="bg-white text-slate-700">Commercial</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Sanctioned Load Requirement (kW)</label>
+                                        <input 
+                                            type="text"
+                                            value={formData.requestedLoad}
+                                            onChange={(e) => setFormData({ ...formData, requestedLoad: e.target.value.replace(/[^0-9.]/g, '') })}
+                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-lg text-slate-800 focus:ring-4 focus:ring-[#FD8008]/10 focus:border-[#FD8008] transition-all outline-none font-bold"
+                                            placeholder="Enter load in kW (e.g. 5)"
+                                        />
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="mt-12 flex justify-between items-center">
-                                <button onClick={handleBack} className="text-white/50 hover:text-white font-bold px-4 transition-all">Back</button>
-                                <button 
-                                    onClick={handleSubmit}
-                                    disabled={isSubmitting}
-                                    className="bg-secondary text-secondary-foreground px-12 py-5 rounded-2xl font-black text-xl flex items-center gap-3 shadow-xl shadow-secondary/40 hover:scale-105 active:scale-95 transition-all"
-                                >
-                                    {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Submit Application"}
-                                </button>
+                                <div className="mt-12 flex justify-between">
+                                    <button onClick={handleBack} className="text-slate-400 hover:text-slate-800 font-black uppercase tracking-wider px-4 transition-all">Back</button>
+                                    <button
+                                        onClick={handleNext}
+                                        className="bg-[#FD8008] hover:bg-[#e67300] text-white px-10 py-5 rounded-2xl font-black text-lg flex items-center gap-3 shadow-xl shadow-[#FD8008]/30 hover:scale-105 active:scale-95 transition-all uppercase tracking-wider"
+                                    >
+                                        Continue <ChevronRight className="h-6 w-6 animate-pulse" />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
+                        {/* Step 3: Documents */}
+                        {step === 3 && (
+                            <div className="animate-in slide-in-from-right fade-in duration-500">
+                                <h2 className="text-xl font-black text-[#192e59] uppercase tracking-wider flex items-center gap-2 mb-10">
+                                    <div className="w-1.5 h-6 bg-[#FD8008] rounded-full" /> Document Verification
+                                </h2>
+
+                                <div className="space-y-8">
+                                    <div className="p-8 rounded-[2rem] bg-gradient-to-br from-[#FD8008]/10 to-slate-50 border border-slate-100 flex flex-col md:flex-row gap-8 items-center">
+                                        <div className="bg-slate-100 p-5 rounded-3xl border border-slate-200">
+                                            <FileKey className="h-12 w-12 text-[#FD8008]" />
+                                        </div>
+                                        <div className="flex-1 text-center md:text-left">
+                                            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Digital Document Locker</h3>
+                                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mt-2">Connect your verified government locker to auto-import Identity and Address proof instantly.</p>
+                                        </div>
+                                        <button
+                                            onClick={handleDigilockerConnect}
+                                            disabled={isDigilockerVerified || isDigilockerConnecting}
+                                            className={`px-8 py-4 rounded-2xl font-black transition-all shadow-xl uppercase tracking-wider
+                                                ${isDigilockerVerified ? 'bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-[#FD8008] hover:bg-[#e67300] text-white hover:scale-105 shadow-[#FD8008]/20'}`}
+                                        >
+                                            {isDigilockerConnecting ? "Linking..." : isDigilockerVerified ? "Verified ✅" : "Connect Locker"}
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer relative overflow-hidden group text-center">
+                                            <div className="absolute inset-0 bg-[#FD8008]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+                                            <QrCode className="h-12 w-12 text-slate-300 mb-4 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                                            <p className="text-slate-700 font-black uppercase tracking-tight relative z-10 text-sm">Scan QR to Upload Identity Proof</p>
+                                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-2 relative z-10 leading-relaxed">Aadhaar / PAN<br />(Secure Mobile Upload)</p>
+                                            <button className="mt-6 bg-[#FD8008] hover:bg-[#e67300] px-6 py-2.5 rounded-xl text-[10px] font-black text-white hover:bg-primary transition-colors shadow-lg relative z-10 uppercase tracking-widest">Show QR Code</button>
+                                        </div>
+                                        <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer relative overflow-hidden group text-center">
+                                            <div className="absolute inset-0 bg-[#FD8008]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+                                            <QrCode className="h-12 w-12 text-slate-300 mb-4 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                                            <p className="text-slate-700 font-black uppercase tracking-tight relative z-10 text-sm">Scan QR to Upload Ownership Proof</p>
+                                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-2 relative z-10 leading-relaxed">Registry Papers / Tax Receipt<br />(Secure Mobile Upload)</p>
+                                            <button className="mt-6 bg-[#FD8008] hover:bg-[#e67300] px-6 py-2.5 rounded-xl text-[10px] font-black text-white hover:bg-primary transition-colors shadow-lg relative z-10 uppercase tracking-widest">Show QR Code</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-12 flex justify-between items-center">
+                                    <button onClick={handleBack} className="text-slate-400 hover:text-slate-800 font-black uppercase tracking-wider px-4 transition-all">Back</button>
+                                    <button
+                                        onClick={handleSubmit}
+                                        disabled={isSubmitting}
+                                        className="bg-[#FD8008] hover:bg-[#e67300] text-white px-12 py-5 rounded-2xl font-black text-xl flex items-center gap-3 shadow-xl shadow-[#FD8008]/40 hover:scale-105 active:scale-95 transition-all uppercase tracking-wider"
+                                    >
+                                        {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin text-white" /> : "Submit Application"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+                    
+                    {/* Footer Decoration */}
+                    <div className="h-2 bg-gradient-to-r from-slate-100 via-[#192e59]/20 to-slate-100 flex-shrink-0"></div>
                 </div>
             </div>
 
@@ -344,7 +446,13 @@ const ApplicationFormPage = () => {
                     scanType="aadhaar"
                     onClose={() => setShowScanner(false)}
                     onSuccess={(data) => {
-                        setFormData(prev => ({ ...prev, name: data.name, aadhaar: data.aadhaar, address: data.address }));
+                        setFormData(prev => ({ 
+                            ...prev, 
+                            firstName: data.name?.split(' ')[0] || "", 
+                            lastName: data.name?.split(' ').slice(1).join(' ') || "", 
+                            aadhaar: data.aadhaar, 
+                            address: data.address 
+                        }));
                         setShowScanner(false);
                     }}
                 />
