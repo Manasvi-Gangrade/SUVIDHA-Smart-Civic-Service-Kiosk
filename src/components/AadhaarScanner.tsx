@@ -10,38 +10,40 @@ interface AadhaarScannerProps {
 export const AadhaarScanner = ({ onSuccess, onCancel }: AadhaarScannerProps) => {
     const [status, setStatus] = useState<"initializing" | "scanning" | "error">("initializing");
     const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+    const isMountedRef = useRef(true);
 
     const handleCancel = async () => {
+        isMountedRef.current = false;
         if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
             try {
                 await html5QrCodeRef.current.stop();
+                html5QrCodeRef.current.clear();
             } catch (err) {
                 console.error("Failed to stop scanner on cancel", err);
             }
         }
         const el = document.getElementById("reader");
         if (el) el.innerHTML = "";
-        setTimeout(() => {
-            onCancel();
-        }, 50);
+        onCancel();
     };
 
     const handleScanSuccess = async (data: string) => {
+        isMountedRef.current = false;
         if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
             try {
                 await html5QrCodeRef.current.stop();
+                html5QrCodeRef.current.clear();
             } catch (err) {
                 console.error("Failed to stop scanner on success", err);
             }
         }
         const el = document.getElementById("reader");
         if (el) el.innerHTML = "";
-        setTimeout(() => {
-            onSuccess(data);
-        }, 50);
+        onSuccess(data);
     };
 
     useEffect(() => {
+        isMountedRef.current = true;
         let html5QrCode: Html5Qrcode | null = null;
         
         const startScanner = async () => {
@@ -50,36 +52,66 @@ export const AadhaarScanner = ({ onSuccess, onCancel }: AadhaarScannerProps) => 
 
             try {
                 html5QrCode = new Html5Qrcode("reader");
+                if (!isMountedRef.current) {
+                    return;
+                }
                 html5QrCodeRef.current = html5QrCode;
 
                 await html5QrCode.start(
                     { facingMode: "user" },
                     { fps: 10, qrbox: { width: 280, height: 280 } },
                     (decodedText) => {
-                        handleScanSuccess(decodedText);
+                        if (isMountedRef.current) {
+                            handleScanSuccess(decodedText);
+                        }
                     },
                     () => {}
                 );
+                
+                if (!isMountedRef.current) {
+                    if (html5QrCode.isScanning) {
+                        await html5QrCode.stop();
+                        html5QrCode.clear();
+                    }
+                    return;
+                }
                 setStatus("scanning");
             } catch (err) {
-                console.error("Camera failed", err);
-                setStatus("error");
+                if (isMountedRef.current) {
+                    console.error("Camera failed", err);
+                    setStatus("error");
+                }
             }
         };
 
         const timer = setTimeout(startScanner, 300);
 
         return () => {
+            isMountedRef.current = false;
             clearTimeout(timer);
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().catch(() => {}).finally(() => {
-                    const el = document.getElementById("reader");
-                    if (el) el.innerHTML = "";
-                });
-            } else {
+            
+            const stopScannerImmediate = async () => {
+                if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+                    try {
+                        await html5QrCodeRef.current.stop();
+                        html5QrCodeRef.current.clear();
+                    } catch (e) {
+                        console.error("Error stopping scanner ref in cleanup", e);
+                    }
+                }
+                if (html5QrCode && html5QrCode.isScanning) {
+                    try {
+                        await html5QrCode.stop();
+                        html5QrCode.clear();
+                    } catch (e) {
+                        console.error("Error stopping scanner instance in cleanup", e);
+                    }
+                }
                 const el = document.getElementById("reader");
                 if (el) el.innerHTML = "";
-            }
+            };
+            
+            stopScannerImmediate();
         };
     }, []);
 
@@ -152,7 +184,7 @@ export const AadhaarScanner = ({ onSuccess, onCancel }: AadhaarScannerProps) => 
                                 className="w-full py-5 bg-indigo-50 text-indigo-600 font-black rounded-2xl hover:bg-indigo-100 transition-all uppercase text-[11px] tracking-widest border-2 border-dashed border-indigo-200 flex items-center justify-center gap-3 shadow-sm active:scale-95"
                             >
                                 <Camera className="h-4 w-4" /> Use Virtual Scan (Demo Mode)
-                            </button>
+                             </button>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, PlusCircle, FileText, CheckCircle2, ChevronRight, User, Home, UploadCloud, ScanFace, FileKey, ShieldCheck, Loader2, Gauge, MapPin, Zap, QrCode } from "lucide-react";
+import { ArrowLeft, PlusCircle, FileText, CheckCircle2, ChevronRight, User, Home, UploadCloud, ScanFace, FileKey, ShieldCheck, Loader2, Gauge, MapPin, Zap, QrCode, Printer } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ScannerOverlay from "../components/ScannerOverlay";
@@ -125,23 +125,72 @@ const ApplicationFormPage = () => {
                 </div>
 
                 <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
-                    <div className="w-full max-w-lg bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-                        <Receipt
-                            transactionId={referenceId}
-                            type={state?.service || "Service Application"}
-                            date={new Date().toLocaleDateString()}
-                            userName={`${formData.firstName} ${formData.lastName}`.trim()}
-                            details={[
-                                { label: "Category", value: state?.category || "Civic" },
-                                { label: "Phone", value: formData.phone },
-                                { label: "Address", value: formData.city },
-                                ...(formData.connectionCategory ? [{ label: "Connection Type", value: formData.connectionCategory }] : []),
-                                ...(formData.occupancyType ? [{ label: "Occupancy", value: formData.occupancyType }] : []),
-                                ...(formData.requestedLoad ? [{ label: "Sanctioned Load", value: `${formData.requestedLoad} kW` }] : []),
-                                { label: "Status", value: "Under Review" }
-                            ]}
-                            onClose={() => navigate("/")}
-                        />
+                    <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+                        {/* Header */}
+                        <div className="bg-[#192e59] p-8 text-white relative flex-shrink-0 text-center">
+                            <h1 className="text-3xl font-[900] tracking-tight uppercase leading-none">Application Submitted Successfully</h1>
+                            <p className="text-blue-200 text-xs font-bold mt-2 tracking-[0.3em] uppercase">Your request is under review</p>
+                        </div>
+                        
+                        {/* Content Grid */}
+                        <div className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar bg-white grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                            {/* Left Column: Confirmation & Actions */}
+                            <div className="flex flex-col justify-center items-center md:items-start text-center md:text-left space-y-6">
+                                <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center border-4 border-emerald-500/20 shadow-md">
+                                    <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-pulse" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-[900] text-slate-800 uppercase tracking-tight leading-tight">Thank You, {formData.firstName}!</h2>
+                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mt-2 leading-relaxed">
+                                        Your service application has been registered in our municipal database. A field agent will contact you shortly to schedule site verification.
+                                    </p>
+                                </div>
+                                <div className="space-y-3 w-full bg-slate-50 border border-slate-100 p-5 rounded-2xl">
+                                    <div className="flex items-center gap-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                        <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                                        Expected TAT: <span className="text-slate-800 font-black">7 Working Days</span>
+                                    </div>
+                                    <div className="flex items-center gap-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                        <div className="w-2 h-2 bg-[#FD8008] rounded-full animate-ping" />
+                                        Category: <span className="text-slate-800 font-black">{state?.category || "Electricity"}</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap gap-4 w-full pt-4">
+                                    <button 
+                                        onClick={() => window.print()}
+                                        className="flex-1 min-w-[140px] bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-900/10 text-sm uppercase tracking-wider"
+                                    >
+                                        <Printer className="h-5 w-5" /> Print Copy
+                                    </button>
+                                    <button 
+                                        onClick={() => navigate("/")}
+                                        className="flex-1 min-w-[140px] bg-[#FD8008] hover:bg-[#e67300] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#FD8008]/20 text-sm uppercase tracking-wider"
+                                    >
+                                        Finish Flow
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Right Column: Receipt View */}
+                            <div className="flex items-center justify-center bg-slate-50 border border-slate-100 p-6 rounded-[2rem] shadow-inner">
+                                <Receipt
+                                    transactionId={referenceId}
+                                    type={state?.service || "Service Application"}
+                                    date={new Date().toLocaleDateString()}
+                                    userName={`${formData.firstName} ${formData.lastName}`.trim()}
+                                    details={[
+                                        { label: "Category", value: state?.category || "Civic" },
+                                        { label: "Phone", value: formData.phone },
+                                        { label: "Address", value: formData.city },
+                                        ...(formData.connectionCategory ? [{ label: "Connection Type", value: formData.connectionCategory }] : []),
+                                        ...(formData.occupancyType ? [{ label: "Occupancy", value: formData.occupancyType }] : []),
+                                        ...(formData.requestedLoad ? [{ label: "Sanctioned Load", value: `${formData.requestedLoad} kW` }] : []),
+                                        { label: "Status", value: "Under Review" }
+                                    ]}
+                                    onClose={() => navigate("/")}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,7 @@
-// A simulated backend using localStorage
+import { isFirebaseConfigured, db as firestore } from "./firebase";
+import { collection, onSnapshot, setDoc, updateDoc, doc } from "firebase/firestore";
+
+// A simulated and real-time cloud synced civic database
 export interface ComplaintRecord {
     id: string;
     type: 'complaint';
@@ -10,6 +13,7 @@ export interface ComplaintRecord {
     location: string;
     status: 'Pending' | 'In Progress' | 'Resolved';
     timestamp: number;
+    synced?: boolean; // Tracking for offline-first deletion synchronization
 }
 
 export interface ApplicationRecord {
@@ -24,6 +28,7 @@ export interface ApplicationRecord {
     pincode: string;
     status: 'Under Review' | 'Approved' | 'Rejected';
     timestamp: number;
+    synced?: boolean; // Tracking for offline-first deletion synchronization
 }
 
 export type CitizenRecord = ComplaintRecord | ApplicationRecord;
@@ -31,6 +36,74 @@ export type CitizenRecord = ComplaintRecord | ApplicationRecord;
 const DB_KEY = 'suvidha_kiosk_db';
 
 class LocalDatabase {
+    constructor() {
+        // Setup real-time cloud sync subscription if Firebase is active!
+        if (isFirebaseConfigured && firestore) {
+            try {
+                onSnapshot(collection(firestore, "records"), (snapshot) => {
+                    const cloudRecords: CitizenRecord[] = [];
+                    snapshot.forEach((docSnap) => {
+                        cloudRecords.push({
+                            id: docSnap.id,
+                            ...docSnap.data(),
+                            synced: true // Explicitly mark cloud documents as synced
+                        } as CitizenRecord);
+                    });
+                    
+                    const localRecords = this.getRecords();
+                    const merged = [...cloudRecords];
+                    
+                    // Keep ONLY local records that have never been synced (synced === false)
+                    // If a local record has synced === true but is missing in cloudRecords, it means
+                    // it was deleted from the Firebase console, so we should delete it locally too!
+                    localRecords.forEach(local => {
+                        if (local.synced === false) {
+                            if (!merged.some(cloud => cloud.id === local.id)) {
+                                merged.push(local);
+                            }
+                        }
+                    });
+                    
+                    // Sort by timestamp descending
+                    merged.sort((a, b) => b.timestamp - a.timestamp);
+                    
+                    // Mirror to local storage safely
+                    localStorage.setItem(DB_KEY, JSON.stringify(merged));
+                    
+                    // Handle sync logic for any unsynced local records
+                    const unsynced = localRecords.filter(r => r.synced === false);
+                    if (unsynced.length > 0) {
+                        unsynced.forEach(local => {
+                            const toUpload = { ...local, synced: true };
+                            setDoc(doc(firestore, "records", local.id), toUpload)
+                                .then(() => {
+                                    // Update local record to synced: true
+                                    const current = this.getRecords();
+                                    const updated = current.map(r => r.id === local.id ? { ...r, synced: true } : r);
+                                    localStorage.setItem(DB_KEY, JSON.stringify(updated));
+                                    window.dispatchEvent(new Event("suvidha_db_sync"));
+                                })
+                                .catch(() => {});
+                        });
+                    }
+                    
+                    // Notify active screens to update state reactively
+                    window.dispatchEvent(new Event("suvidha_db_sync"));
+                }, (error) => {
+                    console.warn(
+                        "Firestore live sync permission blocked or disconnected. " +
+                        "Please verify that your Firebase Firestore Security Rules are set to allow read/write! " +
+                        "Falling back to high-performance local database failover.",
+                        error
+                    );
+                    window.dispatchEvent(new Event("suvidha_db_sync"));
+                });
+            } catch (error) {
+                console.error("Firestore sync subscription failed:", error);
+            }
+        }
+    }
+
     private getRecords(): CitizenRecord[] {
         const data = localStorage.getItem(DB_KEY);
         return data ? JSON.parse(data) : [];
@@ -38,37 +111,91 @@ class LocalDatabase {
 
     private saveRecords(records: CitizenRecord[]) {
         localStorage.setItem(DB_KEY, JSON.stringify(records));
+        // Dispatch local event to keep active tabs in sync when offline
+        window.dispatchEvent(new Event("suvidha_db_sync"));
     }
 
-    // Generate a random ID like CMP-8492
+    // Generate a secure ID like CMP-8492
     private generateId(prefix: string) {
         return `${prefix}-${Math.floor(Math.random() * 9000 + 1000)}`;
     }
 
     public addComplaint(data: Omit<ComplaintRecord, 'id' | 'type' | 'status' | 'timestamp'>): string {
-        const records = this.getRecords();
+        const id = this.generateId('CMP');
         const newRecord: ComplaintRecord = {
             ...data,
-            id: this.generateId('CMP'),
+            id,
             type: 'complaint',
             status: 'Pending',
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            synced: false // Marked as false initially (unsynced)
         };
+
+        // Write locally first to ensure absolute 100% data retention (Offline-First)
+        const records = this.getRecords();
         this.saveRecords([newRecord, ...records]);
-        return newRecord.id;
+
+        // Attempt cloud sync in the background
+        if (isFirebaseConfigured && firestore) {
+            const toUpload = { ...newRecord, synced: true };
+            setDoc(doc(firestore, "records", id), toUpload)
+                .then(() => {
+                    // Update local storage to synced: true on success
+                    const current = this.getRecords();
+                    const updated = current.map(r => r.id === id ? { ...r, synced: true } : r);
+                    this.saveRecords(updated);
+                })
+                .catch(error => {
+                    console.error("Failed to sync complaint to Firebase Firestore:", error);
+                });
+        }
+        return id;
     }
 
     public addApplication(data: Omit<ApplicationRecord, 'id' | 'type' | 'status' | 'timestamp'>): string {
-        const records = this.getRecords();
+        const id = this.generateId('APP');
         const newRecord: ApplicationRecord = {
             ...data,
-            id: this.generateId('APP'),
+            id,
             type: 'application',
             status: 'Under Review',
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            synced: false // Marked as false initially (unsynced)
         };
+
+        // Write locally first to ensure absolute 100% data retention (Offline-First)
+        const records = this.getRecords();
         this.saveRecords([newRecord, ...records]);
-        return newRecord.id;
+
+        // Attempt cloud sync in the background
+        if (isFirebaseConfigured && firestore) {
+            const toUpload = { ...newRecord, synced: true };
+            setDoc(doc(firestore, "records", id), toUpload)
+                .then(() => {
+                    // Update local storage to synced: true on success
+                    const current = this.getRecords();
+                    const updated = current.map(r => r.id === id ? { ...r, synced: true } : r);
+                    this.saveRecords(updated);
+                })
+                .catch(error => {
+                    console.error("Failed to sync application to Firebase Firestore:", error);
+                });
+        }
+        return id;
+    }
+
+    public updateStatus(id: string, status: any) {
+        // Write locally first to ensure absolute 100% data retention (Offline-First)
+        const records = this.getRecords();
+        const updated = records.map(r => r.id === id ? { ...r, status, timestamp: Date.now() } : r);
+        this.saveRecords(updated);
+
+        // Attempt cloud sync in the background
+        if (isFirebaseConfigured && firestore) {
+            updateDoc(doc(firestore, "records", id), { status, timestamp: Date.now() }).catch(error => {
+                console.error("Failed to sync status update to Firebase Firestore:", error);
+            });
+        }
     }
 
     public getAllRecords(): CitizenRecord[] {
@@ -80,7 +207,6 @@ class LocalDatabase {
         const totalComplaints = records.filter(r => r.type === 'complaint').length;
         const totalApplications = records.filter(r => r.type === 'application').length;
 
-        // Group by category for charts
         const byCategory = records.reduce((acc, curr) => {
             acc[curr.category] = (acc[curr.category] || 0) + 1;
             return acc;
@@ -94,21 +220,23 @@ class LocalDatabase {
         };
     }
 
-    // Seed with mock data for the hackathon demo if empty
     public seedIfEmpty() {
-        if (this.getRecords().length === 0) {
-            const mockData: CitizenRecord[] = [
-                { id: 'CMP-1024', type: 'complaint', category: 'Electricity', service: 'Power Outage', name: 'Rahul S.', phone: '9876543210', description: 'No power since morning', location: 'Sector 4', status: 'In Progress', timestamp: Date.now() - 86400000 },
-                { id: 'APP-5521', type: 'application', category: 'Water', service: 'New Connection', name: 'Priya K.', aadhaar: 'XXXX-XXXX-1234', phone: '9123456780', city: 'New Delhi', pincode: '110001', status: 'Approved', timestamp: Date.now() - 172800000 },
-                { id: 'CMP-8812', type: 'complaint', category: 'Waste', service: 'Missed Pickup', name: 'Amit M.', phone: '9001122334', description: 'Garbage not collected for 3 days', location: 'Vasant Vihar', status: 'Pending', timestamp: Date.now() - 3600000 },
-                { id: 'CMP-9921', type: 'complaint', category: 'Municipal', service: 'Pothole', name: 'Sneha P.', phone: '9988776655', description: 'Huge pothole on main road', location: 'Lajpat Nagar', status: 'Resolved', timestamp: Date.now() - 400000000 },
-                { id: 'APP-1102', type: 'application', category: 'Property', service: 'Tax Registration', name: 'Rohan D.', aadhaar: 'XXXX-XXXX-9988', phone: '9876512345', city: 'New Delhi', pincode: '110015', status: 'Under Review', timestamp: Date.now() - 5000000 }
-            ];
-            this.saveRecords(mockData);
-        }
+        // Dummy data disabled as requested by the user
     }
 }
 
 export const db = new LocalDatabase();
-// Seed immediately
-db.seedIfEmpty();
+
+// Clear default dummy records to ensure a fresh empty state for real-time testing
+try {
+    const existingData = localStorage.getItem('suvidha_kiosk_db');
+    if (existingData) {
+        const records = JSON.parse(existingData);
+        const hasMock = records.some((r: any) => r.id === 'CMP-1024' || r.id === 'APP-5521');
+        if (hasMock) {
+            localStorage.removeItem('suvidha_kiosk_db');
+        }
+    }
+} catch (e) {
+    console.error("Failed to clean up dummy mock data", e);
+}

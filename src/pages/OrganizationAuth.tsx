@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ShieldCheck, ArrowRight, Loader2, Smartphone, Fingerprint, QrCode, RefreshCw, X, ArrowLeft } from "lucide-react";
+import { ShieldCheck, ArrowRight, Loader2, Smartphone, Fingerprint, QrCode, RefreshCw, X, ArrowLeft, MessageSquare } from "lucide-react";
 import { AadhaarScanner } from "../components/AadhaarScanner";
 import { toast } from "sonner";
 
@@ -30,6 +30,11 @@ export const OrganizationAuth = () => {
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaText, setCaptchaText] = useState("X7B92");
 
+  // OTP Dynamic Verification States
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [showSmsPopup, setShowSmsPopup] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+
   const inputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
   const refreshCaptcha = () => {
@@ -37,6 +42,52 @@ export const OrganizationAuth = () => {
     let result = "";
     for (let i = 0; i < 5; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
     setCaptchaText(result);
+  };
+
+  useEffect(() => {
+    refreshCaptcha();
+  }, []);
+
+  const triggerOtpSend = (displayNum: string) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOtp(code);
+      setOtpSent(true);
+      setIsLoading(false);
+      setShowSmsPopup(true);
+      toast.success(`Secure verification OTP sent to ${displayNum}`);
+    }, 1200);
+  };
+
+  // Watch for full Aadhaar completion to auto-trigger OTP (Simulation)
+  useEffect(() => {
+    const fullAadhaar = aadhaarBlocks.join("");
+    if (fullAadhaar.length === 12 && !otpSent) {
+      triggerOtpSend(`+91 ******${Math.floor(1000 + Math.random() * 9000)}`);
+    }
+  }, [aadhaarBlocks, otpSent]);
+
+  // Watch for full Mobile Number completion to auto-trigger OTP (Simulation)
+  useEffect(() => {
+    if (mobileNumber.length === 10 && !otpSent) {
+      triggerOtpSend(`+91 ******${mobileNumber.slice(-4)}`);
+    }
+  }, [mobileNumber, otpSent]);
+
+  // Reset states when switching tabs
+  useEffect(() => {
+    setOtp("");
+    setGeneratedOtp("");
+    setOtpSent(false);
+    setShowSmsPopup(false);
+  }, [authMethod]);
+
+  const handleResendOtp = () => {
+    const displayNum = authMethod === "aadhaar" 
+      ? `+91 ******${Math.floor(1000 + Math.random() * 9000)}`
+      : `+91 ******${mobileNumber.slice(-4) || "8842"}`;
+    triggerOtpSend(displayNum);
   };
 
   const handleAadhaarChange = (index: number, value: string) => {
@@ -58,17 +109,23 @@ export const OrganizationAuth = () => {
       refreshCaptcha();
       return;
     }
+
+    if (otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP!");
+      return;
+    }
     
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      toast.success("Authentication Successful");
+      toast.success("Identity Authenticated successfully!");
+      setShowSmsPopup(false);
       if (redirectState && redirectState.redirectTo) {
         navigate(redirectState.redirectTo, { state: redirectState.serviceState });
       } else {
         navigate(`/department/${id}`);
       }
-    }, 1500);
+    }, 1200);
   };
 
   const handleDigiLockerLogin = () => {
@@ -94,11 +151,30 @@ export const OrganizationAuth = () => {
       case 'property': return 'Property & Tax Dept.';
       default: return 'Department Login';
     }
-  }
+  };
 
   return (
     <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
       
+      {/* SIMULATED PHONE NOTIFICATION POPUP */}
+      {showSmsPopup && (
+        <div className="fixed top-6 right-6 w-80 bg-white border border-slate-200 rounded p-4 shadow-xl z-[100] animate-in slide-in-from-right-8 duration-500">
+          <div className="flex items-start gap-4">
+            <div className="h-10 w-10 bg-green-600 rounded flex items-center justify-center shrink-0">
+              <MessageSquare className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs font-bold text-slate-500 uppercase">Messages • Now</span>
+                <button onClick={() => setShowSmsPopup(false)} className="text-slate-400 hover:text-slate-900">✕</button>
+              </div>
+              <p className="text-xs font-bold text-slate-900">Govt of India (SUVIDHA)</p>
+              <p className="text-sm text-slate-600 mt-1">Your verification code is <span className="font-bold text-[#192e59]">{generatedOtp}</span>. Do not share.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Background Video Overlay */}
       <div className="absolute inset-0 z-0">
         <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30 mix-blend-overlay">
@@ -116,7 +192,7 @@ export const OrganizationAuth = () => {
               setAadhaarBlocks([num.slice(0,4), num.slice(4,8), num.slice(8,12)]);
             }
             setShowScanner(false);
-            toast.success("Aadhaar Scanned!");
+            toast.success("Aadhaar Scanned successfully!");
           }}
           onCancel={() => setShowScanner(false)}
         />
@@ -141,25 +217,28 @@ export const OrganizationAuth = () => {
             {/* Unified Tabs Container */}
             <div className="flex bg-slate-50 p-1.5 rounded-[1.5rem] border-2 border-slate-100 mb-12">
               <button 
+                type="button"
                 onClick={() => setAuthMethod("aadhaar")}
                 className={`flex-1 py-4 rounded-[1.1rem] flex flex-col items-center gap-2 transition-all duration-500 ${authMethod === 'aadhaar' ? 'bg-[#192e59] text-white shadow-2xl' : 'text-slate-400 hover:text-[#192e59] hover:bg-white'}`}
               >
                 <Fingerprint className="w-6 h-6" />
-                <span className="font-black text-[10px] uppercase tracking-[0.2em]">Aadhaar Auth</span>
+                <span className="font-black text-xs uppercase tracking-[0.2em]">Aadhaar Auth</span>
               </button>
               <button 
+                type="button"
                 onClick={() => setAuthMethod("mobile")}
                 className={`flex-1 py-4 rounded-[1.1rem] flex flex-col items-center gap-2 transition-all duration-500 ${authMethod === 'mobile' ? 'bg-[#192e59] text-white shadow-2xl' : 'text-slate-400 hover:text-[#192e59] hover:bg-white'}`}
               >
                 <Smartphone className="w-6 h-6" />
-                <span className="font-black text-[10px] uppercase tracking-[0.2em]">Mobile Auth</span>
+                <span className="font-black text-xs uppercase tracking-[0.2em]">Mobile Auth</span>
               </button>
               <button 
+                type="button"
                 onClick={() => setAuthMethod("digilocker")}
                 className={`flex-1 py-4 rounded-[1.1rem] flex flex-col items-center gap-2 transition-all duration-500 ${authMethod === 'digilocker' ? 'bg-[#192e59] text-white shadow-2xl' : 'text-slate-400 hover:text-[#192e59] hover:bg-white'}`}
               >
                 <ShieldCheck className="w-6 h-6" />
-                <span className="font-black text-[10px] uppercase tracking-[0.2em]">DigiLocker</span>
+                <span className="font-black text-xs uppercase tracking-[0.2em]">DigiLocker</span>
               </button>
             </div>
 
@@ -244,14 +323,18 @@ export const OrganizationAuth = () => {
                         placeholder="XXXXXX"
                         className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-6 py-4 font-mono text-2xl font-bold text-[#192e59] tracking-[0.5em] focus:border-[#192e59] outline-none transition-all placeholder:text-slate-300"
                       />
-                      <button type="button" className="text-xs font-black text-[#FD8008] uppercase tracking-[0.15em] hover:underline flex items-center gap-1 mt-1">
+                      <button 
+                        type="button" 
+                        onClick={handleResendOtp}
+                        className="text-xs font-black text-[#FD8008] uppercase tracking-[0.15em] hover:underline flex items-center gap-1 mt-1"
+                      >
                         Didn't receive code? <span className="underline">Resend OTP Now</span>
                       </button>
                     </div>
 
                     {/* Captcha Field */}
                     <div className="space-y-3">
-                      <label className="text-[10px] font-[900] text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <label className="text-xs font-[900] text-slate-400 uppercase tracking-widest flex items-center gap-2">
                         Security Captcha <span className="text-red-400">*</span>
                       </label>
                       <div className="flex gap-3">

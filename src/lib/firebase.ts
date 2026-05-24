@@ -1,4 +1,8 @@
-// 🏛️ SECURE FIREBASE CONFIGURATION WITH FAILSFE FALLBACKS
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
+// Secure Firebase Configuration with failsafe fallbacks
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "placeholder-api-key",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "placeholder-auth-domain",
@@ -15,9 +19,22 @@ const isFirebaseConfigured =
   !firebaseConfig.projectId.startsWith("your-") &&
   firebaseConfig.apiKey !== "placeholder-api-key";
 
-// Defensive mock to prevent boot-up static compilation crashes when firebase is not installed
-export const app = null;
-export const db = null;
-export const auth = null;
+let appInstance = null;
+let dbInstance = null;
+let authInstance = null;
 
+if (isFirebaseConfigured) {
+  try {
+    appInstance = initializeApp(firebaseConfig);
+    dbInstance = getFirestore(appInstance);
+    authInstance = getAuth(appInstance);
+    authInstance.useDeviceLanguage();
+  } catch (error) {
+    console.error("Firebase failed to initialize:", error);
+  }
+}
+
+export const app = appInstance;
+export const db = dbInstance;
+export const auth = authInstance;
 export { isFirebaseConfigured };

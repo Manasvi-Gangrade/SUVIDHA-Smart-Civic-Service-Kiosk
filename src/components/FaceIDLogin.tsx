@@ -14,24 +14,38 @@ const FaceIDLogin = ({ onSuccess, onCancel }: FaceIDLoginProps) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    let activeStream: MediaStream | null = null;
+
     async function startCamera() {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (!isMounted) {
+          mediaStream.getTracks().forEach(track => track.stop());
+          return;
+        }
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
         }
+        activeStream = mediaStream;
         setStream(mediaStream);
         setStatus("scanning");
       } catch (err) {
-        console.error("Camera access failed", err);
-        setStatus("error");
-        toast.error("Camera access denied or not available.");
+        if (isMounted) {
+          console.error("Camera access failed", err);
+          setStatus("error");
+          toast.error("Camera access denied or not available.");
+        }
       }
     }
 
     startCamera();
 
     return () => {
+      isMounted = false;
+      if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+      }
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }

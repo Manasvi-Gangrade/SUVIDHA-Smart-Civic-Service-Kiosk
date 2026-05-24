@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   LayoutDashboard,
   FileText,
@@ -42,6 +42,7 @@ import {
   Wifi,
   ChevronRight,
   Plus,
+  X,
   BarChart as BarChartIcon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -61,6 +62,7 @@ import {
   Legend
 } from 'recharts';
 import { db } from "@/lib/database";
+import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -72,23 +74,158 @@ const AdminDashboard = () => {
     language: "English"
   });
 
-  // Fetch live data from local database
-  const records = useMemo(() => db.getAllRecords(), []);
-  const statsData = useMemo(() => db.getStats(), [records]);
+  const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
+  const [newServiceType, setNewServiceType] = useState<"complaint" | "application">("complaint");
+  const [newServiceData, setNewServiceData] = useState({
+    name: "",
+    phone: "",
+    category: "Electricity",
+    service: "New Meter Connection",
+    description: "",
+    location: "Guwahati City",
+    aadhaar: "",
+    city: "Guwahati",
+    pincode: "781001"
+  });
+
+  // Fetch live data as state from local database to support real-time reactivity
+  const [recordsList, setRecordsList] = useState(() => db.getAllRecords());
+  
+  useEffect(() => {
+    const handleSync = () => {
+      setRecordsList(db.getAllRecords());
+    };
+    window.addEventListener("suvidha_db_sync", handleSync);
+    return () => window.removeEventListener("suvidha_db_sync", handleSync);
+  }, []);
+  
+  const statsData = useMemo(() => db.getStats(), [recordsList]);
   
   const resolvedCount = useMemo(() => 
-    records.filter(r => r.status === 'Resolved' || r.status === 'Approved').length, 
-    [records]
+    recordsList.filter(r => r.status === 'Resolved' || r.status === 'Approved').length, 
+    [recordsList]
   );
 
+  const chartData = useMemo(() => {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const aggregated = days.map(name => ({ name, apps: 0, comps: 0 }));
+
+    recordsList.forEach(r => {
+      if (!r.timestamp) return;
+      const dayIndex = new Date(r.timestamp).getDay();
+      if (r.type === 'application') {
+        aggregated[dayIndex].apps += 1;
+      } else if (r.type === 'complaint') {
+        aggregated[dayIndex].comps += 1;
+      }
+    });
+
+    const monIndex = 1;
+    const reordered = [
+      ...aggregated.slice(monIndex),
+      ...aggregated.slice(0, monIndex)
+    ];
+    
+    if (recordsList.length === 0) {
+      return [
+        { name: 'Mon', apps: 0, comps: 0 },
+        { name: 'Tue', apps: 0, comps: 0 },
+        { name: 'Wed', apps: 0, comps: 0 },
+        { name: 'Thu', apps: 0, comps: 0 },
+        { name: 'Fri', apps: 0, comps: 0 },
+        { name: 'Sat', apps: 0, comps: 0 },
+        { name: 'Sun', apps: 0, comps: 0 },
+      ];
+    }
+    return reordered;
+  }, [recordsList]);
+
+  const handleStatusChange = (id: string, newStatus: string) => {
+    db.updateStatus(id, newStatus as any);
+    setRecordsList(db.getAllRecords());
+    toast.success(`Ticket ${id} successfully updated to ${newStatus}!`);
+  };
+
+  const handleExportData = () => {
+    if (recordsList.length === 0) {
+      toast.error("No records found to export.");
+      return;
+    }
+    const headers = ["ID", "Type", "Category", "Service", "Name", "Phone", "Status", "Timestamp"];
+    const rows = recordsList.map(r => [
+      r.id,
+      r.type,
+      r.category,
+      r.service || "",
+      r.name,
+      r.phone,
+      r.status,
+      new Date(r.timestamp).toISOString()
+    ]);
+    const csvContent = [headers, ...rows].map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `suvidha_records_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("CSV Data exported successfully!");
+  };
+
+  const handleAddNewService = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newServiceData.name.trim() || !newServiceData.phone.trim()) {
+      toast.error("Please fill all required fields.");
+      return;
+    }
+
+    let id = "";
+    if (newServiceType === "complaint") {
+      id = db.addComplaint({
+        category: newServiceData.category,
+        service: newServiceData.service,
+        name: newServiceData.name,
+        phone: newServiceData.phone,
+        description: newServiceData.description || "Manual Entry by Admin",
+        location: newServiceData.location,
+      });
+    } else {
+      id = db.addApplication({
+        category: newServiceData.category,
+        service: newServiceData.service,
+        name: newServiceData.name,
+        aadhaar: newServiceData.aadhaar || "XXXX-XXXX-0000",
+        phone: newServiceData.phone,
+        city: newServiceData.city,
+        pincode: newServiceData.pincode,
+      });
+    }
+
+    setRecordsList(db.getAllRecords());
+    setIsNewServiceOpen(false);
+    toast.success(`Successfully registered! Ticket ID: ${id}`);
+    setNewServiceData({
+      name: "",
+      phone: "",
+      category: "Electricity",
+      service: "New Meter Connection",
+      description: "",
+      location: "Guwahati City",
+      aadhaar: "",
+      city: "Guwahati",
+      pincode: "781001"
+    });
+  };
+
   const stats = [
-    { label: "Total Complaints", value: statsData.complaints.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" },
+    { label: "Total Complaints", value: statsData.complaints.toString(), icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-50" },
     { label: "Total Applications", value: statsData.applications.toString(), icon: FileText, color: "text-indigo-600", bg: "bg-indigo-50" },
     { label: "Resolved Services", value: resolvedCount.toString(), icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
     { label: "Active Kiosks", value: "24", icon: Globe, color: "text-blue-600", bg: "bg-blue-50" },
   ];
 
-  const liveActivity = records.slice(0, 5).map(r => ({
+  const liveActivity = recordsList.slice(0, 5).map(r => ({
     name: r.name,
     service: r.service || r.category || "General Service",
     id: r.id,
@@ -97,7 +234,7 @@ const AdminDashboard = () => {
     time: "Live"
   }));
 
-  const COLORS = ['#4f46e5', '#f59e0b', '#10b981', '#ef4444'];
+  const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444'];
 
   const renderContent = () => {
     switch (activeTab) {
@@ -134,15 +271,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={[
-                      { name: 'Mon', apps: 40, comps: 24 },
-                      { name: 'Tue', apps: 30, comps: 13 },
-                      { name: 'Wed', apps: 20, comps: 98 },
-                      { name: 'Thu', apps: 27, comps: 39 },
-                      { name: 'Fri', apps: 18, comps: 48 },
-                      { name: 'Sat', apps: 23, comps: 38 },
-                      { name: 'Sun', apps: 34, comps: 43 },
-                    ]}>
+                    <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
@@ -167,10 +296,10 @@ const AdminDashboard = () => {
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Approved', value: 400 },
-                          { name: 'Pending', value: 300 },
-                          { name: 'In Progress', value: 300 },
-                          { name: 'Rejected', value: 200 },
+                          { name: 'Approved', value: statsData.applications },
+                          { name: 'Pending', value: statsData.complaints },
+                          { name: 'In Progress', value: recordsList.filter(r => r.status === 'In Progress' || r.status === 'Under Review').length },
+                          { name: 'Resolved', value: resolvedCount },
                         ]}
                         cx="50%"
                         cy="50%"
@@ -189,19 +318,23 @@ const AdminDashboard = () => {
                 </div>
                 <div className="space-y-2 mt-4">
                   {[
-                    { label: 'Approved', color: 'bg-indigo-600' },
-                    { label: 'Pending', color: 'bg-amber-500' },
-                    { label: 'In Progress', color: 'bg-emerald-500' },
-                    { label: 'Rejected', color: 'bg-rose-500' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                        <span className="text-slate-600">{item.label}</span>
+                    { label: 'Approved/Review', count: recordsList.filter(r => r.status === 'Approved' || r.status === 'Under Review').length, color: 'bg-indigo-600' },
+                    { label: 'Pending', count: recordsList.filter(r => r.status === 'Pending').length, color: 'bg-amber-500' },
+                    { label: 'In Progress', count: recordsList.filter(r => r.status === 'In Progress').length, color: 'bg-emerald-500' },
+                    { label: 'Resolved', count: recordsList.filter(r => r.status === 'Resolved').length, color: 'bg-rose-500' },
+                  ].map((item, i) => {
+                    const total = recordsList.length || 1;
+                    const pct = Math.round((item.count / total) * 100);
+                    return (
+                      <div key={i} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                          <span className="text-slate-600">{item.label}</span>
+                        </div>
+                        <span className="font-bold text-slate-900">{pct}%</span>
                       </div>
-                      <span className="font-bold text-slate-900">{25 * (i+1)}%</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -258,6 +391,169 @@ const AdminDashboard = () => {
             </div>
           </div>
         );
+      case "apps": {
+        const apps = recordsList.filter(r => r.type === "application");
+        return (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-slate-900">Submitted Applications</h3>
+              <span className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold">Total: {apps.length}</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 border-b border-slate-100">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Citizen</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Category & Service</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Aadhaar</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Mobile</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {apps.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-bold">No Applications Registered</td>
+                    </tr>
+                  ) : (
+                    apps.map((app) => (
+                      <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold font-mono">
+                              {app.name[0]}
+                            </div>
+                            <div>
+                              <span className="text-sm font-semibold text-slate-900 block">{app.name}</span>
+                              <span className="text-[10px] font-mono text-slate-400 font-bold">{app.id}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-bold text-slate-700 block">{app.service}</span>
+                          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{app.category}</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-mono text-slate-600">{app.aadhaar}</td>
+                        <td className="px-6 py-4 text-sm font-mono text-slate-600">{app.phone}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
+                            ${app.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
+                              app.status === 'Rejected' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 
+                              'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                            {app.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {app.status === "Under Review" ? (
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => handleStatusChange(app.id, "Approved")}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-all shadow-sm"
+                              >
+                                Approve
+                              </button>
+                              <button 
+                                onClick={() => handleStatusChange(app.id, "Rejected")}
+                                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg transition-all shadow-sm"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs font-semibold text-slate-400">Archived</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      }
+      case "complaints": {
+        const comps = recordsList.filter(r => r.type === "complaint");
+        return (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-slate-900">Grievance & Utility Complaints</h3>
+              <span className="text-xs bg-orange-50 text-orange-600 px-3 py-1 rounded-full font-bold">Total: {comps.length}</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 border-b border-slate-100">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Citizen</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Service</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Mobile</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {comps.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-bold">No Complaints Registered</td>
+                    </tr>
+                  ) : (
+                    comps.map((comp) => (
+                      <tr key={comp.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center text-xs font-bold font-mono">
+                              {comp.name[0]}
+                            </div>
+                            <div>
+                              <span className="text-sm font-semibold text-slate-900 block">{comp.name}</span>
+                              <span className="text-[10px] font-mono text-slate-400 font-bold">{comp.id}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-bold text-slate-700 block">{comp.service}</span>
+                          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{comp.category}</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{comp.description}</td>
+                        <td className="px-6 py-4 text-sm font-mono text-slate-600">{comp.phone}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
+                            ${comp.status === 'Resolved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
+                              comp.status === 'In Progress' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 
+                              'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                            {comp.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {comp.status === "Pending" ? (
+                            <button 
+                              onClick={() => handleStatusChange(comp.id, "In Progress")}
+                              className="px-3 py-1.5 bg-[#FD8008] hover:bg-[#e67300] text-white font-bold text-xs rounded-lg transition-all shadow-sm"
+                            >
+                              Assign Tech
+                            </button>
+                          ) : comp.status === "In Progress" ? (
+                            <button 
+                              onClick={() => handleStatusChange(comp.id, "Resolved")}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-all shadow-sm"
+                            >
+                              Resolve
+                            </button>
+                          ) : (
+                            <span className="text-xs font-semibold text-slate-400">Archived</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      }
       case "analytics":
         return (
           <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm animate-in fade-in duration-500">
@@ -365,14 +661,14 @@ const AdminDashboard = () => {
   return (
     <div className="h-screen w-screen bg-slate-50 flex font-sans overflow-hidden">
       {/* SIDEBAR */}
-      <aside className="w-64 bg-slate-900 flex flex-col h-full z-50 flex-shrink-0">
+      <aside className="w-64 bg-[#192e59] flex flex-col h-full z-50 flex-shrink-0 border-r border-white/5">
         <div className="p-8 flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-          <div className="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-900/50">
+          <div className="h-10 w-10 bg-[#FD8008] rounded-xl flex items-center justify-center shadow-lg shadow-[#FD8008]/20">
             <ShieldCheck className="h-6 w-6 text-white" />
           </div>
           <div>
             <h2 className="text-lg font-black text-white tracking-tighter uppercase leading-none">SUVIDHA</h2>
-            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Admin Portal</p>
+            <p className="text-[10px] font-bold text-[#FD8008] uppercase tracking-widest mt-1">Admin Portal</p>
           </div>
         </div>
 
@@ -390,8 +686,8 @@ const AdminDashboard = () => {
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all text-sm ${
                 activeTab === item.id 
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" 
-                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  ? "bg-[#FD8008] text-white shadow-lg shadow-[#FD8008]/20" 
+                  : "text-blue-100/70 hover:text-white hover:bg-white/10"
               }`}
             >
               <item.icon className="h-5 w-5" />
@@ -400,10 +696,10 @@ const AdminDashboard = () => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-white/10">
           <button
             onClick={() => navigate("/")}
-            className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 font-bold text-sm rounded-xl hover:bg-rose-500/10 hover:text-rose-500 transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 text-blue-200/70 font-bold text-sm rounded-xl hover:bg-rose-500/20 hover:text-rose-400 transition-all"
           >
             <LogOut className="h-5 w-5" />
             Logout
@@ -461,10 +757,16 @@ const AdminDashboard = () => {
                 <p className="text-sm text-slate-500">Monitor and manage city services in real-time.</p>
               </div>
               <div className="flex gap-3">
-                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                <button 
+                  onClick={handleExportData}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                >
                   <Download className="h-4 w-4" /> Export Data
                 </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20">
+                <button 
+                  onClick={() => setIsNewServiceOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#192e59] text-white rounded-xl text-xs font-bold hover:bg-[#11203e] transition-all shadow-lg shadow-[#192e59]/20"
+                >
                   <Plus className="h-4 w-4" /> New Service
                 </button>
               </div>
@@ -474,6 +776,172 @@ const AdminDashboard = () => {
           </div>
         </main>
       </div>
+
+      {/* NEW SERVICE MODAL */}
+      {isNewServiceOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
+            <div className="bg-[#192e59] p-6 text-white flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-black uppercase tracking-tight">Create New Ticket</h3>
+                <p className="text-[9px] font-bold text-[#FD8008] uppercase tracking-wider mt-1">Manual Service Registry</p>
+              </div>
+              <button 
+                onClick={() => setIsNewServiceOpen(false)}
+                className="h-10 w-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+              >
+                <X className="h-6 w-6 text-white" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddNewService} className="p-8 space-y-5 overflow-y-auto custom-scrollbar flex-1 bg-white">
+              <div className="grid grid-cols-2 gap-3 p-1 bg-slate-100 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setNewServiceType("complaint")}
+                  className={`py-3 rounded-lg font-bold text-xs uppercase transition-all ${newServiceType === "complaint" ? "bg-[#192e59] text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+                >
+                  Register Complaint
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewServiceType("application")}
+                  className={`py-3 rounded-lg font-bold text-xs uppercase transition-all ${newServiceType === "application" ? "bg-[#192e59] text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+                >
+                  Submit Application
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Citizen Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newServiceData.name}
+                    onChange={e => setNewServiceData({ ...newServiceData, name: e.target.value })}
+                    className="w-full border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#192e59] focus:bg-white outline-none transition-all"
+                    placeholder="Enter full name"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mobile Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={newServiceData.phone}
+                    onChange={e => setNewServiceData({ ...newServiceData, phone: e.target.value })}
+                    className="w-full border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#192e59] focus:bg-white outline-none transition-all"
+                    placeholder="e.g. 9876543210"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</label>
+                    <select
+                      value={newServiceData.category}
+                      onChange={e => setNewServiceData({ ...newServiceData, category: e.target.value })}
+                      className="w-full border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#192e59] focus:bg-white outline-none transition-all"
+                    >
+                      <option value="Electricity">Electricity</option>
+                      <option value="Water">Water</option>
+                      <option value="Waste">Waste</option>
+                      <option value="Municipal">Municipal</option>
+                      <option value="Property">Property</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Item</label>
+                    <input
+                      type="text"
+                      value={newServiceData.service}
+                      onChange={e => setNewServiceData({ ...newServiceData, service: e.target.value })}
+                      className="w-full border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#192e59] focus:bg-white outline-none transition-all"
+                      placeholder="e.g. Meter Connection"
+                    />
+                  </div>
+                </div>
+
+                {newServiceType === "complaint" ? (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Location / Ward</label>
+                      <input
+                        type="text"
+                        value={newServiceData.location}
+                        onChange={e => setNewServiceData({ ...newServiceData, location: e.target.value })}
+                        className="w-full border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#192e59] focus:bg-white outline-none transition-all"
+                        placeholder="e.g. Ward No. 5, Sector 4"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+                      <textarea
+                        value={newServiceData.description}
+                        onChange={e => setNewServiceData({ ...newServiceData, description: e.target.value })}
+                        className="w-full border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#192e59] focus:bg-white outline-none transition-all h-20 resize-none"
+                        placeholder="Describe the complaint in detail..."
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aadhaar Number</label>
+                      <input
+                        type="text"
+                        value={newServiceData.aadhaar}
+                        onChange={e => setNewServiceData({ ...newServiceData, aadhaar: e.target.value })}
+                        className="w-full border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#192e59] focus:bg-white outline-none transition-all"
+                        placeholder="Enter 12-digit Aadhaar"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">City</label>
+                        <input
+                          type="text"
+                          value={newServiceData.city}
+                          onChange={e => setNewServiceData({ ...newServiceData, city: e.target.value })}
+                          className="w-full border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#192e59] focus:bg-white outline-none transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pincode</label>
+                        <input
+                          type="text"
+                          value={newServiceData.pincode}
+                          onChange={e => setNewServiceData({ ...newServiceData, pincode: e.target.value })}
+                          className="w-full border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#192e59] focus:bg-white outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsNewServiceOpen(false)}
+                  className="flex-1 py-4 border-2 border-slate-100 rounded-xl font-bold text-xs uppercase hover:bg-slate-50 text-slate-500 transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-4 bg-[#FD8008] text-white rounded-xl font-bold text-xs uppercase hover:bg-[#e67300] transition-all shadow-lg shadow-[#FD8008]/20 active:scale-95"
+                >
+                  Register Entry
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

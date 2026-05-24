@@ -20,6 +20,7 @@ const PaymentPortal = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const activeStreamRef = useRef<MediaStream | null>(null);
 
   // My Real UPI ID (You can change this)
   const upiId = "your-upi-id@ybl"; 
@@ -27,34 +28,51 @@ const PaymentPortal = () => {
   const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR`;
 
   useEffect(() => {
+    let isCurrent = true;
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: "environment", width: 1280, height: 720 } 
+        });
+        if (!isCurrent) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        activeStreamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        if (isCurrent) {
+          toast.error("Camera access denied. Please check permissions.");
+          setCameraActive(false);
+        }
+      }
+    };
+
+    const stopCamera = () => {
+      if (activeStreamRef.current) {
+        activeStreamRef.current.getTracks().forEach(track => track.stop());
+        activeStreamRef.current = null;
+      }
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    };
+
     if (cameraActive && step === "scan") {
       startCamera();
     } else {
       stopCamera();
     }
-    return () => stopCamera();
+
+    return () => {
+      isCurrent = false;
+      stopCamera();
+    };
   }, [cameraActive, step]);
-
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment", width: 1280, height: 720 } 
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      toast.error("Camera access denied. Please check permissions.");
-      setCameraActive(false);
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-      tracks.forEach(track => track.stop());
-    }
-  };
 
   const captureAndVerify = async () => {
     if (!videoRef.current || !canvasRef.current) return;

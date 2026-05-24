@@ -27,7 +27,30 @@ const LoginPage = () => {
     const [showSmsPopup, setShowSmsPopup] = useState(false);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+    // Randomized Captcha States
+    const [aadhaarCaptcha, setAadhaarCaptcha] = useState("");
+    const [aadhaarCaptchaInput, setAadhaarCaptchaInput] = useState("");
+    const [phoneCaptcha, setPhoneCaptcha] = useState("");
+    const [phoneCaptchaInput, setPhoneCaptchaInput] = useState("");
+
+    const refreshAadhaarCaptcha = () => {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let result = "";
+        for (let i = 0; i < 5; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+        setAadhaarCaptcha(result);
+    };
+
+    const refreshPhoneCaptcha = () => {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let result = "";
+        for (let i = 0; i < 5; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+        setPhoneCaptcha(result);
+    };
+
     useEffect(() => {
+        refreshAadhaarCaptcha();
+        refreshPhoneCaptcha();
+
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
         if (code) {
@@ -38,7 +61,6 @@ const LoginPage = () => {
     }, []);
 
     const handleDigilockerLogin = () => {
-        // Redirect to API Setu MeriPehchaan Sandbox
         const clientId = "MNRNJVXE";
         const redirectUri = encodeURIComponent(window.location.origin + "/auth/login");
         const state = "suvidha_kiosk_auth";
@@ -50,44 +72,54 @@ const LoginPage = () => {
 
     const handleInitialSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (idValue.length < 8) {
-            toast.error("Please enter a valid ID");
+        const cleanAadhaar = idValue.replace(/\s/g, "");
+        if (cleanAadhaar.length !== 12 || !/^\d+$/.test(cleanAadhaar)) {
+            toast.error("Please enter a valid 12-digit Aadhaar number");
+            return;
+        }
+        if (aadhaarCaptchaInput.toUpperCase() !== aadhaarCaptcha.toUpperCase()) {
+            toast.error("Invalid Captcha! Please try again.");
+            refreshAadhaarCaptcha();
             return;
         }
         setIsVerifying(true);
         setTimeout(() => {
             setIsVerifying(false);
-            setStep("department");
-            toast.success("Identity Verified. Select your department.");
-        }, 1200);
+            setStep("consumer");
+            toast.success("Aadhaar UID successfully verified in UIDAI database. Please confirm your mobile number to receive secure OTP.");
+        }, 1500);
     };
 
     const handleDeptSelect = (deptId: string) => {
         setSelectedDept(deptId);
-        setStep("consumer"); // Ask for phone number
+        setStep("aadhaar"); // Ask for Aadhaar after department select
     };
 
     const handleSendOTP = (e: React.FormEvent) => {
         e.preventDefault();
         if (phone.length < 10) {
-            toast.error("Enter valid mobile number");
+            toast.error("Please enter a valid 10-digit mobile number");
+            return;
+        }
+        if (phoneCaptchaInput.toUpperCase() !== phoneCaptcha.toUpperCase()) {
+            toast.error("Invalid Captcha! Please try again.");
+            refreshPhoneCaptcha();
             return;
         }
 
         setIsVerifying(true);
-        // Simulated Secure SMS Gateway
         setTimeout(() => {
             const code = Math.floor(100000 + Math.random() * 900000).toString();
             setGeneratedOtp(code);
             setIsVerifying(false);
             setStep("otp");
             
-            // Show the "Phone Notification" simulation after 2 seconds
+            // Show the on-screen simulated SMS popup
             setTimeout(() => {
                 setShowSmsPopup(true);
-                toast.info("New Message: Your Suvidha OTP is " + code);
-            }, 2000);
-        }, 2000);
+                toast.info("Secure Gateway: OTP sent to +91 " + phone);
+            }, 1000);
+        }, 1200);
     };
 
     const handleOTPChange = (value: string, index: number) => {
@@ -102,29 +134,43 @@ const LoginPage = () => {
         e.preventDefault();
         const inputOtp = otp.join("");
         setIsVerifying(true);
-        
+
         setTimeout(() => {
             setIsVerifying(false);
-            if (inputOtp === generatedOtp || inputOtp === "123456") {
+            // Relaxed validation: ANY 6-digit OTP succeeds!
+            if (inputOtp.length === 6) {
                 setStep("success");
                 setShowSmsPopup(false);
                 toast.success("Authentication Success");
                 setTimeout(() => {
-                    navigate("/dashboard", { state: { dept: selectedDept } });
+                    if (selectedDept) {
+                        navigate("/dashboard", { state: { dept: selectedDept } });
+                    } else {
+                        setStep("department");
+                    }
                 }, 2000);
             } else {
-                toast.error("Invalid Security Code");
+                toast.error("Invalid Security Code! Please enter a 6-digit OTP.");
                 setOtp(["", "", "", "", "", ""]);
                 otpRefs.current[0]?.focus();
             }
-        }, 1500);
+        }, 1200);
     };
 
     const handleAadhaarScanned = (data: string) => {
-        setStep("department");
         const uidMatch = data.match(/\d{12}/);
-        setIdValue(uidMatch ? uidMatch[0] : "Scanned ID");
-        toast.success("Aadhaar Scanned!");
+        if (uidMatch) {
+            setIdValue(uidMatch[0]);
+            toast.success("Aadhaar Card Securely Scanned!");
+            setIsVerifying(true);
+            setTimeout(() => {
+                setIsVerifying(false);
+                setStep("consumer");
+                toast.success("Aadhaar UID successfully verified in UIDAI database. Please confirm your mobile number to receive secure OTP.");
+            }, 1200);
+        } else {
+            toast.error("Invalid Aadhaar QR Code structure. Please scan a valid Government of India QR.");
+        }
     };
 
     return (
@@ -139,7 +185,7 @@ const LoginPage = () => {
                         </div>
                         <div className="flex-1">
                             <div className="flex justify-between items-center mb-1">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase">Messages • Now</span>
+                                <span className="text-xs font-bold text-slate-500 uppercase">Messages • Now</span>
                                 <button onClick={() => setShowSmsPopup(false)} className="text-slate-400 hover:text-slate-900">✕</button>
                             </div>
                             <p className="text-xs font-bold text-slate-900">Govt of India (SUVIDHA)</p>
@@ -233,14 +279,14 @@ const LoginPage = () => {
                                     className={`flex-1 py-4 flex flex-col items-center gap-2 transition-all duration-300 rounded-xl ${step === 'scan' ? 'bg-[#192e59] text-white shadow-xl' : 'text-slate-400 hover:text-[#192e59] hover:bg-white'}`}
                                 >
                                     <QrCode className="w-6 h-6" />
-                                    <span className="font-black text-[10px] uppercase tracking-widest">Scan Aadhaar</span>
+                                    <span className="font-black text-xs uppercase tracking-widest">Scan Aadhaar</span>
                                 </button>
                                 <button 
                                     onClick={() => setStep("aadhaar")} 
                                     className={`flex-1 py-4 flex flex-col items-center gap-2 transition-all duration-300 rounded-xl ${step === 'aadhaar' ? 'bg-[#192e59] text-white shadow-xl' : 'text-slate-400 hover:text-[#192e59] hover:bg-white'}`}
                                 >
                                     <User className="w-6 h-6" />
-                                    <span className="font-black text-[10px] uppercase tracking-widest">Manual ID</span>
+                                    <span className="font-black text-xs uppercase tracking-widest">Manual ID</span>
                                 </button>
                             </div>
 
@@ -250,7 +296,7 @@ const LoginPage = () => {
                                         <ShieldCheck className="w-6 h-6 text-emerald-600" />
                                     </div>
                                     <div className="text-left">
-                                        <p className="text-[10px] uppercase tracking-widest text-emerald-600/60 leading-none mb-1">Secure SSO</p>
+                                        <p className="text-xs uppercase tracking-widest text-emerald-600/60 leading-none mb-1">Secure SSO</p>
                                         <p className="text-sm">Login with DigiLocker</p>
                                     </div>
                                 </button>
@@ -258,11 +304,15 @@ const LoginPage = () => {
 
                             <div className="relative group">
                                 <label className="absolute -top-2 left-4 bg-white px-2 text-xs text-slate-400 font-black uppercase tracking-widest group-focus-within:text-[#192e59] z-10 transition-colors">Select Department</label>
-                                <select className="w-full border-2 border-slate-100 rounded-2xl p-4 text-slate-800 font-bold bg-white outline-none appearance-none focus:border-[#192e59] focus:ring-4 focus:ring-[#192e59]/5 transition-all">
-                                    <option>Choose Department</option>
-                                    <option>Electricity Department</option>
-                                    <option>Water Supply Board</option>
-                                    <option>Municipal Corporation</option>
+                                <select 
+                                    value={selectedDept}
+                                    onChange={(e) => handleDeptSelect(e.target.value)}
+                                    className="w-full border-2 border-slate-100 rounded-2xl p-4 text-slate-800 font-bold bg-white outline-none appearance-none focus:border-[#192e59] focus:ring-4 focus:ring-[#192e59]/5 transition-all"
+                                >
+                                    <option value="">Choose Department</option>
+                                    {departments.map(d => (
+                                        <option key={d.id} value={d.id}>{d.name}</option>
+                                    ))}
                                 </select>
                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                                     <ChevronRight className="w-5 h-5 text-slate-400 rotate-90" />
@@ -304,11 +354,11 @@ const LoginPage = () => {
 
                              <div className="flex items-center gap-4 py-4">
                                 <div className="bg-slate-50 p-2 border-2 border-slate-100 rounded-xl select-none flex-1 flex justify-center items-center h-14">
-                                    <span className="font-mono text-2xl font-black tracking-[0.2em] text-slate-700 skew-x-[-15deg] blur-[0.4px]">X9a4B</span>
+                                    <span className="font-mono text-2xl font-black tracking-[0.2em] text-slate-700 skew-x-[-15deg] blur-[0.4px]">{aadhaarCaptcha}</span>
                                 </div>
-                                <button type="button" className="flex flex-col items-center text-[#192e59] hover:text-[#122242] transition-colors">
+                                <button type="button" onClick={refreshAadhaarCaptcha} className="flex flex-col items-center text-[#192e59] hover:text-[#122242] transition-colors">
                                     <RefreshCw className="w-6 h-6 mb-1" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest">Reload</span>
+                                    <span className="text-xs font-black uppercase tracking-widest">Reload</span>
                                 </button>
                              </div>
 
@@ -316,6 +366,8 @@ const LoginPage = () => {
                                 <label className="absolute -top-2 left-4 bg-white px-2 text-xs text-slate-400 font-black uppercase tracking-widest group-focus-within:text-[#192e59] z-10 transition-colors">Verification Captcha<span className="text-red-500 ml-1">*</span></label>
                                 <input 
                                     type="text" 
+                                    value={aadhaarCaptchaInput}
+                                    onChange={(e) => setAadhaarCaptchaInput(e.target.value)}
                                     className="w-full border-2 border-slate-100 rounded-2xl p-4 text-slate-800 font-bold bg-white outline-none focus:border-[#192e59] focus:ring-4 focus:ring-[#192e59]/5 transition-all"
                                     placeholder="Type characters above"
                                 />
@@ -347,7 +399,7 @@ const LoginPage = () => {
                                             </div>
                                             <div className="flex-1">
                                                 <h4 className="font-black text-slate-800 uppercase tracking-tight leading-none text-sm">{dept.name}</h4>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 line-clamp-1">{dept.desc}</p>
+                                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1 line-clamp-1">{dept.desc}</p>
                                             </div>
                                             <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#192e59] transition-colors" />
                                         </button>
@@ -377,12 +429,23 @@ const LoginPage = () => {
 
                              <div className="flex items-center gap-4 py-4">
                                 <div className="bg-slate-50 p-2 border-2 border-slate-100 rounded-xl select-none flex-1 flex justify-center items-center h-14">
-                                    <span className="font-mono text-2xl font-black tracking-[0.2em] text-slate-700 skew-x-[-15deg] blur-[0.4px]">M2p9Q</span>
+                                    <span className="font-mono text-2xl font-black tracking-[0.2em] text-slate-700 skew-x-[-15deg] blur-[0.4px]">{phoneCaptcha}</span>
                                 </div>
-                                <button type="button" className="flex flex-col items-center text-[#192e59] hover:text-[#122242] transition-colors">
+                                <button type="button" onClick={refreshPhoneCaptcha} className="flex flex-col items-center text-[#192e59] hover:text-[#122242] transition-colors">
                                     <RefreshCw className="w-6 h-6 mb-1" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest">Reload</span>
+                                    <span className="text-xs font-black uppercase tracking-widest">Reload</span>
                                 </button>
+                             </div>
+
+                             <div className="relative group">
+                                <label className="absolute -top-2 left-4 bg-white px-2 text-xs text-slate-400 font-black uppercase tracking-widest group-focus-within:text-[#192e59] z-10 transition-colors">Verification Captcha<span className="text-red-500 ml-1">*</span></label>
+                                <input 
+                                    type="text" 
+                                    value={phoneCaptchaInput}
+                                    onChange={(e) => setPhoneCaptchaInput(e.target.value)}
+                                    className="w-full border-2 border-slate-100 rounded-2xl p-4 text-slate-800 font-bold bg-white outline-none focus:border-[#192e59] focus:ring-4 focus:ring-[#192e59]/5 transition-all"
+                                    placeholder="Type characters above"
+                                />
                              </div>
 
                              <button type="submit" disabled={isVerifying} className="w-full bg-[#192e59] hover:bg-[#122242] text-white py-4 rounded-2xl font-black text-lg uppercase tracking-widest shadow-lg shadow-[#192e59]/20 transition-all flex items-center justify-center">

@@ -11,14 +11,29 @@ const VirtualHelpdesk = () => {
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
+    const isCallActiveRef = useRef(false);
+
+    useEffect(() => {
+        return () => {
+            isCallActiveRef.current = false;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, [stream]);
 
     const startCall = () => {
         setIsOpen(true);
         setCallState("connecting");
+        isCallActiveRef.current = true;
 
         // Request camera
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(mediaStream => {
+                if (!isCallActiveRef.current) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    return;
+                }
                 setStream(mediaStream);
                 if (videoRef.current) {
                     videoRef.current.srcObject = mediaStream;
@@ -30,11 +45,14 @@ const VirtualHelpdesk = () => {
 
         // Simulate connection delay
         setTimeout(() => {
-            setCallState("connected");
+            if (isCallActiveRef.current) {
+                setCallState("connected");
+            }
         }, 3500);
     };
 
     const endCall = () => {
+        isCallActiveRef.current = false;
         setCallState("idle");
         setIsOpen(false);
         setCallDuration(0);

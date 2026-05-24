@@ -13,10 +13,12 @@ const ScannerOverlay = ({ onClose, onSuccess, scanType = "qr" }: ScannerOverlayP
     const [hasCamera, setHasCamera] = useState(true);
 
     useEffect(() => {
+        let isMounted = true;
         let html5QrCode: Html5Qrcode | null = null;
         let videoStream: MediaStream | null = null;
 
         const initTimer = setTimeout(() => {
+            if (!isMounted) return;
             setScanState("scanning");
 
             if (scanType === "qr") {
@@ -27,8 +29,10 @@ const ScannerOverlay = ({ onClose, onSuccess, scanType = "qr" }: ScannerOverlayP
                     { facingMode: "environment" },
                     { fps: 10, qrbox: { width: 250, height: 250 } },
                     (decodedText) => {
+                        if (!isMounted) return;
                         setScanState("success");
                         setTimeout(() => {
+                            if (!isMounted) return;
                             onSuccess({ accountNo: decodedText });
                             onClose();
                         }, 1500);
@@ -36,12 +40,16 @@ const ScannerOverlay = ({ onClose, onSuccess, scanType = "qr" }: ScannerOverlayP
                     () => {}
                 ).catch((err) => {
                     console.error("Camera start failed", err);
-                    setHasCamera(false);
+                    if (isMounted) setHasCamera(false);
                 });
             } else {
                 // Simulated AI Document Scanning
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
                     .then(stream => {
+                        if (!isMounted) {
+                            stream.getTracks().forEach(track => track.stop());
+                            return;
+                        }
                         videoStream = stream;
                         const videoEl = document.createElement("video");
                         videoEl.srcObject = stream;
@@ -56,8 +64,10 @@ const ScannerOverlay = ({ onClose, onSuccess, scanType = "qr" }: ScannerOverlayP
                         
                         // Simulate AI processing taking 3.5 seconds
                         setTimeout(() => {
+                            if (!isMounted) return;
                             setScanState("success");
                             setTimeout(() => {
+                                if (!isMounted) return;
                                 onSuccess({
                                     name: "Rajesh Kumar",
                                     aadhaar: "4921 8829 4591",
@@ -69,12 +79,13 @@ const ScannerOverlay = ({ onClose, onSuccess, scanType = "qr" }: ScannerOverlayP
                     })
                     .catch((err) => {
                         console.error("Camera access failed", err);
-                        setHasCamera(false);
+                        if (isMounted) setHasCamera(false);
                     });
             }
         }, 800);
 
         return () => {
+            isMounted = false;
             clearTimeout(initTimer);
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(() => html5QrCode.clear()).catch(console.error);
