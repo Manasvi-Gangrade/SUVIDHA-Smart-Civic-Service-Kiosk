@@ -75,7 +75,7 @@ const VirtualQueuePage = () => {
             <header className="sticky top-0 z-50 border-b border-white/10 bg-[#122242]/85 backdrop-blur-md px-6 py-4 shadow-sm flex items-center relative z-10">
                 <button
                     onClick={() => navigate(-1)}
-                    className="mr-4 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl font-bold text-xs uppercase tracking-widest backdrop-blur-md transition-all hover:scale-105 active:scale-95 duration-200 group"
+                    className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] z-50"
                 >
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                     <span>Back</span>
