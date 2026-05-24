@@ -73,8 +73,12 @@ const CivicMapPage = () => {
             {/* Header */}
             <div className="relative z-10 flex items-center justify-between p-6 border-b border-white/10 bg-[#122242]/85 backdrop-blur-md shadow-xl">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate(-1)} className="p-3 bg-[#FD8008] hover:bg-[#e67000] border border-[#FD8008] text-white rounded-xl transition-all shadow-[0_4px_12px_rgba(253,128,8,0.3)] hover:scale-105 active:scale-95">
-                        <ArrowLeft className="w-6 h-6" />
+                    <button 
+                        onClick={() => navigate(-1)} 
+                        className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl font-bold text-xs uppercase tracking-widest backdrop-blur-md transition-all hover:scale-105 active:scale-95 duration-200 group"
+                    >
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span>Back</span>
                     </button>
                     <div>
                         <h1 className="text-2xl font-black tracking-widest text-[#FD8008] uppercase">SUVIDHA GIS RADAR</h1>

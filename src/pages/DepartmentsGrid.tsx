@@ -140,10 +140,10 @@ const DepartmentsGrid = () => {
       {/* Floating Back Button */}
       <button
         onClick={() => navigate("/")}
-        className="kiosk-touch-target absolute top-4 right-6 z-50 flex items-center gap-2 bg-[#FD8008] hover:bg-[#e67000] border border-[#FD8008] px-5 py-2.5 rounded-xl text-[10px] font-black text-white transition-all shadow-[0_4px_12px_rgba(253,128,8,0.3)] uppercase tracking-widest hover:scale-105 active:scale-95"
+        className="kiosk-touch-target absolute top-4 right-6 z-50 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)]"
       >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        BACK HOME
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span>BACK HOME</span>
       </button>
 
       {/* 🚀 QUICK LAUNCH CATEGORY TABS */}

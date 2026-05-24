@@ -187,7 +187,6 @@ const KioskHeader = () => {
               {ttsEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
             </button>
           )}
-
           {voiceSupported && (
             <button
               onClick={isListening ? stopListening : startListening}
@@ -200,10 +199,6 @@ const KioskHeader = () => {
               {isListening && <span className="text-[10px] font-bold uppercase tracking-tighter">Listening</span>}
             </button>
           )}
-
-          <button className="hidden xl:flex text-[#192e59] bg-white border border-[#192e59] px-5 py-2.5 rounded-full font-bold text-xs uppercase items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm ml-2">
-            <Play className="w-3.5 h-3.5" /> SIMULATION
-          </button>
 
           <button onClick={() => navigate("/admin/login")} className="bg-[#192e59] hover:bg-[#112040] text-white px-8 py-2.5 rounded-full font-bold text-xs uppercase shadow-[0_4px_14px_0_rgba(25,46,89,0.39)] transition-transform hover:-translate-y-0.5">
             ADMIN LOGIN

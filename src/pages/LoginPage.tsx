@@ -336,9 +336,14 @@ const LoginPage = () => {
                     {/* Aadhaar Input */}
                     {step === "aadhaar" && (
                         <form onSubmit={handleInitialSubmit} className="space-y-6 animate-in fade-in duration-300">
-                             <div className="flex items-center gap-2 mb-4 text-[#192e59]">
-                                <button type="button" onClick={() => setStep("selection")} className="hover:underline flex items-center text-sm font-bold"><ArrowLeft className="w-4 h-4 mr-1"/> Back</button>
-                             </div>
+                             <button 
+                                type="button" 
+                                onClick={() => setStep("selection")} 
+                                className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group mb-4"
+                            >
+                                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                <span>Back</span>
+                            </button>
                              
                              <div className="relative group">
                                 <label className="absolute -top-2 left-4 bg-white px-2 text-xs text-slate-400 font-black uppercase tracking-widest group-focus-within:text-[#192e59] z-10 transition-colors">Identification Number<span className="text-red-500 ml-1">*</span></label>

@@ -54,8 +54,12 @@ const EditProfile = () => {
             {/* Header */}
             <div className="border-b border-white/10 bg-[#1e2e50] py-12">
                 <div className="container flex items-center gap-6">
-                    <button onClick={() => navigate(-1)} className="p-4 rounded-2xl bg-[#FD8008] hover:bg-[#e67000] border border-[#FD8008] text-white transition-all shadow-[0_4px_12px_rgba(253,128,8,0.3)] hover:scale-105 active:scale-95">
-                        <ArrowLeft className="h-8 w-8 text-white" />
+                    <button 
+                        onClick={() => navigate(-1)} 
+                        className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl font-bold text-xs uppercase tracking-widest backdrop-blur-md transition-all hover:scale-105 active:scale-95 duration-200 group shadow-md"
+                    >
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span>Back</span>
                     </button>
                     <div>
                         <h1 className="text-4xl font-black tracking-tight">Edit Consumer Profile</h1>

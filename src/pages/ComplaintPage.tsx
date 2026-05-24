@@ -128,14 +128,14 @@ const ComplaintPage = () => {
 
       <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
         <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-          
           {/* Header Section */}
           <div className="bg-[#192e59] p-8 text-white relative flex-shrink-0">
             <button 
               onClick={() => submitted ? navigate("/departments") : navigate(-1)} 
-              className="absolute left-6 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-full transition-colors"
+              className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/15 rounded-xl font-bold text-xs uppercase tracking-widest backdrop-blur-md transition-all hover:scale-105 active:scale-95 duration-200 group"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span>Back</span>
             </button>
             <div className="text-center">
               <h1 className="text-3xl font-[900] tracking-tight uppercase leading-none">
