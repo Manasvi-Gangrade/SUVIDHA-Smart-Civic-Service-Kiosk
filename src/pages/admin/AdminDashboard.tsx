@@ -852,8 +852,12 @@ const AdminDashboard = () => {
       {/* SIDEBAR */}
       <aside className="w-64 bg-[#192e59] flex flex-col h-full z-50 flex-shrink-0 border-r border-white/5">
         <div className="p-8 flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-          <div className="h-10 w-10 bg-[#FD8008] rounded-xl flex items-center justify-center shadow-lg shadow-[#FD8008]/20">
-            <ShieldCheck className="h-6 w-6 text-white" />
+          <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 bg-white/10">
+            <img
+              src="/images/logo.png"
+              alt="Suvidha Logo"
+              className="h-full w-full object-contain"
+            />
           </div>
           <div>
             <h2 className="text-lg font-black text-white tracking-tighter uppercase leading-none">SUVIDHA</h2>
@@ -869,7 +873,6 @@ const AdminDashboard = () => {
             { label: "Complaints", icon: AlertCircle, id: "complaints" },
             { label: "Kiosk Status", icon: Globe, id: "users" },
             { label: "Audit Logs", icon: ShieldCheck, id: "audit" },
-            { label: "Settings", icon: SettingsIcon, id: "settings" },
           ].map((item) => (
             <button
               key={item.id}

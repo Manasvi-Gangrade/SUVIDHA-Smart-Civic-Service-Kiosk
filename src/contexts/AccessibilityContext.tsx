@@ -83,11 +83,11 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
         localStorage.setItem('kiosk_textSize', textSize);
         const root = document.documentElement;
         if (textSize === 'large') {
-            root.style.fontSize = '18px'; // approx 112.5%
+            root.style.setProperty('--font-scale', '1.25');
         } else if (textSize === 'xlarge') {
-            root.style.fontSize = '20px'; // approx 125%
+            root.style.setProperty('--font-scale', '1.5');
         } else {
-            root.style.fontSize = '16px'; // default 100%
+            root.style.setProperty('--font-scale', '1.0');
         }
     }, [textSize]);
 

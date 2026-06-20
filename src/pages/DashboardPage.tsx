@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ClipboardList, Clock, CheckCircle2, AlertCircle, FileText, MessageSquarePlus, Ticket, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { db } from "@/lib/database";
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
@@ -94,8 +95,8 @@ const DashboardPage = () => {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Dynamic simulation for the dashboard
-  const [liveRequests, setLiveRequests] = useState(requests);
+  // Dynamic simulation and live records integration
+  const [liveRequests, setLiveRequests] = useState<any[]>([]);
   const [liveTotal, setLiveTotal] = useState(requests.length + 1200);
 
   useEffect(() => {
@@ -105,10 +106,48 @@ const DashboardPage = () => {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const loadData = () => {
+      const dbRecords = db.getAllRecords();
+      const formatted = dbRecords.map(r => ({
+        id: r.id,
+        dept: r.category,
+        subject: r.type === 'complaint' ? r.service : `${r.service} request`,
+        status: r.status,
+        date: new Date(r.timestamp).toISOString().split('T')[0],
+        assignedTo: r.status === 'Resolved' || r.status === 'Approved' ? 'Officer Assigned (Completed)' : 'Officer Assigned',
+        timeline: r.type === 'complaint' ? [
+          { step: "Submitted", done: true, date: new Date(r.timestamp).toLocaleDateString() },
+          { step: "Verification", done: r.status !== 'Pending', date: r.status !== 'Pending' ? 'Completed' : 'In Progress' },
+          { step: "Inspection", done: r.status === 'Resolved', date: r.status === 'Resolved' ? 'Completed' : 'Pending' },
+          { step: "Resolved", done: r.status === 'Resolved', date: r.status === 'Resolved' ? 'Completed' : 'Pending' },
+        ] : [
+          { step: "Submitted", done: true, date: new Date(r.timestamp).toLocaleDateString() },
+          { step: "Verification", done: r.status !== 'Under Review', date: r.status !== 'Under Review' ? 'Completed' : 'In Progress' },
+          { step: "Review", done: r.status !== 'Under Review', date: r.status !== 'Under Review' ? 'Completed' : 'In Progress' },
+          { step: "Approved", done: r.status === 'Approved', date: r.status === 'Approved' ? 'Finished' : 'Pending' },
+        ]
+      }));
+
+      const combined = [...formatted];
+      requests.forEach(req => {
+        if (!combined.some(c => c.id === req.id)) {
+          combined.push(req);
+        }
+      });
+
+      setLiveRequests(combined);
+    };
+
+    loadData();
+    window.addEventListener("suvidha_db_sync", loadData);
+    return () => window.removeEventListener("suvidha_db_sync", loadData);
+  }, []);
+
   const stats = [
     { label: "Total City Requests", value: liveTotal, icon: FileText, color: "text-white", bg: "bg-white/5 border-white/10 backdrop-blur-md" },
-    { label: "My In Progress", value: liveRequests.filter((r) => r.status === "In Progress").length, icon: Clock, color: "text-[#FD8008]", bg: "bg-[#FD8008]/10 border-[#FD8008]/20" },
-    { label: "My Resolved", value: liveRequests.filter((r) => r.status === "Resolved").length, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+    { label: "My In Progress", value: liveRequests.filter((r) => r.status === "In Progress" || r.status === "Under Review").length, icon: Clock, color: "text-[#FD8008]", bg: "bg-[#FD8008]/10 border-[#FD8008]/20" },
+    { label: "My Resolved", value: liveRequests.filter((r) => r.status === "Resolved" || r.status === "Approved").length, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
     { label: "My Pending", value: liveRequests.filter((r) => r.status === "Pending").length, icon: AlertCircle, color: "text-slate-300", bg: "bg-white/5 border-white/10" },
   ];
 
@@ -246,7 +285,7 @@ const DashboardPage = () => {
         <div>
           <h2 className="mb-4 text-lg font-bold text-white">{t("dashboard.recent")}</h2>
           <div className="space-y-3">
-            {requests.map((r) => {
+            {liveRequests.map((r) => {
               const isOpen = expandedId === r.id;
               return (
                 <div key={r.id} className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden">

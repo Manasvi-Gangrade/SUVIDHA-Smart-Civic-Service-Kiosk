@@ -71,11 +71,10 @@ const VirtualQueuePage = () => {
                 <div className="absolute inset-0 bg-gradient-to-b from-[#192e59]/80 via-[#192e59]/95 to-[#192e59]" />
             </div>
 
-            {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-white/10 bg-[#122242]/85 backdrop-blur-md px-6 py-4 shadow-sm flex items-center relative z-10">
+            <header className="sticky top-0 z-50 border-b border-white/10 bg-[#122242]/85 backdrop-blur-md px-6 py-4 shadow-sm flex items-center gap-6 relative z-10">
                 <button
                     onClick={() => navigate(-1)}
-                    className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] z-50"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] z-50"
                 >
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                     <span>Back</span>

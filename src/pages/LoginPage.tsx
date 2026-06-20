@@ -15,6 +15,8 @@ const departments = [
     { id: "other", name: "Other Civic Services", icon: "/images/property.png", color: "bg-indigo-500", desc: "Miscellaneous government requests" },
 ];
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const LoginPage = () => {
     const navigate = useNavigate();
     const [step, setStep] = useState<Step>("selection");
@@ -24,8 +26,29 @@ const LoginPage = () => {
     const [generatedOtp, setGeneratedOtp] = useState("");
     const [selectedDept, setSelectedDept] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
-    const [showSmsPopup, setShowSmsPopup] = useState(false);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const [isLoading, setIsLoading] = useState(false);
+    const [aadhaarRefId, setAadhaarRefId] = useState("");
+    const [aadhaarDigits, setAadhaarDigits] = useState<string[]>(Array(12).fill(""));
+    const aadhaarRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const handleAadhaarDigitChange = (value: string, index: number) => {
+        if (!/^\d*$/.test(value)) return;
+        const newDigits = [...aadhaarDigits];
+        newDigits[index] = value.slice(-1);
+        setAadhaarDigits(newDigits);
+        setIdValue(newDigits.join(""));
+        if (value && index < 11) {
+            aadhaarRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleAadhaarKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+        if (e.key === "Backspace" && !aadhaarDigits[index] && index > 0) {
+            aadhaarRefs.current[index - 1]?.focus();
+        }
+    };
 
     // Randomized Captcha States
     const [aadhaarCaptcha, setAadhaarCaptcha] = useState("");
@@ -55,22 +78,136 @@ const LoginPage = () => {
         const code = params.get("code");
         if (code) {
             toast.success("DigiLocker Authentication Successful!");
+            const tempName = "DigiLocker Citizen";
+            import("@/lib/database").then(({ loginOrSignupToBackend }) => {
+                loginOrSignupToBackend("999988887777", "9876543210", tempName).then(() => {
+                    window.dispatchEvent(new Event("suvidha_login_change"));
+                });
+            });
             setStep("department");
             window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // SANDBOX.CO.IN CALLBACK TRIGGER
+        const sandboxSessionId = params.get("session_id") || params.get("sandbox_session_id");
+        if (sandboxSessionId) {
+            toast.info("Verifying secure Sandbox DigiLocker session...");
+            setStep("selection");
+            fetch(`${API_URL}/api/sandbox/digilocker/status/${sandboxSessionId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.status === "succeeded") {
+                        toast.success(`Welcome, ${data.citizen.name}! DigiLocker verified.`);
+                        localStorage.setItem("smartcity_token", data.token);
+                        localStorage.setItem("smartcity_citizen", JSON.stringify(data.citizen));
+                        window.dispatchEvent(new Event("suvidha_login_change"));
+                        setStep("department");
+                    } else {
+                        toast.error(data.message || "DigiLocker session not completed.");
+                    }
+                })
+                .catch(err => {
+                    console.error("Sandbox verification error:", err);
+                    toast.error("Network error during Sandbox verification.");
+                })
+                .finally(() => {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                });
         }
     }, []);
 
     const handleDigilockerLogin = () => {
-        const clientId = "MNRNJVXE";
-        const redirectUri = encodeURIComponent(window.location.origin + "/auth/login");
-        const state = "suvidha_kiosk_auth";
-        const codeChallenge = "n6Li6eP2UzbkRvu5uCxWj-nUabNu15NpvA48FpAaPhg";
-        
-        const oauthUrl = `https://dev-meripehchaan.dl6.in/public/oauth2/1/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&state=${state}&Code_challenge=${codeChallenge}&Code_challenge_method=S256`;
-        window.location.href = oauthUrl;
+        handleLiveDigilockerRedirect();
     };
 
-    const handleInitialSubmit = (e: React.FormEvent) => {
+    const handleLiveDigilockerRedirect = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch(`${API_URL}/api/sandbox/digilocker/init`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ redirect_url: window.location.origin + "/login" })
+            });
+            const data = await res.json();
+            if (data.success && data.authorization_url) {
+                window.location.href = data.authorization_url;
+            } else {
+                toast.error(data.message || "Failed to connect to Sandbox.co.in API");
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.error("Sandbox redirect error:", error);
+            toast.error("Network error connecting to Sandbox.co.in gateway");
+            setIsLoading(false);
+        }
+    };
+
+    const handleDemoAadhaarLogin = () => {
+        toast.info("Demo Mode: Simulating Aadhaar Authentication...");
+        setIsVerifying(true);
+        setTimeout(() => {
+            const cleanAadhaar = idValue.replace(/\s/g, "") || "999988887777";
+            const tempName = `Demo Citizen (${cleanAadhaar.slice(-4)})`;
+            
+            localStorage.setItem("smartcity_token", "DEMO_AADHAAR_TOKEN_" + Date.now());
+            localStorage.setItem("smartcity_citizen", JSON.stringify({
+                id: `CIT-${Date.now()}`,
+                name: tempName,
+                aadhaar: cleanAadhaar,
+                mobile: "9876543210"
+            }));
+            
+            import("@/lib/database").then(({ loginOrSignupToBackend }) => {
+                loginOrSignupToBackend(cleanAadhaar, "9876543210", tempName).then(() => {
+                    window.dispatchEvent(new Event("suvidha_login_change"));
+                    setIsVerifying(false);
+                    setStep("success");
+                    setTimeout(() => {
+                        if (selectedDept) {
+                            navigate("/dashboard", { state: { dept: selectedDept } });
+                        } else {
+                            setStep("department");
+                        }
+                    }, 1500);
+                });
+            });
+        }, 1000);
+    };
+
+    const handleDemoMobileLogin = () => {
+        toast.info("Demo Mode: Simulating Mobile Authentication...");
+        setIsVerifying(true);
+        setTimeout(() => {
+            const finalMobile = phone || "9876543210";
+            const cleanAadhaar = "999988887777";
+            const tempName = "Demo Citizen (Mobile)";
+            
+            localStorage.setItem("smartcity_token", "DEMO_MOBILE_TOKEN_" + Date.now());
+            localStorage.setItem("smartcity_citizen", JSON.stringify({
+                id: `CIT-${Date.now()}`,
+                name: tempName,
+                aadhaar: cleanAadhaar,
+                mobile: finalMobile
+            }));
+            
+            import("@/lib/database").then(({ loginOrSignupToBackend }) => {
+                loginOrSignupToBackend(cleanAadhaar, finalMobile, tempName).then(() => {
+                    window.dispatchEvent(new Event("suvidha_login_change"));
+                    setIsVerifying(false);
+                    setStep("success");
+                    setTimeout(() => {
+                        if (selectedDept) {
+                            navigate("/dashboard", { state: { dept: selectedDept } });
+                        } else {
+                            setStep("department");
+                        }
+                    }, 1500);
+                });
+            });
+        }, 1000);
+    };
+
+    const handleInitialSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const cleanAadhaar = idValue.replace(/\s/g, "");
         if (cleanAadhaar.length !== 12 || !/^\d+$/.test(cleanAadhaar)) {
@@ -83,11 +220,26 @@ const LoginPage = () => {
             return;
         }
         setIsVerifying(true);
-        setTimeout(() => {
+        try {
+            const res = await fetch(`${API_URL}/api/sandbox/aadhaar/otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ aadhaar_number: cleanAadhaar })
+            });
+            const data = await res.json();
+            if (data.success && data.reference_id) {
+                setAadhaarRefId(data.reference_id);
+                setStep("otp");
+                toast.success("Aadhaar OTP sent to your UIDAI registered mobile number!");
+            } else {
+                toast.error(data.message || "Failed to generate Aadhaar OTP");
+            }
+        } catch (error) {
+            console.error("Aadhaar OTP initialization error:", error);
+            toast.error("Network error connecting to Aadhaar Gateway");
+        } finally {
             setIsVerifying(false);
-            setStep("consumer");
-            toast.success("Aadhaar UID successfully verified in UIDAI database. Please confirm your mobile number to receive secure OTP.");
-        }, 1500);
+        }
     };
 
     const handleDeptSelect = (deptId: string) => {
@@ -95,7 +247,7 @@ const LoginPage = () => {
         setStep("aadhaar"); // Ask for Aadhaar after department select
     };
 
-    const handleSendOTP = (e: React.FormEvent) => {
+    const handleSendOTP = async (e: React.FormEvent) => {
         e.preventDefault();
         if (phone.length < 10) {
             toast.error("Please enter a valid 10-digit mobile number");
@@ -108,18 +260,29 @@ const LoginPage = () => {
         }
 
         setIsVerifying(true);
-        setTimeout(() => {
+        try {
+            const res = await fetch(`${API_URL}/api/auth/send-otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ method: "mobile", value: phone })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setStep("otp");
+                toast.success("Secure Verification OTP sent to your mobile number!");
+            } else {
+                toast.error(data.message || "Failed to send mobile OTP");
+            }
+        } catch (error) {
+            console.error("Mobile OTP send error:", error);
             const code = Math.floor(100000 + Math.random() * 900000).toString();
             setGeneratedOtp(code);
-            setIsVerifying(false);
             setStep("otp");
-            
-            // Show the on-screen simulated SMS popup
-            setTimeout(() => {
-                setShowSmsPopup(true);
-                toast.info("Secure Gateway: OTP sent to +91 " + phone);
-            }, 1000);
-        }, 1200);
+            console.log("Fallback mock OTP (check DevTools console):", code);
+            toast.success("Secure Gateway: Simulated OTP sent!");
+        } finally {
+            setIsVerifying(false);
+        }
     };
 
     const handleOTPChange = (value: string, index: number) => {
@@ -130,18 +293,80 @@ const LoginPage = () => {
         if (value && index < 5) otpRefs.current[index + 1]?.focus();
     };
 
-    const handleVerifyOTP = (e: React.FormEvent) => {
+    const handleOTPKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+        if (e.key === "Backspace" && !otp[index] && index > 0) {
+            otpRefs.current[index - 1]?.focus();
+        }
+    };
+
+    const handleVerifyOTP = async (e: React.FormEvent) => {
         e.preventDefault();
         const inputOtp = otp.join("");
+        if (inputOtp.length !== 6) {
+            toast.error("Please enter a valid 6-digit OTP");
+            return;
+        }
+
         setIsVerifying(true);
 
-        setTimeout(() => {
-            setIsVerifying(false);
-            // Relaxed validation: ANY 6-digit OTP succeeds!
-            if (inputOtp.length === 6) {
+        // If we are in real Aadhaar OTP flow (Sandbox.co.in)
+        if (aadhaarRefId) {
+            try {
+                const res = await fetch(`${API_URL}/api/sandbox/aadhaar/verify`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        reference_id: aadhaarRefId,
+                        otp: inputOtp,
+                        aadhaar_number: idValue.replace(/\s/g, "")
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.token) {
+                    toast.success(`Welcome, ${data.citizen.name}! Aadhaar verified.`);
+                    localStorage.setItem("smartcity_token", data.token);
+                    localStorage.setItem("smartcity_citizen", JSON.stringify(data.citizen));
+                    window.dispatchEvent(new Event("suvidha_login_change"));
+                    setStep("success");
+                    setTimeout(() => {
+                        if (selectedDept) {
+                            navigate("/dashboard", { state: { dept: selectedDept } });
+                        } else {
+                            setStep("department");
+                        }
+                    }, 2000);
+                } else {
+                    toast.error(data.message || "Aadhaar OTP verification failed");
+                    setOtp(["", "", "", "", "", ""]);
+                    otpRefs.current[0]?.focus();
+                }
+            } catch (error) {
+                console.error("Aadhaar OTP verification network error:", error);
+                toast.error("Network error verifying Aadhaar OTP");
+            } finally {
+                setIsVerifying(false);
+            }
+            return;
+        }
+
+        // Real Mobile OTP Verification flow via Backend/Twilio
+        try {
+            const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    method: "mobile",
+                    value: phone,
+                    otp: inputOtp
+                })
+            });
+            const data = await res.json();
+            if (data.success && data.token) {
+                toast.success(`Welcome, ${data.citizen.name}! Mobile verified.`);
+                localStorage.setItem("smartcity_token", data.token);
+                localStorage.setItem("smartcity_citizen", JSON.stringify(data.citizen));
+                window.dispatchEvent(new Event("suvidha_login_change"));
                 setStep("success");
-                setShowSmsPopup(false);
-                toast.success("Authentication Success");
                 setTimeout(() => {
                     if (selectedDept) {
                         navigate("/dashboard", { state: { dept: selectedDept } });
@@ -149,18 +374,40 @@ const LoginPage = () => {
                         setStep("department");
                     }
                 }, 2000);
+                return;
             } else {
-                toast.error("Invalid Security Code! Please enter a 6-digit OTP.");
+                toast.error(data.message || "OTP verification failed");
                 setOtp(["", "", "", "", "", ""]);
                 otpRefs.current[0]?.focus();
             }
-        }, 1200);
+        } catch (error) {
+            console.error("Mobile verify error, using simulated fallback:", error);
+            toast.success("Simulated Authentication Success");
+            setStep("success");
+            const cleanAadhaar = idValue.replace(/\s/g, "") || "123456789012";
+            const tempName = `Citizen ${cleanAadhaar.slice(-4)}`;
+            import("@/lib/database").then(({ loginOrSignupToBackend }) => {
+                loginOrSignupToBackend(cleanAadhaar, phone || "9876543210", tempName).then(() => {
+                    window.dispatchEvent(new Event("suvidha_login_change"));
+                });
+            });
+            setTimeout(() => {
+                if (selectedDept) {
+                    navigate("/dashboard", { state: { dept: selectedDept } });
+                } else {
+                    setStep("department");
+                }
+            }, 2000);
+        } finally {
+            setIsVerifying(false);
+        }
     };
 
     const handleAadhaarScanned = (data: string) => {
         const uidMatch = data.match(/\d{12}/);
         if (uidMatch) {
             setIdValue(uidMatch[0]);
+            setAadhaarDigits(uidMatch[0].split(""));
             toast.success("Aadhaar Card Securely Scanned!");
             setIsVerifying(true);
             setTimeout(() => {
@@ -176,24 +423,7 @@ const LoginPage = () => {
     return (
         <div className="flex w-full min-h-screen relative overflow-hidden bg-slate-50 font-sans">
             
-            {/* SIMULATED PHONE NOTIFICATION POPUP */}
-            {showSmsPopup && (
-                <div className="fixed top-6 right-6 w-80 bg-white border border-slate-200 rounded p-4 shadow-xl z-[100] animate-in slide-in-from-right-8 duration-500">
-                    <div className="flex items-start gap-4">
-                        <div className="h-10 w-10 bg-green-600 rounded flex items-center justify-center shrink-0">
-                            <MessageSquare className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-xs font-bold text-slate-500 uppercase">Messages • Now</span>
-                                <button onClick={() => setShowSmsPopup(false)} className="text-slate-400 hover:text-slate-900">✕</button>
-                            </div>
-                            <p className="text-xs font-bold text-slate-900">Govt of India (SUVIDHA)</p>
-                            <p className="text-sm text-slate-600 mt-1">Your verification code is <span className="font-bold text-[#192e59]">{generatedOtp}</span>. Do not share.</p>
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Background Video Overlay */}
             <div className="absolute inset-0 z-0">
@@ -291,14 +521,24 @@ const LoginPage = () => {
                             </div>
 
                             <div className="mb-8">
-                                <button onClick={handleDigilockerLogin} className="w-full py-5 border-2 border-emerald-100 bg-white text-emerald-800 font-black rounded-2xl hover:bg-emerald-50 hover:border-emerald-500 transition-all flex justify-center items-center gap-4 shadow-sm group">
-                                    <div className="p-2 bg-emerald-50 rounded-lg group-hover:scale-110 transition-transform">
-                                        <ShieldCheck className="w-6 h-6 text-emerald-600" />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="text-xs uppercase tracking-widest text-emerald-600/60 leading-none mb-1">Secure SSO</p>
-                                        <p className="text-sm">Login with DigiLocker</p>
-                                    </div>
+                                <button 
+                                    onClick={handleDigilockerLogin} 
+                                    disabled={isLoading}
+                                    className="w-full py-5 border-2 border-emerald-100 bg-white text-emerald-800 font-black rounded-2xl hover:bg-emerald-50 hover:border-emerald-500 transition-all flex justify-center items-center gap-4 shadow-sm group disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isLoading ? (
+                                        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+                                    ) : (
+                                        <>
+                                            <div className="p-2 bg-emerald-50 rounded-lg group-hover:scale-110 transition-transform">
+                                                <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                                            </div>
+                                            <div className="text-left">
+                                                <p className="text-xs uppercase tracking-widest text-emerald-600/60 leading-none mb-1">Secure SSO</p>
+                                                <p className="text-sm">Login with DigiLocker</p>
+                                            </div>
+                                        </>
+                                    )}
                                 </button>
                             </div>
 
@@ -339,22 +579,29 @@ const LoginPage = () => {
                              <button 
                                 type="button" 
                                 onClick={() => setStep("selection")} 
-                                className="flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] mb-4"
+                                className="flex items-center gap-2.5 px-5 py-2.5 bg-white hover:bg-slate-100 text-[#192e59] border-2 border-slate-200 rounded-xl font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_8px_20px_rgba(0,0,0,0.15)] mb-4"
                             >
-                                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                <ArrowLeft className="w-4 h-4 text-[#192e59] group-hover:-translate-x-1 transition-transform stroke-[2.5]" />
                                 <span>Back</span>
                             </button>
                              
-                             <div className="relative group">
-                                <label className="absolute -top-2 left-4 bg-white px-2 text-xs text-slate-400 font-black uppercase tracking-widest group-focus-within:text-[#192e59] z-10 transition-colors">Identification Number<span className="text-red-500 ml-1">*</span></label>
-                                <input 
-                                    type="text" 
-                                    value={idValue}
-                                    onChange={(e) => setIdValue(e.target.value)}
-                                    className="w-full border-2 border-slate-100 rounded-2xl p-4 text-slate-800 font-bold bg-white outline-none focus:border-[#192e59] focus:ring-4 focus:ring-[#192e59]/5 transition-all"
-                                    placeholder="Enter your 12-digit ID"
-                                    autoFocus
-                                />
+                             <div className="space-y-3">
+                                <label className="block text-xs text-slate-400 font-black uppercase tracking-widest text-center">Aadhaar Identification Number <span className="text-red-500">*</span></label>
+                                <div className="flex gap-1.5 justify-center">
+                                    {aadhaarDigits.map((digit, i) => (
+                                        <input
+                                            key={i}
+                                            ref={(el) => { aadhaarRefs.current[i] = el; }}
+                                            type="text"
+                                            maxLength={1}
+                                            value={digit}
+                                            onChange={(e) => handleAadhaarDigitChange(e.target.value, i)}
+                                            onKeyDown={(e) => handleAadhaarKeyDown(e, i)}
+                                            className="w-7 h-11 sm:w-8 sm:h-12 rounded-xl border-2 border-slate-100 bg-white text-center text-lg sm:text-xl font-bold text-slate-900 focus:border-[#192e59] focus:ring-4 focus:ring-[#192e59]/5 outline-none transition-all shadow-sm"
+                                            autoFocus={i === 0}
+                                        />
+                                    ))}
+                                </div>
                              </div>
 
                              <div className="flex items-center gap-4 py-4">
@@ -380,6 +627,20 @@ const LoginPage = () => {
 
                              <button type="submit" disabled={isVerifying} className="w-full bg-[#192e59] hover:bg-[#122242] text-white py-4 rounded-2xl font-black text-lg uppercase tracking-widest shadow-lg shadow-[#192e59]/20 transition-all flex items-center justify-center">
                                 {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify Identity"}
+                             </button>
+
+                             <div className="relative flex py-2 items-center">
+                                <div className="flex-grow border-t border-slate-200"></div>
+                                <span className="flex-shrink mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">or</span>
+                                <div className="flex-grow border-t border-slate-200"></div>
+                             </div>
+
+                             <button 
+                                type="button" 
+                                onClick={handleDemoAadhaarLogin} 
+                                className="w-full bg-[#FD8008]/10 hover:bg-[#FD8008]/20 text-[#FD8008] border-2 border-dashed border-[#FD8008]/40 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] duration-200"
+                             >
+                                Quick Demo Login
                              </button>
                         </form>
                     )}
@@ -456,6 +717,20 @@ const LoginPage = () => {
                              <button type="submit" disabled={isVerifying} className="w-full bg-[#192e59] hover:bg-[#122242] text-white py-4 rounded-2xl font-black text-lg uppercase tracking-widest shadow-lg shadow-[#192e59]/20 transition-all flex items-center justify-center">
                                 {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : "Generate Secure OTP"}
                              </button>
+
+                             <div className="relative flex py-2 items-center">
+                                <div className="flex-grow border-t border-slate-200"></div>
+                                <span className="flex-shrink mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">or</span>
+                                <div className="flex-grow border-t border-slate-200"></div>
+                             </div>
+
+                             <button 
+                                type="button" 
+                                onClick={handleDemoMobileLogin} 
+                                className="w-full bg-[#FD8008]/10 hover:bg-[#FD8008]/20 text-[#FD8008] border-2 border-dashed border-[#FD8008]/40 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] duration-200"
+                             >
+                                Quick Demo Login
+                             </button>
                         </form>
                     )}
 
@@ -474,6 +749,7 @@ const LoginPage = () => {
                                         maxLength={1}
                                         value={digit}
                                         onChange={(e) => handleOTPChange(e.target.value, i)}
+                                        onKeyDown={(e) => handleOTPKeyDown(e, i)}
                                         className="w-12 h-16 rounded-2xl border-2 border-slate-100 bg-white text-center text-2xl font-black text-slate-900 focus:border-[#192e59] focus:ring-4 focus:ring-[#192e59]/5 outline-none transition-all shadow-sm"
                                     />
                                 ))}
@@ -493,7 +769,7 @@ const LoginPage = () => {
                             <h2 className="text-2xl font-bold text-slate-800">Verification Successful</h2>
                             <p className="text-slate-500 text-sm mt-2">Redirecting securely...</p>
                          </div>
-                    )}
+                     )}
 
                     {/* FACE ID */}
                     {step === "face" && (
@@ -501,12 +777,16 @@ const LoginPage = () => {
                             onSuccess={() => {
                                 setStep("department");
                                 toast.success("Biometrics Verified!");
+                                import("@/lib/database").then(({ loginOrSignupToBackend }) => {
+                                    loginOrSignupToBackend("123456789012", "9876543210", "Rajesh Kumar");
+                                });
                             }}
                             onCancel={() => setStep("selection")}
                          />
                     )}
-                </div>
+                 </div>
             </div>
+            
         </div>
     );
 };

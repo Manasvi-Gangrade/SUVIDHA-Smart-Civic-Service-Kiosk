@@ -19,28 +19,28 @@ const govColors: Record<
   }
 > = {
   saffron: {
-    labelBg: "bg-[#FF9933]",
-    bulletColor: "bg-[#FF9933]",
+    labelBg: "bg-[#FFA500]",
+    bulletColor: "bg-[#FFA500]",
   },
   rose: {
-    labelBg: "bg-[#E3000F]",
-    bulletColor: "bg-[#E3000F]",
+    labelBg: "bg-[#FF4500]",
+    bulletColor: "bg-[#FF4500]",
   },
   teal: {
-    labelBg: "bg-[#008080]",
-    bulletColor: "bg-[#008080]",
+    labelBg: "bg-[#4CAF50]",
+    bulletColor: "bg-[#4CAF50]",
   },
   blue: {
-    labelBg: "bg-[#0066FF]",
-    bulletColor: "bg-[#0066FF]",
+    labelBg: "bg-[#2196F3]",
+    bulletColor: "bg-[#2196F3]",
   },
   green: {
-    labelBg: "bg-[#138808]",
-    bulletColor: "bg-[#138808]",
+    labelBg: "bg-[#2ECC71]",
+    bulletColor: "bg-[#2ECC71]",
   },
   indigo: {
-    labelBg: "bg-[#4F46E5]",
-    bulletColor: "bg-[#4F46E5]",
+    labelBg: "bg-[#607D8B]",
+    bulletColor: "bg-[#607D8B]",
   },
   default: {
     labelBg: "bg-slate-800",
@@ -96,23 +96,23 @@ const DepartmentCard = ({
       <div className="relative z-10 flex flex-col items-center justify-between w-full h-full pointer-events-none">
         
         {/* Department Name Header Capsule */}
-        <div className={`w-full px-4 py-2.5 rounded-2xl ${gov.labelBg} text-white shadow-md border border-white/15 transition-transform duration-500 group-hover:scale-105 shrink-0`}>
-          <h3 className="font-[950] text-[0.85rem] lg:text-[1rem] tracking-tight uppercase text-center drop-shadow-sm leading-none">
+        <div className={`w-full px-6 py-4 rounded-[1.5rem] ${gov.labelBg} text-white shadow-md border border-white/15 transition-transform duration-500 group-hover:scale-105 shrink-0`}>
+          <h3 className="font-[950] text-[1.1rem] lg:text-[1.3rem] tracking-tight uppercase text-center drop-shadow-sm leading-none">
             {title}
           </h3>
         </div>
         
         {/* 📋 SOLID ROYAL SUVIDHA BLUE BACKPLATE (Made taller and larger using flex-1 & vertical centering to occupy massive visual presence inside the card!) */}
         {features.length > 0 && (
-          <div className="w-full bg-[#192e59] rounded-2xl py-4 px-3.5 border border-white/15 mt-3 flex-1 flex flex-col justify-center transition-all duration-500 shadow-[0_4px_25px_rgba(0,0,0,0.5)]">
-            <ul className="text-left space-y-1.5 lg:space-y-2">
+          <div className="w-full bg-[#192e59] rounded-2xl py-6 px-5 border border-white/15 mt-4 flex-1 flex flex-col justify-center transition-all duration-500 shadow-[0_4px_25px_rgba(0,0,0,0.5)]">
+            <ul className="text-left space-y-3 lg:space-y-4">
               {features.map((feat, fidx) => (
                 <li 
                   key={fidx} 
-                  className="text-[11px] lg:text-[12px] xl:text-[13px] font-[900] text-slate-100 uppercase tracking-wide flex items-center gap-2.5 leading-tight"
+                  className="text-[14px] lg:text-[16px] xl:text-[18px] font-[900] text-slate-100 uppercase tracking-wide flex items-center gap-4 leading-tight"
                 >
                   {/* Color-themed bullet point */}
-                  <span className={`h-1.5 w-1.5 lg:h-2 lg:w-2 rounded-full shrink-0 shadow-sm ${gov.bulletColor}`} />
+                  <span className={`h-2 w-2 lg:h-3 lg:w-3 rounded-full shrink-0 shadow-sm ${gov.bulletColor}`} />
                   <span className="truncate">{feat}</span>
                 </li>
               ))}

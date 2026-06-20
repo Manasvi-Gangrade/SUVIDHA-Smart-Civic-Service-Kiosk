@@ -35,10 +35,10 @@ import { AccessibilityProvider, useAccessibility } from "./contexts/Accessibilit
 import AccessibilityMenu from "./components/AccessibilityMenu";
 import { useEffect } from "react";
 import VirtualKeyboard from "./components/VirtualKeyboard";
-
 import { IdleScreensaver } from "./components/IdleScreensaver";
 import { TTSProvider } from "./context/TTSContext";
 import { VoiceAssistantProvider } from "./context/VoiceAssistantContext";
+import { LocationTrackerProvider } from "./context/LocationContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -112,9 +112,9 @@ const AppContent = () => {
   return (
     <>
       <ScreenMagnifier />
-      <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
+      <div className="relative flex h-screen flex-col overflow-hidden bg-background">
         {!hideHeader && <KioskHeader />}
-        <main className="flex-1 transition-all duration-300">
+        <main className="flex-1 overflow-y-auto transition-all duration-300">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/complaint" element={<ComplaintPage />} />
@@ -147,22 +147,21 @@ const AppContent = () => {
             <AccessibilityMenu />
             <VirtualHelpdesk />
             <Chatbot />
-            <SystemSettings />
           </div>
         )}
       </div>
     </>
   );
 };
-
 const App = () => (
-    <QueryClientProvider client={queryClient}>
-        <ErrorBoundary>
-            <AccessibilityProvider>
-            <FontSizeWrapper>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner position="top-center" toastOptions={{ className: 'kiosk-toast' }} />
+  <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
+          <AccessibilityProvider>
+          <FontSizeWrapper>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner position="top-center" toastOptions={{ className: 'kiosk-toast' }} />
+              <LocationTrackerProvider>
                 <BrowserRouter>
                   <TTSProvider>
                   <VoiceAssistantProvider>
@@ -170,11 +169,12 @@ const App = () => (
                   </VoiceAssistantProvider>
                   </TTSProvider>
                 </BrowserRouter>
-              </TooltipProvider>
-            </FontSizeWrapper>
-        </AccessibilityProvider>
-        </ErrorBoundary>
-    </QueryClientProvider>
+              </LocationTrackerProvider>
+            </TooltipProvider>
+          </FontSizeWrapper>
+      </AccessibilityProvider>
+      </ErrorBoundary>
+  </QueryClientProvider>
 );
 
 export default App;

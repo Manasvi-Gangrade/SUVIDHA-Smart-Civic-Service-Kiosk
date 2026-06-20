@@ -20,22 +20,25 @@ const RESPONSES: Record<string, Record<string, string>> = {
         ta: "வணக்கம்! நான் சகாயக், உங்கள் மெய்நிகர் உதவியாளர். இன்று நான் உங்களுக்கு எவ்வாறு உதவலாம்?",
         gu: "નમસ્તે! હું સહાયક છું, તમારો વર્ચ્યુઅલ આસિસ્ટન્ટ. આજે હું તમને કઈ રીતે મદદ કરી શકું?",
         bn: "নমস্কার! আমি সহায়ক, আপনার ভার্চুয়াল সহকারী। আজ আমি আপনাকে কিভাবে সাহায্য করতে পারি?",
+        as: "নমস্কাৰ! মই সহায়ক, আপোনাৰ ভাৰ্চুৱেল সহযোগী। আজি মই আপোনাক কেনেকৈ সহায় কৰিব পাৰোঁ?",
     },
     thanks: {
         en: "You're very welcome! Let me know if you need help with anything else.",
         hi: "बहुत स्वागत है! यदि आपको और कुछ मदद चाहिए तो बताएं।",
         mr: "तुमचे खूप स्वागत आहे! इतर कशातही मदत लागली तर सांगा.",
-        ta: "மிகவும் வரவேற்கிறோம்! வேறு ஏதாவது உதவி தேவைப்பட்டால் தெரியப்படுத்துங்கள்.",
-        gu: "ખૂબ સ્વાગત છે! બીજી કોઈ મદદ જોઈએ તો જણાવो.",
+        ta: "மிகவும் வரவேற்கிறோம்! வேறு ஏதாவது உதவி தேவைப்பட்டால் తెలియப்படுத்துங்கள்.",
+        gu: "ખૂબ સ્વાગત છે! બીજી કોઈ મદદ જોઈએ તો જણાવો.",
         bn: "স্বাগতম! আর কোনো সাহায্যের দরকার হলে জানান।",
+        as: "আপোনাক বহুত আদৰণি জনাইছোঁ! যদি আপোনাক অন্য কিবা সহায় লাগে মোক জনাওক।",
     },
     bill: {
         en: "To pay bills, go to 'Departments' on the Home page and select your utility (Electricity, Water, or Gas).",
         hi: "बिल भुगतान के लिए होम पेज पर 'विभाग' पर जाएं और संबंधित उपयोगिता (बिजली, पानी या गैस) चुनें।",
         mr: "बिल भरण्यासाठी, मुख्यपृष्ठावर 'विभाग' मध्ये जा आणि संबंधित सेवा निवडा (वीज, पाणी किंवा गॅस).",
         ta: "பில் செலுத்த, முகப்புப் பக்கத்தில் 'துறைகள்' என்பதற்குச் சென்று தொடர்புடைய சேவையை (மின்சாரம், தண்ணீர் அல்லது எரிவாயு) தேர்ந்தெடுக்கவும்.",
-        gu: "બિલ ભરવા માટે, હોમ પેજ પર 'વિભાગ' માં જાઓ અને સંબંધित सेवा (વીજળી, પાણી અથવા ગેસ) પસંદ કરો.",
+        gu: "બિલ ભરવા માટે, હોમ પેજ પર 'વિભાગ' માં જાઓ અને સંબંધિત સેવા (વીજળી, પાણી અથવા ગેસ) પસંદ કરો.",
         bn: "বিল পরিশোধের জন্য হোম পেজে 'বিভাগ' এ যান এবং সংশ্লিষ্ট পরিষেবা (বিদ্যুৎ, জল বা গ্যাস) নির্বাচন করুন।",
+        as: "বিল পৰিশোধ কৰিবলৈ, হোম পেজৰ 'বিভাগ'লৈ যাওক আৰু আপোনাৰ উপযোগী সেৱা (বিদ্যুৎ, পানী বা গেছ) বাছনি কৰক।",
     },
     complaint: {
         en: "You can register a grievance by clicking 'Register Complaint' on the Home page. It takes less than 2 minutes!",
@@ -44,30 +47,34 @@ const RESPONSES: Record<string, Record<string, string>> = {
         ta: "முகப்புப் பக்கத்தில் 'புகார் பதிவு' என்பதைக் கிளிக் செய்வதன் மூலம் புகாரை பதிவு செய்யலாம். இது 2 நிமிடத்திற்கும் குறைவான நேரம் எடுக்கும்!",
         gu: "હોમ પેજ પર 'ફરિયાદ નોંધો' પર ક્લિક કરીને ઓ ફરિયાદ નોંધાવી શકો. 2 મિનિટ કરતા ઓછો સમય લાગે!",
         bn: "হোম পেজে 'অভিযোগ নিবন্ধন' এ ক্লিক করে অভিযোগ দাখিল করতে পারেন। মাত্র ২ মিনিট লাগে!",
+        as: "আপুনি হোম পেজত 'অভিযোগ পঞ্জীয়ন কৰক'ত ক্লিক কৰি অভিযোগ দাখিল কৰিব পাৰে। ইয়াত ২ মিনিটতকৈও কম সময় লাগে!",
     },
     track: {
         en: "To check your application status, use 'Track Request'. You'll need your Request ID (e.g., SVD-2026-XXXX).",
         hi: "अपने आवेदन की स्थिति जांचने के लिए 'अनुरोध ट्रैक करें' का उपयोग करें। आपको रिक्वेस्ट आईडी (जैसे SVD-2026-XXXX) की आवश्यकता होगी।",
         mr: "तुमच्या अर्जाची स्थिती तपासण्यासाठी 'विनंती ट्रॅक करा' वापरा. तुम्हाला Request ID (उदा. SVD-2026-XXXX) आवश्यक आहे.",
         ta: "உங்கள் விண்ணப்ப நிலையை சரிபார்க்க 'கோரிக்கையை கண்காணி' பயன்படுத்தவும். உங்களுக்கு Request ID (எ.கா. SVD-2026-XXXX) தேவைப்படும்.",
-        gu: "અરજીની સ્થિતિ ચેક કરવા 'ટ્રૅક રિક્વેસ્ટ' उपयोग करो. Request ID (દા.ત. SVD-2026-XXXX) ની જરૂર પડશે.",
+        gu: "અરજીની સ્થિતિ ચેક કરવા 'ટ્રૅક રિક્વેસ્ટ' ઉપયોગ કરો. Request ID (દા.ત. SVD-2026-XXXX) ની જરૂર પડશે.",
         bn: "আবেদনের অবস্থা দেখতে 'ট্র্যাক রিকোয়েস্ট' ব্যবহার করুন। আপনার Request ID (যেমন SVD-2026-XXXX) প্রয়োজন হবে।",
+        as: "আপোনাৰ আবেদনৰ স্থিতি পৰীক্ষা কৰিবলৈ, 'অনুৰোধ ট্ৰেক কৰক' ব্যৱহাৰ কৰক। আপোনাক অনুৰোধ আইডিৰ প্ৰয়োজন হ'ব (যেনে, SVD-2026-XXXX)।",
     },
     token: {
         en: "Skip the queue! Generate a digital token for walk-in services directly from any Department page.",
         hi: "लाइन छोड़ें! किसी भी विभाग पृष्ठ से सीधे वॉक-इन सेवाओं के लिए डिजिटल टोकन जेनरेट करें।",
         mr: "रांग सोडा! कोणत्याही विभाग पृष्ठावरून थेट walk-in सेवांसाठी डिजिटल टोकन तयार करा.",
-        ta: "வரிசையைத் தவிர்க்கவும்! எந்த துறை பக்கத்திலிருந்தும் நேரடியாக walk-in சேவைகளுக்கான டிजிட்டல் டோக்கனை உருவாக்குங்கள்.",
-        gu: "લાઇન ન ઊભા! ડિપાર્ટ્મેન્ટ પેજ પ walk-in સેવા માટે ડિજiટ ટોકન બનાવો.",
+        ta: "வரிசையைத் தவிர்க்கவும்! எந்த துறை பக்கத்திலிருந்தும் நேரடியாக walk-in சேவைகளுக்கான டிஜிட்டல் டோக்கனை உருவாக்குங்கள்.",
+        gu: "લાઇન ન ઊભા! ડિપાર્ટ્મેન્ટ પેજ પ walk-in સેવા માટે ડિજીટલ ટોકન બનાવો.",
         bn: "লাইনে দাঁড়াবেন না! যেকোনো বিভাগের পেজ থেকে walk-in সেবার ডিজিটাল টোকন তৈরি করুন।",
+        as: "শাৰী এৰাই চলক! যিকোনো বিভাগৰ পৃষ্ঠাৰ পৰা পোনপটীয়াকৈ ডিজিটেল টোকেন সৃষ্টি কৰক।",
     },
     fallback: {
         en: "I'm not sure about that. I can help you Pay Bills, Track Requests, or Register Complaints. What would you like?",
         hi: "मुझे यकीन नहीं है। मैं आपको बिल भुगतान, अनुरोध ट्रैकिंग या शिकायत दर्ज करने में मदद कर सकता हूँ।",
         mr: "मला खात्री नाही. मी तुम्हाला बिल भरणे, विनंती ट्रॅक करणे किंवा तक्रार नोंदवणे यात मदत करू शकतो.",
         ta: "எனக்கு நிச்சயமில்லை. பில் செலுத்துதல், கோரிக்கை கண்காணிப்பு அல்லது புகார் பதிவு செய்ய உதவ முடியும்.",
-        gu: "ખાતrી નથી. બil ભрવાનu, viનti ટreking, ywu rvad ફriyd nondawnwn mdad kri shkn.",
+        gu: "ખાતરી નથી. બિલ ભરવાનું, વિનંતી ટ્રેકિંગ અથવા ફરિયાદ નોંધવામાં મદદ કરી શકું.",
         bn: "নিশ্চিত না। বিল পরিশোধ, ট্র্যাকিং বা অভিযোগ নিবন্ধনে সাহায্য করতে পারি।",
+        as: "মই এই বিষয়ে নিশ্চিত নহয়। মই আপোনাক বিল পৰিশোধ কৰা, অনুৰোধ ট্ৰেক কৰা বা অভিযোগ পঞ্জীয়ন কৰাত সহায় কৰিব পাৰোঁ।",
     },
 };
 
@@ -75,12 +82,13 @@ const ACKNOWLEDGEMENTS: Record<string, string> = {
     en: "Language changed to English.",
     hi: "भाषा बदलकर हिंदी हो गई है।",
     mr: "भाषा बदलून मराठी झाली आहे.",
-    bn: "ভাষা পরিবর্তন করে বাংলা করা হয়েছে।"
+    bn: "ভাষা পরিবর্তন করে বাংলা করা হয়েছে।",
+    as: "ভাষা অসমীয়ালৈ সলনি কৰা হৈছে।"
 };
 
 const SPEECH_LANG_MAP: Record<string, string> = {
     hi: "hi-IN", mr: "mr-IN", ta: "ta-IN", te: "te-IN",
-    gu: "gu-IN", bn: "bn-IN", en: "en-IN",
+    gu: "gu-IN", bn: "bn-IN", en: "en-IN", as: "as-IN",
 };
 
 function getResponse(input: string, lang: string): string {
@@ -88,12 +96,12 @@ function getResponse(input: string, lang: string): string {
     const l = RESPONSES.greeting[base] ? base : "en";
     const lower = input.toLowerCase();
 
-    if (lower.match(/\b(hello|hi|namaste|hey|नमस्ते|हेलो)\b/)) return RESPONSES.greeting[l];
-    if (lower.match(/\b(thank|thanks|धन्यवाद|shukriya|शुक्रिया)\b/)) return RESPONSES.thanks[l];
-    if (lower.match(/\b(pay|bill|electricity|water|gas|बिल|पानी|बिजली|गैस)\b/)) return RESPONSES.bill[l];
-    if (lower.match(/\b(complaint|grievance|report|issue|शिकायत|तक्रार)\b/)) return RESPONSES.complaint[l];
-    if (lower.match(/\b(status|track|check|application|ट्रैक|स्थिति)\b/)) return RESPONSES.track[l];
-    if (lower.match(/\b(token|queue|walk-in|टोकन|लाइन)\b/)) return RESPONSES.token[l];
+    if (lower.match(/\b(hello|hi|namaste|hey|नमस्ते|हेलो|নমস্কাৰ|নমস্কার)\b/)) return RESPONSES.greeting[l];
+    if (lower.match(/\b(thank|thanks|धन्यवाद|shukriya|शुक्रिया|ধন্যবাদ|ধন্যবাদ ধন্যবাদ)\b/)) return RESPONSES.thanks[l];
+    if (lower.match(/\b(pay|bill|electricity|water|gas|बिल|पानी|बिजली|गैस|বিল|পৰিশোধ)\b/)) return RESPONSES.bill[l];
+    if (lower.match(/\b(complaint|grievance|report|issue|शिकायत|तक्रार|অভিযোগ|আপত্তি)\b/)) return RESPONSES.complaint[l];
+    if (lower.match(/\b(status|track|check|application|ट्रैक|स्थिति|ট্ৰেক|অবস্থা)\b/)) return RESPONSES.track[l];
+    if (lower.match(/\b(token|queue|walk-in|टोकन|लाइन|টোকেন|শাৰী)\b/)) return RESPONSES.token[l];
     return RESPONSES.fallback[l];
 }
 

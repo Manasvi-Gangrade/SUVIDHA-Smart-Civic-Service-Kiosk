@@ -148,7 +148,7 @@ const MeterComplaintPage = () => {
   // Step 4: Receipt View (Wrapped in beautiful custom layout)
   if (step === 4 && severity) {
     return (
-      <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
+      <div className="h-full bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
         {/* Background Video Overlay */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30 mix-blend-overlay">
@@ -182,7 +182,7 @@ const MeterComplaintPage = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
+    <div className="h-full bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
       
       {/* Background Video Overlay */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -199,7 +199,7 @@ const MeterComplaintPage = () => {
           <div className="bg-[#192e59] p-8 text-white relative flex-shrink-0">
             <button 
               onClick={() => navigate(-1)} 
-              className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] z-50"
+              className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] z-50"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span>Back</span>
@@ -468,9 +468,21 @@ const MeterComplaintPage = () => {
                       <p className="text-slate-700 font-black uppercase tracking-tight relative z-10 text-sm">Scan QR – Upload Meter Photo</p>
                       <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-2 relative z-10 leading-relaxed">Clear photo of meter/damage<br />(Secure Mobile Upload)</p>
                       {uploadedPhotos.meterPhoto ? (
-                        <span className="mt-4 bg-emerald-50 text-emerald-600 border border-emerald-200 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest relative z-10 flex items-center gap-1.5 shadow-sm">
-                          {uploadedPhotos.meterPhoto}
-                        </span>
+                        <div className="mt-4 flex flex-col items-center gap-2 relative z-10">
+                          <span className="bg-emerald-50 text-emerald-600 border border-emerald-200 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                            {uploadedPhotos.meterPhoto}
+                          </span>
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUploadedPhotos(prev => ({ ...prev, meterPhoto: null }));
+                            }}
+                            className="text-rose-500 hover:text-rose-700 text-[10px] font-black uppercase tracking-widest hover:underline transition-all"
+                          >
+                            Remove & Re-upload
+                          </button>
+                        </div>
                       ) : (
                         <button 
                           type="button"
@@ -491,9 +503,21 @@ const MeterComplaintPage = () => {
                       <p className="text-slate-700 font-black uppercase tracking-tight relative z-10 text-sm">Scan QR – Upload Site Photo</p>
                       <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-2 relative z-10 leading-relaxed">Wide shot of installation area<br />(Secure Mobile Upload)</p>
                       {uploadedPhotos.sitePhoto ? (
-                        <span className="mt-4 bg-emerald-50 text-emerald-600 border border-emerald-200 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest relative z-10 flex items-center gap-1.5 shadow-sm">
-                          {uploadedPhotos.sitePhoto}
-                        </span>
+                        <div className="mt-4 flex flex-col items-center gap-2 relative z-10">
+                          <span className="bg-emerald-50 text-emerald-600 border border-emerald-200 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                            {uploadedPhotos.sitePhoto}
+                          </span>
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUploadedPhotos(prev => ({ ...prev, sitePhoto: null }));
+                            }}
+                            className="text-rose-500 hover:text-rose-700 text-[10px] font-black uppercase tracking-widest hover:underline transition-all"
+                          >
+                            Remove & Re-upload
+                          </button>
+                        </div>
                       ) : (
                         <button 
                           type="button"

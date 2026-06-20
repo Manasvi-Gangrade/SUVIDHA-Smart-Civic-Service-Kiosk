@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Camera, CheckCircle2, AlertCircle, Loader2, ArrowLeft, ShieldCheck, QrCode } from "lucide-react";
 import { toast } from "sonner";
+import { startRazorpayPayment } from "../utils/RazorpayPayment";
 
 // NOTE: You need to install tesseract.js: npm install tesseract.js
 declare global {
@@ -21,6 +22,39 @@ const PaymentPortal = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeStreamRef = useRef<MediaStream | null>(null);
+
+  const handleRazorpayPayment = async () => {
+    try {
+      const amountVal = parseFloat(amount);
+      const paiseAmount = Math.round(amountVal * 100);
+
+      await startRazorpayPayment({
+        keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_T6OUyCefir5VyB',
+        amount: paiseAmount,
+        currency: 'INR',
+        name: 'SUVIDHA Smart Kiosk',
+        description: `Payment for ${service}`,
+        prefill: {
+          name: 'Citizen User',
+          email: 'citizen@suvidha.gov.in',
+          contact: '9999999999'
+        },
+        themeColor: '#192e59',
+        onSuccess: (payload) => {
+          console.log('Payment Successful!', payload);
+          toast.success("Payment Received via Razorpay!");
+          setStep("success");
+        },
+        onFailure: (err) => {
+          console.error('Payment Failed:', err);
+          toast.error(`Payment Failed: ${err.description || 'Cancelled'}`);
+        }
+      });
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Razorpay initiation failed.");
+    }
+  };
 
   // My Real UPI ID (You can change this)
   const upiId = "your-upi-id@ybl"; 
@@ -127,7 +161,7 @@ const PaymentPortal = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
+    <div className="h-full bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
       
       {/* Background Video Overlay */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -144,7 +178,7 @@ const PaymentPortal = () => {
           <div className="bg-[#192e59] p-8 text-white relative flex-shrink-0">
             <button 
               onClick={() => navigate(-1)} 
-              className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] z-50"
+              className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] z-50"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span>Back</span>
@@ -204,15 +238,24 @@ const PaymentPortal = () => {
                       <p className="text-slate-500 font-bold text-xs">Use any UPI App (GPay, Paytm, PhonePe)</p>
                     </div>
 
-                    <button 
-                      onClick={() => {
-                        setStep("scan");
-                        setCameraActive(true);
-                      }}
-                      className="w-full bg-[#192e59] text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg hover:bg-[#112040] transition-all flex items-center justify-center gap-2"
-                    >
-                      <Camera className="w-5 h-5" /> Verify Payment
-                    </button>
+                    <div className="w-full space-y-2">
+                      <button 
+                        onClick={() => {
+                          setStep("scan");
+                          setCameraActive(true);
+                        }}
+                        className="w-full bg-[#192e59] text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg hover:bg-[#112040] transition-all flex items-center justify-center gap-2"
+                      >
+                        <Camera className="w-5 h-5" /> AI Vision Verify
+                      </button>
+
+                      <button 
+                        onClick={handleRazorpayPayment}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2"
+                      >
+                        💳 Pay via Razorpay
+                      </button>
+                    </div>
                   </div>
                 )}
 

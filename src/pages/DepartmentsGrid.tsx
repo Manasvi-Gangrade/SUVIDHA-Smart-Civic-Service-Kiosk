@@ -70,43 +70,43 @@ const quickTabs = [
     icon: Zap,
     label: "Electricity",
     path: "/department/electricity",
-    colorClass: "bg-[#FF9933]",
-    shadowClass: "shadow-[0_0_15px_rgba(255,153,51,0.3)] hover:shadow-[0_0_25px_rgba(255,153,51,0.55)]",
+    colorClass: "bg-[#FFA500]",
+    shadowClass: "shadow-[0_0_15px_rgba(255,165,0,0.3)] hover:shadow-[0_0_25px_rgba(255,165,0,0.55)]",
   },
   {
     icon: Flame,
     label: "Gas",
     path: "/department/gas",
-    colorClass: "bg-[#E3000F]",
-    shadowClass: "shadow-[0_0_15px_rgba(227,0,15,0.3)] hover:shadow-[0_0_25px_rgba(227,0,15,0.55)]",
+    colorClass: "bg-[#FF4500]",
+    shadowClass: "shadow-[0_0_15px_rgba(255,69,0,0.3)] hover:shadow-[0_0_25px_rgba(255,69,0,0.55)]",
   },
   {
     icon: Landmark,
     label: "Municipal",
     path: "/department/municipal",
-    colorClass: "bg-[#008080]",
-    shadowClass: "shadow-[0_0_15px_rgba(0,128,128,0.3)] hover:shadow-[0_0_25px_rgba(0,128,128,0.55)]",
+    colorClass: "bg-[#4CAF50]",
+    shadowClass: "shadow-[0_0_15px_rgba(76,175,80,0.3)] hover:shadow-[0_0_25px_rgba(76,175,80,0.55)]",
   },
   {
     icon: Droplet,
     label: "Water",
     path: "/department/water",
-    colorClass: "bg-[#0066FF]",
-    shadowClass: "shadow-[0_0_15px_rgba(0,102,255,0.3)] hover:shadow-[0_0_25px_rgba(0,102,255,0.55)]",
+    colorClass: "bg-[#2196F3]",
+    shadowClass: "shadow-[0_0_15px_rgba(33,150,243,0.3)] hover:shadow-[0_0_25px_rgba(33,150,243,0.55)]",
   },
   {
     icon: Trash2,
     label: "Sanitation",
     path: "/department/waste",
-    colorClass: "bg-[#138808]",
-    shadowClass: "shadow-[0_0_15px_rgba(19,136,8,0.3)] hover:shadow-[0_0_25px_rgba(19,136,8,0.55)]",
+    colorClass: "bg-[#2ECC71]",
+    shadowClass: "shadow-[0_0_15px_rgba(46,204,113,0.3)] hover:shadow-[0_0_25px_rgba(46,204,113,0.55)]",
   },
   {
     icon: FileText,
     label: "Property",
     path: "/department/property",
-    colorClass: "bg-[#4F46E5]",
-    shadowClass: "shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.55)]",
+    colorClass: "bg-[#607D8B]",
+    shadowClass: "shadow-[0_0_15px_rgba(96,125,139,0.3)] hover:shadow-[0_0_25px_rgba(96,125,139,0.55)]",
   },
 ];
 
@@ -114,7 +114,7 @@ const DepartmentsGrid = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-[#192e59] flex flex-col p-4 lg:p-6 pb-28 lg:pb-32 justify-start gap-4 relative overflow-y-auto custom-scrollbar">
+    <div className="h-full bg-[#192e59] flex flex-col p-6 lg:p-10 pb-28 lg:pb-32 justify-between gap-8 relative overflow-y-auto custom-scrollbar">
       
       {/* BACKGROUND VIDEO */}
       <div className="absolute inset-0 z-0">
@@ -131,8 +131,8 @@ const DepartmentsGrid = () => {
       </div>
 
       {/* Header Section */}
-      <div className="mb-1 mt-1 flex justify-center animate-slide-up relative z-10 w-full text-center shrink-0">
-        <h1 className="text-[1.75rem] lg:text-[2rem] font-[900] tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-[#e2e8f0] to-[#94a3b8] drop-shadow-2xl uppercase">
+      <div className="mb-2 mt-2 flex justify-center animate-slide-up relative z-10 w-full text-center shrink-0">
+        <h1 className="text-[2.2rem] lg:text-[2.8rem] font-[900] tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-[#e2e8f0] to-[#94a3b8] drop-shadow-2xl uppercase">
           Select a department to proceed
         </h1>
       </div>
@@ -140,30 +140,30 @@ const DepartmentsGrid = () => {
       {/* Floating Back Button */}
       <button
         onClick={() => navigate("/")}
-        className="kiosk-touch-target absolute top-4 right-6 z-50 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)]"
+        className="kiosk-touch-target absolute top-6 left-8 z-50 flex items-center gap-2 px-6 py-3.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)]"
       >
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         <span>BACK HOME</span>
       </button>
 
       {/* 🚀 QUICK LAUNCH CATEGORY TABS */}
-      <div className="mb-2 flex justify-center items-center gap-5 lg:gap-10 overflow-x-auto overflow-y-hidden py-2 px-4 z-10 w-full animate-slide-up no-scrollbar shrink-0">
+      <div className="mb-4 flex justify-center items-center gap-8 lg:gap-14 overflow-x-auto overflow-y-hidden py-3 px-6 z-10 w-full animate-slide-up no-scrollbar shrink-0">
         {quickTabs.map((tab, idx) => {
           const TabIcon = tab.icon;
           return (
             <button
               key={tab.label}
               onClick={() => navigate(tab.path)}
-              className="flex flex-col items-center gap-3 group focus:outline-none shrink-0"
+              className="flex flex-col items-center gap-4 group focus:outline-none shrink-0"
               style={{ animationDelay: `${0.03 * idx}s` }}
             >
               {/* Circular Icon Plate */}
-              <div className={`h-16 w-16 lg:h-[4.75rem] lg:w-[4.75rem] rounded-full flex items-center justify-center text-white border border-white/15 transition-all duration-300 group-hover:scale-110 group-active:scale-95 ${tab.colorClass} ${tab.shadowClass}`}>
-                <TabIcon className="w-7 h-7 lg:w-9 lg:h-9 transition-transform duration-300 group-hover:rotate-12" strokeWidth={2.5} />
+              <div className={`h-20 w-20 lg:h-[5.5rem] lg:w-[5.5rem] rounded-full flex items-center justify-center text-white border border-white/15 transition-all duration-300 group-hover:scale-110 group-active:scale-95 ${tab.colorClass} ${tab.shadowClass}`}>
+                <TabIcon className="w-9 h-9 lg:w-11 lg:h-11 transition-transform duration-300 group-hover:rotate-12" strokeWidth={2.5} />
               </div>
               
               {/* Text Label */}
-              <span className="text-[9px] lg:text-[10px] font-black text-slate-300 group-hover:text-white uppercase tracking-widest transition-colors">
+              <span className="text-[11px] lg:text-[13px] font-black text-slate-200 group-hover:text-white uppercase tracking-widest transition-colors">
                 {tab.label}
               </span>
             </button>
@@ -172,14 +172,14 @@ const DepartmentsGrid = () => {
       </div>
 
       {/* 📑 SLEEK GLOWING SUBHEADING */}
-      <div className="mt-4 mb-1 flex justify-center items-center relative z-10 w-full text-center animate-slide-up shrink-0 select-none">
-        <h2 className="text-[13px] lg:text-[15px] font-[900] tracking-[0.25em] text-transparent bg-clip-text bg-gradient-to-br from-white via-[#e2e8f0] to-[#94a3b8] drop-shadow-2xl uppercase">
+      <div className="mt-6 mb-2 flex justify-center items-center relative z-10 w-full text-center animate-slide-up shrink-0 select-none">
+        <h2 className="text-[16px] lg:text-[20px] font-[900] tracking-[0.25em] text-transparent bg-clip-text bg-gradient-to-br from-white via-[#e2e8f0] to-[#94a3b8] drop-shadow-2xl uppercase">
           Department Features & Active Services
         </h2>
       </div>
 
       {/* 🎬 DYNAMIC INF-SCROLL CINEMATIC MARQUEE FOR SQUARE DEPT CARDS (LANDSCAPE ONLY) */}
-      <div className="relative w-full overflow-hidden py-4 z-10 animate-slide-up shrink-0 pb-8 show-landscape items-center justify-center">
+      <div className="relative w-full overflow-hidden py-6 z-10 animate-slide-up shrink-0 pb-10 show-landscape items-center justify-center">
         {/* Soft edge blur masks for premium transitions */}
         <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#192e59] via-[#192e59]/75 to-transparent z-20 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-28 bg-gradient-to-l from-[#192e59] via-[#192e59]/75 to-transparent z-20 pointer-events-none" />
@@ -189,7 +189,7 @@ const DepartmentsGrid = () => {
           {[...allDepartments, ...allDepartments, ...allDepartments].map((dept, idx) => (
             <div 
               key={`${dept.title}-${idx}`} 
-              className="w-[13.5rem] lg:w-[16.5rem] xl:w-[18.5rem] shrink-0 mr-6 lg:mr-8"
+              className="w-[18rem] lg:w-[22rem] xl:w-[26rem] shrink-0 mr-8 lg:mr-10"
             >
               <DepartmentCard
                 icon={dept.icon}

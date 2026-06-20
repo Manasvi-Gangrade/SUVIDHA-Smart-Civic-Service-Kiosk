@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useLocationTracker } from "../context/LocationContext";
 
 // Fix leaflet icon paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -30,20 +31,12 @@ const customIconStr = (color: string) => `
   </div>
 `;
 
-const mapNodes = [
-    { id: 1, type: 'Electricity', label: 'North Zone Power Board', lat: 28.6139 + 0.02, lng: 77.2090 - 0.03, color: '#facc15' },
-    { id: 2, type: 'Water', label: 'Sector 4 Jal Board', lat: 28.6139 - 0.015, lng: 77.2090 + 0.04, color: '#60a5fa' },
-    { id: 3, type: 'Municipal', label: 'Central Civic Body', lat: 28.6139 - 0.03, lng: 77.2090 - 0.01, color: '#34d399' },
-    { id: 4, type: 'Hospital', label: 'City General Hospital', lat: 28.6139 + 0.01, lng: 77.2090 + 0.025, color: '#f87171' },
-    { id: 5, type: 'Gas', label: 'Indraprastha Gas Depot', lat: 28.6139 - 0.04, lng: 77.2090 + 0.015, color: '#fb923c' },
-];
-
-const center: [number, number] = [28.6139, 77.2090]; // New Delhi center
+const center: [number, number] = [28.6139, 77.2090]; // Default New Delhi center
 
 function MapUpdater({ centerPos }: { centerPos: [number, number] }) {
     const map = useMap();
     useEffect(() => {
-        map.flyTo(centerPos, 13, { duration: 2 });
+        map.flyTo(centerPos, 14, { duration: 2 });
     }, [centerPos, map]);
     return null;
 }
@@ -51,10 +44,30 @@ function MapUpdater({ centerPos }: { centerPos: [number, number] }) {
 const CivicMapPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const { coords, address } = useLocationTracker();
+
     const [activeCenter, setActiveCenter] = useState<[number, number]>(center);
 
+    // Dynamic civic centers based on resolved user coordinates
+    const userLat = coords?.latitude || center[0];
+    const userLng = coords?.longitude || center[1];
+
+    const mapNodes = [
+        { id: 1, type: 'Electricity', label: `${address?.city || 'City'} Power Grid Board`, lat: userLat + 0.008, lng: userLng - 0.006, color: '#FFA500' },
+        { id: 2, type: 'Water', label: `${address?.city || 'City'} Jal Board Office`, lat: userLat - 0.005, lng: userLng + 0.012, color: '#2196F3' },
+        { id: 3, type: 'Municipal', label: 'Municipal Corporation Head Office', lat: userLat - 0.009, lng: userLng - 0.003, color: '#4CAF50' },
+        { id: 4, type: 'Hospital', label: 'City Central Government Hospital', lat: userLat + 0.004, lng: userLng + 0.007, color: '#f87171' },
+        { id: 5, type: 'Gas', label: 'Mahanagar PNG/LPG Supply Depot', lat: userLat - 0.012, lng: userLng + 0.004, color: '#FF4500' },
+    ];
+
+    useEffect(() => {
+        if (coords) {
+            setActiveCenter([coords.latitude, coords.longitude]);
+        }
+    }, [coords]);
+
     return (
-        <div className="h-[calc(100vh-64px)] bg-[#192e59] text-white flex flex-col font-sans overflow-hidden relative">
+        <div className="h-full bg-[#192e59] text-white flex flex-col font-sans overflow-hidden relative">
             
             {/* 🎥 THE DYNAMIC BACKGROUND VIDEO */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -98,10 +111,10 @@ const CivicMapPage = () => {
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 shrink-0"><MapPin className="h-5 w-5 text-[#FD8008]" /> Focus Target</h2>
                         <div className="space-y-3 overflow-y-auto custom-scrollbar pr-1 flex-1">
                             <button
-                                onClick={() => setActiveCenter(center)}
+                                onClick={() => setActiveCenter([userLat, userLng])}
                                 className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 transition-colors text-sm font-semibold flex items-center justify-between"
                             >
-                                Reset to Center
+                                Reset to My Location
                                 <Crosshair className="h-4 w-4 text-[#FD8008]" />
                             </button>
                             {mapNodes.map(node => (
@@ -122,8 +135,8 @@ const CivicMapPage = () => {
                 {/* The Leaflet Map Area */}
                 <div className="flex-1 relative rounded-3xl border border-white/10 bg-slate-900/50 backdrop-blur-sm overflow-hidden shadow-2xl z-0">
                     <MapContainer
-                        center={center}
-                        zoom={13}
+                        center={[userLat, userLng]}
+                        zoom={14}
                         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
                         className="z-0"
                         zoomControl={false}
@@ -138,12 +151,12 @@ const CivicMapPage = () => {
 
                         {/* User Location */}
                         <Marker
-                            position={center}
-                            icon={L.divIcon({ className: 'custom-icon', html: customIconStr('#10b981'), iconSize: [30, 30], iconAnchor: [15, 15] })}
+                            position={[userLat, userLng]}
+                            icon={L.divIcon({ className: 'custom-icon', html: customIconStr('#0066ff'), iconSize: [30, 30], iconAnchor: [15, 15] })}
                         >
                             <Popup className="custom-popup">
                                 <div className="font-bold text-slate-900">Current Location</div>
-                                <div className="text-xs">You are here (Kiosk Terminal)</div>
+                                <div className="text-xs text-slate-700">{address?.displayName || "You are here (Kiosk Terminal)"}</div>
                             </Popup>
                         </Marker>
 
@@ -156,7 +169,7 @@ const CivicMapPage = () => {
                             >
                                 <Popup className="custom-popup">
                                     <div className="font-bold text-slate-900">{node.type} Node</div>
-                                    <div className="text-sm">{node.label}</div>
+                                    <div className="text-sm text-slate-700">{node.label}</div>
                                 </Popup>
                             </Marker>
                         ))}
@@ -167,10 +180,10 @@ const CivicMapPage = () => {
                         <div className="absolute top-1/2 left-1/2 w-[200%] h-[200%] origin-top-left -translate-x-1/2 -translate-y-1/2" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, rgba(253,128,8,0.1) 60deg, rgba(253,128,8,0.4) 90deg, transparent 90deg)', animation: 'spin 4s linear infinite' }} />
                     </div>
                     <style>{`
-            .custom-popup .leaflet-popup-content-wrapper { background: rgba(255,255,255,0.9); border-radius: 8px; }
-            .custom-popup .leaflet-popup-tip { background: rgba(255,255,255,0.9); }
-            @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-          `}</style>
+                        .custom-popup .leaflet-popup-content-wrapper { background: rgba(255,255,255,0.9); border-radius: 8px; }
+                        .custom-popup .leaflet-popup-tip { background: rgba(255,255,255,0.9); }
+                        @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+                    `}</style>
                 </div>
             </div>
         </div>

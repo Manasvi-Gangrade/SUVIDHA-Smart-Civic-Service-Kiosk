@@ -32,10 +32,10 @@ const AdminLogin = () => {
             {/* GORGEOUS STANDARDIZED BACK TO HOME BUTTON */}
             <button 
                 onClick={() => navigate("/")} 
-                className="absolute top-[80px] right-6 z-[60] flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)]"
+                className="absolute top-[80px] left-6 z-[60] flex items-center gap-2.5 px-5 py-2.5 bg-white hover:bg-slate-100 text-[#192e59] border-2 border-slate-200 rounded-xl font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_8px_20px_rgba(0,0,0,0.15)]"
             >
-                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                <span>Back to Home</span>
+                <ArrowLeft className="w-4 h-4 text-[#192e59] group-hover:-translate-x-1 transition-transform stroke-[2.5]" />
+                <span>Back</span>
             </button>
 
             <KioskHeader />

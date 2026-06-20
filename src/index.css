@@ -18,13 +18,14 @@
       PERFECT KIOSK SCALING MAGIC:
       Locks the font-size (and therefore all Tailwind rem units) to the exact 16:9 proportion in landscape,
       or the 9:16 proportion in portrait.
+      Multiplied by --font-scale for accessibility text resizing.
     */
-    font-size: min(0.8333vw, 1.481vh); 
+    font-size: calc(var(--font-scale, 1.0) * min(0.8333vw, 1.481vh)); 
   }
 
   @media (max-aspect-ratio: 1/1) {
     html, body {
-      font-size: min(1.481vw, 0.8333vh);
+      font-size: calc(var(--font-scale, 1.0) * min(1.481vw, 0.8333vh));
     }
   }
 

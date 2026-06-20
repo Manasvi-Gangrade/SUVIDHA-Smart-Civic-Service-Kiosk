@@ -94,27 +94,30 @@ const themeColors: Record<
   }
 > = {
   electricity: {
-    primary: "#FF9933",
-    gradientFrom: "from-[#FF9933]",
-    gradientTo: "to-[#cc7a29]",
-    lightBg: "bg-amber-50",
-    iconBg: "bg-[#FF9933]/10 text-[#FF9933]",
-    borderFocus: "focus:border-[#FF9933] focus:ring-[#FF9933]/15",
+    primary: "#FFA500",
+    gradientFrom: "from-[#FFA500]",
+    gradientTo: "to-[#cc8400]",
+    lightBg: "bg-amber-50/50",
+    iconBg: "bg-[#FFA500]/10 text-[#FFA500]",
+    borderFocus: "focus:border-[#FFA500] focus:ring-[#FFA500]/15",
     video: "/videos/electricity.mp4",
     marqueeImages: [
-      "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1548549303-7cfbbd5e7146?w=600&auto=format&fit=crop&q=80"
+      "/images/elec1.jpeg",
+      "/images/elec2.jpeg",
+      "/images/elec3.jpeg",
+      "/images/elec4.jpeg",
+      "/images/elec5.jpeg",
+      "/images/elec6.jpeg",
+      "/images/elec7.jpeg"
     ]
   },
   gas: {
-    primary: "#E3000F",
-    gradientFrom: "from-[#E3000F]",
-    gradientTo: "to-[#b3000c]",
-    lightBg: "bg-red-50",
-    iconBg: "bg-[#E3000F]/10 text-[#E3000F]",
-    borderFocus: "focus:border-[#E3000F] focus:ring-[#E3000F]/15",
+    primary: "#FF4500",
+    gradientFrom: "from-[#FF4500]",
+    gradientTo: "to-[#cc3700]",
+    lightBg: "bg-red-50/50",
+    iconBg: "bg-[#FF4500]/10 text-[#FF4500]",
+    borderFocus: "focus:border-[#FF4500] focus:ring-[#FF4500]/15",
     video: "/videos/gas.mp4",
     marqueeImages: [
       "https://images.unsplash.com/photo-1581094288338-2314dddb7ecc?w=600&auto=format&fit=crop&q=80",
@@ -124,12 +127,12 @@ const themeColors: Record<
     ]
   },
   municipal: {
-    primary: "#008080",
-    gradientFrom: "from-[#008080]",
-    gradientTo: "to-[#005c5c]",
-    lightBg: "bg-teal-50",
-    iconBg: "bg-[#008080]/10 text-[#008080]",
-    borderFocus: "focus:border-[#008080] focus:ring-[#008080]/15",
+    primary: "#4CAF50",
+    gradientFrom: "from-[#4CAF50]",
+    gradientTo: "to-[#3d8b41]",
+    lightBg: "bg-emerald-50/50",
+    iconBg: "bg-[#4CAF50]/10 text-[#4CAF50]",
+    borderFocus: "focus:border-[#4CAF50] focus:ring-[#4CAF50]/15",
     video: "/videos/Municipal.mp4",
     marqueeImages: [
       "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&auto=format&fit=crop&q=80",
@@ -139,42 +142,44 @@ const themeColors: Record<
     ]
   },
   water: {
-    primary: "#0066FF",
-    gradientFrom: "from-[#0066FF]",
-    gradientTo: "to-[#0052cc]",
-    lightBg: "bg-blue-50",
-    iconBg: "bg-[#0066FF]/10 text-[#0066FF]",
-    borderFocus: "focus:border-[#0066FF] focus:ring-[#0066FF]/15",
+    primary: "#2196F3",
+    gradientFrom: "from-[#2196F3]",
+    gradientTo: "to-[#1976D2]",
+    lightBg: "bg-blue-50/50",
+    iconBg: "bg-[#2196F3]/10 text-[#2196F3]",
+    borderFocus: "focus:border-[#2196F3] focus:ring-[#2196F3]/15",
     video: "/videos/Water.mp4",
     marqueeImages: [
-      "https://images.unsplash.com/photo-1581093588401-f3c22d75ba21?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1548826873-e82943e248b5?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1488330890490-c408188e25da?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1482862549707-f63cb32c5fd9?w=600&auto=format&fit=crop&q=80"
+      "/images/water1.jpeg",
+      "/images/water2.jpeg",
+      "/images/water3.jpeg",
+      "/images/water4.jpeg",
+      "/images/water5.jpeg",
+      "/images/water6.jpeg"
     ]
   },
   waste: {
-    primary: "#138808",
-    gradientFrom: "from-[#138808]",
-    gradientTo: "to-[#0f6c06]",
-    lightBg: "bg-emerald-50",
-    iconBg: "bg-[#138808]/10 text-[#138808]",
-    borderFocus: "focus:border-[#138808] focus:ring-[#138808]/15",
+    primary: "#2ECC71",
+    gradientFrom: "from-[#2ECC71]",
+    gradientTo: "to-[#27ae60]",
+    lightBg: "bg-emerald-50/50",
+    iconBg: "bg-[#2ECC71]/10 text-[#2ECC71]",
+    borderFocus: "focus:border-[#2ECC71] focus:ring-[#2ECC71]/15",
     video: "/videos/Waste Management.mp4",
     marqueeImages: [
-      "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1605600611283-cdeb34440c9c?w=600&auto=format&fit=crop&q=80"
+      "/images/sanitation1.jpeg",
+      "/images/sanitation2.jpeg",
+      "/images/sanitation3.jpeg",
+      "/images/sanitation4.jpeg"
     ]
   },
   property: {
-    primary: "#4F46E5",
-    gradientFrom: "from-[#4F46E5]",
-    gradientTo: "to-[#3b32c4]",
-    lightBg: "bg-indigo-50",
-    iconBg: "bg-[#4F46E5]/10 text-[#4F46E5]",
-    borderFocus: "focus:border-[#4F46E5] focus:ring-[#4F46E5]/15",
+    primary: "#607D8B",
+    gradientFrom: "from-[#607D8B]",
+    gradientTo: "to-[#455A64]",
+    lightBg: "bg-slate-50/50",
+    iconBg: "bg-[#607D8B]/10 text-[#607D8B]",
+    borderFocus: "focus:border-[#607D8B] focus:ring-[#607D8B]/15",
     video: "/videos/Property.mp4",
     marqueeImages: [
       "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80",
@@ -187,12 +192,12 @@ const themeColors: Record<
 
 // 🌈 MULTI-COLOR SOLID VIBRANT THEMES FOR EACH SQUARE ACCORDING TO REFERENCE LAYOUT!
 const squareColors = [
-  "bg-[#FF9933] shadow-[#FF9933]/20 hover:shadow-[#FF9933]/40", // saffron gold
-  "bg-[#0066FF] shadow-[#0066FF]/20 hover:shadow-[#0066FF]/40", // royal blue
-  "bg-[#138808] shadow-[#138808]/20 hover:shadow-[#138808]/40", // forest green
-  "bg-[#E3000F] shadow-[#E3000F]/20 hover:shadow-[#E3000F]/40", // red
-  "bg-[#8B5CF6] shadow-[#8B5CF6]/20 hover:shadow-[#8B5CF6]/40", // purple
-  "bg-[#008080] shadow-[#008080]/20 hover:shadow-[#008080]/40", // teal
+  "bg-[#FFA500] shadow-[#FFA500]/20 hover:shadow-[#FFA500]/40", // Electricity: Saffron Gold
+  "bg-[#FF4500] shadow-[#FF4500]/20 hover:shadow-[#FF4500]/40", // Gas: Orange-Red
+  "bg-[#4CAF50] shadow-[#4CAF50]/20 hover:shadow-[#4CAF50]/40", // Municipal: Eco Green
+  "bg-[#2196F3] shadow-[#2196F3]/20 hover:shadow-[#2196F3]/40", // Water: Sky Blue
+  "bg-[#2ECC71] shadow-[#2ECC71]/20 hover:shadow-[#2ECC71]/40", // Sanitation: Jade Green
+  "bg-[#607D8B] shadow-[#607D8B]/20 hover:shadow-[#607D8B]/40", // Property: Teal-Gray
 ];
 
 const DepartmentPage = () => {
@@ -214,7 +219,7 @@ const DepartmentPage = () => {
   const titleKey = `dept.${id}.title`;
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar font-display relative flex flex-col justify-between bg-[#192e59] text-white pb-32">
+    <div className="h-full overflow-y-auto custom-scrollbar font-display relative flex flex-col justify-between bg-[#192e59] text-white pb-32">
       
       {/* 🎥 THE UNIFIED BACKGROUND BACKGROUND VIDEO FOR DEPARTMENT PAGE */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -237,7 +242,7 @@ const DepartmentPage = () => {
       <div className="relative z-10 w-full">
         
         {/* 🏛️ FLOATING COMPACT TOP BACK ACTION DECK */}
-        <div className="w-full px-[5%] pt-2 pb-0 flex justify-end shrink-0 relative z-50 max-w-none">
+        <div className="w-full px-[5%] pt-2 pb-0 flex justify-start shrink-0 relative z-50 max-w-none">
           <button
             onClick={() => navigate('/departments')}
             className="flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)]"
@@ -248,7 +253,7 @@ const DepartmentPage = () => {
         </div>
 
         {/* 🏛️ 2. CENTERED MAJESTIC DEPARTMENT BRAND HEADER */}
-        <div className="flex flex-col items-center mt-0 mb-3 text-center px-4 animate-slide-up relative z-10">
+        <div className="flex flex-col items-center mt-6 mb-8 text-center px-4 animate-slide-up relative z-10">
           <div 
             className="px-8 py-3.5 rounded-[2rem] flex items-center justify-center inline-flex shadow-2xl transition-transform hover:scale-105 duration-300 bg-white"
             style={{ 
@@ -262,64 +267,138 @@ const DepartmentPage = () => {
         </div>
 
         {/* 📑 3. BRAND NEW ROUNDED-SQUARE ICON SERVICE TABS GRID */}
-        <div className="w-full px-[5%] mt-0 mb-1 max-w-none">
+        <div className="w-full px-[5%] mt-4 mb-8 max-w-none">
           
-          {/* Centered horizontal flexbox of features floating directly on the page! */}
-          <div className="flex flex-wrap items-start justify-center gap-6 lg:gap-10 py-6">
-            {deptData.services.map((service, index) => {
-              const englishTitle = service.title.toLowerCase();
-              let route = "/complaint";
-              if (englishTitle.includes("pay") || englishTitle.includes("bill") || englishTitle.includes("tax") || englishTitle.includes("subsidy")) {
-                route = "/payment";
-              } else if (englishTitle.includes("new") || englishTitle.includes("connection") || englishTitle.includes("registration")) {
-                route = "/application";
-              } else if (englishTitle.includes("load") || englishTitle.includes("change")) {
-                route = "/load-change";
-              } else if (englishTitle.includes("meter")) {
-                route = "/meter-complaint";
-              }
+          {id === "waste" ? (
+            /* 🌍 Split layout for Waste Management: Video on Left, Service Buttons on Right */
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center py-6 max-w-6xl mx-auto">
+              
+              {/* Left Column: Video Placeholder */}
+              <div className="lg:col-span-6 w-full flex flex-col items-center">
+                <div className="w-full relative aspect-video bg-black rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    src="https://www.youtube.com/embed/g2H249N5l38?autoplay=1&mute=1&loop=1&playlist=g2H249N5l38" 
+                    title="Waste Segregation Guide" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full"
+                  ></iframe>
+                </div>
+                <p className="text-[11px] text-green-400 font-black tracking-[0.2em] mt-4 uppercase animate-pulse">
+                  🌱 WASTE SEGREGATION & RECYCLING GUIDE
+                </p>
+              </div>
 
-              // Dynamic vibrant colors matching the dynamic theme colors or individual palette
-              const squareBg = squareColors[index % squareColors.length];
+              {/* Right Column: Service Cards as square boxes */}
+              <div className="lg:col-span-6 w-full flex flex-wrap justify-center gap-6 py-4">
+                {deptData.services.map((service, index) => {
+                  const englishTitle = service.title.toLowerCase();
+                  let route = "/complaint";
+                  if (englishTitle.includes("pay") || englishTitle.includes("bill") || englishTitle.includes("tax") || englishTitle.includes("subsidy")) {
+                    route = "/payment";
+                  } else if (englishTitle.includes("new") || englishTitle.includes("connection") || englishTitle.includes("registration")) {
+                    route = "/application";
+                  } else if (englishTitle.includes("load") || englishTitle.includes("change")) {
+                    route = "/load-change";
+                  } else if (englishTitle.includes("meter")) {
+                    route = "/meter-complaint";
+                  }
 
-              return (
-                <button 
-                  key={index}
-                  onClick={() => navigate(`/auth/${id}`, {
-                    state: {
-                      redirectTo: route,
-                      serviceState: {
-                        category: t(titleKey),
-                        service: t(`dept.${id}.s${index + 1}`),
-                        description: t(`dept.${id}.s${index + 1}`)
+                  const squareBg = squareColors[index % squareColors.length];
+
+                  return (
+                    <button 
+                      key={index}
+                      onClick={() => navigate(`/auth/${id}`, {
+                        state: {
+                          redirectTo: route,
+                          serviceState: {
+                            category: t(titleKey),
+                            service: t(`dept.${id}.s${index + 1}`),
+                            description: t(`dept.${id}.s${index + 1}`)
+                          }
+                        }
+                      })}
+                      className={`h-40 w-40 lg:h-48 lg:w-48 rounded-[2rem] flex flex-col items-center justify-center p-4 text-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg relative overflow-hidden group focus:outline-none ${squareBg}`}
+                    >
+                      {/* Circle enclosing the thin crisp icon */}
+                      <div className="mb-4 h-12 w-12 rounded-full border-2 border-[#192e59] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0">
+                        <service.icon className="h-6 w-6 text-[#192e59] stroke-[2.2]" />
+                      </div>
+                      
+                      {/* Centered Bold Dark Blue Title inside the flat solid card */}
+                      <h4 className="text-[12px] lg:text-[14px] font-[900] text-[#192e59] uppercase tracking-normal leading-snug line-clamp-3 px-1 relative z-10">
+                        {t(`dept.${id}.s${index + 1}`)}
+                      </h4>
+
+                      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    </button>
+                  );
+                })}
+              </div>
+
+            </div>
+          ) : (
+            /* Centered horizontal flexbox of features for other departments */
+            <div className="flex flex-wrap items-start justify-center gap-8 lg:gap-12 py-10">
+              {deptData.services.map((service, index) => {
+                const englishTitle = service.title.toLowerCase();
+                let route = "/complaint";
+                if (englishTitle.includes("pay") || englishTitle.includes("bill") || englishTitle.includes("tax") || englishTitle.includes("subsidy")) {
+                  route = "/payment";
+                } else if (englishTitle.includes("new") || englishTitle.includes("connection") || englishTitle.includes("registration")) {
+                  route = "/application";
+                } else if (englishTitle.includes("load") || englishTitle.includes("change")) {
+                  route = "/load-change";
+                } else if (englishTitle.includes("meter")) {
+                  route = "/meter-complaint";
+                }
+
+                // Dynamic vibrant colors matching the dynamic theme colors or individual palette
+                const squareBg = squareColors[index % squareColors.length];
+
+                return (
+                  <button 
+                    key={index}
+                    onClick={() => navigate(`/auth/${id}`, {
+                      state: {
+                        redirectTo: route,
+                        serviceState: {
+                          category: t(titleKey),
+                          service: t(`dept.${id}.s${index + 1}`),
+                          description: t(`dept.${id}.s${index + 1}`)
+                        }
                       }
-                    }
-                  })}
-                  className={`h-40 w-40 lg:h-48 lg:w-48 rounded-[2rem] flex flex-col items-center justify-center p-4 text-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg relative overflow-hidden group focus:outline-none ${squareBg}`}
-                >
-                  
-                  {/* Circle enclosing the thin crisp icon matching the reference style exactly! */}
-                  <div className="mb-4 h-12 w-12 rounded-full border-2 border-white flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0">
-                    <service.icon className="h-6 w-6 text-white stroke-[2.2]" />
-                  </div>
-                  
-                  {/* Centered Bold White Title inside the flat solid card */}
-                  <h4 className="text-[12px] lg:text-[14px] font-[900] text-white uppercase tracking-normal leading-snug line-clamp-3 px-1 relative z-10">
-                    {t(`dept.${id}.s${index + 1}`)}
-                  </h4>
+                    })}
+                    className={`h-40 w-40 lg:h-48 lg:w-48 rounded-[2rem] flex flex-col items-center justify-center p-4 text-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg relative overflow-hidden group focus:outline-none ${squareBg}`}
+                  >
+                    
+                    {/* Circle enclosing the thin crisp icon matching the reference style exactly! */}
+                    <div className="mb-4 h-12 w-12 rounded-full border-2 border-[#192e59] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0">
+                      <service.icon className="h-6 w-6 text-[#192e59] stroke-[2.2]" />
+                    </div>
+                    
+                    {/* Centered Bold Dark Blue Title inside the flat solid card */}
+                    <h4 className="text-[12px] lg:text-[14px] font-[900] text-[#192e59] uppercase tracking-normal leading-snug line-clamp-3 px-1 relative z-10">
+                      {t(`dept.${id}.s${index + 1}`)}
+                    </h4>
 
-                  {/* Subtle micro hover accent */}
-                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    {/* Subtle micro hover accent */}
+                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                </button>
-              );
-            })}
-          </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
         </div>
 
         {/* 🎬 4. CINEMATIC INFINITE-SCROLLING DYNAMIC IMAGE MARQUEE */}
-        <div className="w-full px-[5%] mt-2 max-w-none">
+        <div className="w-full px-[5%] mt-12 lg:mt-16 max-w-none">
           <div className="overflow-hidden relative py-2">
 
             <div className="flex w-max animate-img-marquee gap-8">
@@ -353,7 +432,7 @@ const DepartmentPage = () => {
         </div>
 
       {/* 🏛️ Lower Extras Grid */}
-      {["gas", "water", "waste", "property"].includes(id || "") && (
+      {["gas", "water", "property"].includes(id || "") && (
         <div className="w-full px-[5%] mt-8 relative z-10 shrink-0 max-w-none">
           <div className="w-full">
             <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/10 shadow-2xl h-full text-white [&>div]:mt-0 [&>div]:bg-transparent [&>div]:border-none [&>div]:p-0 [&>div]:shadow-none">

@@ -1,13 +1,16 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { 
   MessageSquarePlus, CheckCircle2, Lightbulb, X, Camera, Paperclip, ShieldCheck, ArrowLeft,
-  Search, AlertTriangle, FileText, ChevronRight, Loader2, AlertCircle, Wrench, Flame, Droplets, Info, Milestone
+  Search, AlertTriangle, FileText, ChevronRight, Loader2, AlertCircle, Wrench, Flame, Droplets, Info, Milestone, QrCode
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { db } from "@/lib/database";
 import { VoiceDictation } from "@/components/VoiceDictation";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useLocationTracker } from "@/context/LocationContext";
+import { isFirebaseConfigured, db as firestore } from "@/lib/firebase";
+import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 
 const categories = [
   "Electricity", "Gas Distribution", "Water Supply", "Waste Management", "Municipal Services", "Property & Tax", "Other"
@@ -62,6 +65,7 @@ const ComplaintPage = () => {
   const navigate = useNavigate();
   const state = location.state as { category?: string; service?: string; description?: string } | null;
   const { t } = useTranslation();
+  const { address } = useLocationTracker();
 
   const [submitted, setSubmitted] = useState(false);
   const [referenceId, setReferenceId] = useState("");
@@ -70,11 +74,105 @@ const ComplaintPage = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [locationStr, setLocationStr] = useState("");
+
+  // Pre-fill locationStr when geocoded address is resolved
+  useEffect(() => {
+    if (address && !locationStr) {
+      setLocationStr(address.displayName || "");
+    }
+  }, [address, locationStr]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [dismissedSuggestions, setDismissedSuggestions] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [activeQrModal, setActiveQrModal] = useState<string | null>(null);
+  const [sessionId] = useState(() => "session_" + Math.floor(Math.random() * 900000 + 100000));
+  const [kioskIp, setKioskIp] = useState(() => localStorage.getItem("suvidha_kiosk_ip") || window.location.hostname);
+
+  const dataURLtoFile = (dataurl: string, filename: string) => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'application/octet-stream';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  useEffect(() => {
+    if (!isFirebaseConfigured || !firestore) return;
+
+    const unsubscribeComplaint = onSnapshot(
+      doc(firestore, "mobile_uploads", `${sessionId}_complaint`),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.uploaded && data.fileName && data.fileData) {
+            try {
+              const file = dataURLtoFile(data.fileData, data.fileName);
+              setUploadedFiles(prev => {
+                if (prev.some(f => f.name === data.fileName)) return prev;
+                return [...prev, file].slice(0, 3);
+              });
+              setActiveQrModal(null);
+            } catch (e) {
+              console.error("Error converting uploaded base64 data to File object:", e);
+            }
+          }
+        }
+      }
+    );
+
+    return () => {
+      unsubscribeComplaint();
+    };
+  }, [sessionId]);
+
+  const [successUploadedDoc, setSuccessUploadedDoc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!referenceId || !isFirebaseConfigured || !firestore) return;
+
+    const unsubscribeSuccessUpload = onSnapshot(
+      doc(firestore, "mobile_uploads", `${referenceId}_complaint`),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.uploaded && data.fileName) {
+            setSuccessUploadedDoc(data.fileName);
+            try {
+              const records = db.getRecords();
+              const updated = records.map((r: any) => {
+                if (r.id === referenceId) {
+                  return {
+                    ...r,
+                    attachments: [...(r.attachments || []), { name: data.fileName, timestamp: data.timestamp || Date.now() }]
+                  };
+                }
+                return r;
+              });
+              localStorage.setItem("suvidha_records", JSON.stringify(updated));
+              
+              // Also update in firestore
+              updateDoc(doc(firestore, "records", referenceId), {
+                attachments: [{ name: data.fileName, timestamp: data.timestamp || Date.now() }]
+              }).catch(() => {});
+            } catch (e) {
+              console.error("Error updating complaint with mobile upload:", e);
+            }
+          }
+        }
+      }
+    );
+
+    return () => {
+      unsubscribeSuccessUpload();
+    };
+  }, [referenceId]);
   
   const [step, setStep] = useState(1);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -174,7 +272,7 @@ const ComplaintPage = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
+    <div className="h-full bg-gradient-to-br from-[#0f172a] via-[#192e59] to-[#0f172a] flex flex-col relative overflow-hidden font-sans">
       
       {/* Background Video Overlay */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -190,7 +288,7 @@ const ComplaintPage = () => {
           <div className="bg-[#192e59] p-8 text-white relative flex-shrink-0">
             <button 
               onClick={() => submitted ? navigate("/departments") : navigate(-1)} 
-              className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] z-50"
+              className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)] z-50"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span>Back</span>
@@ -252,29 +350,50 @@ const ComplaintPage = () => {
                     </div>
                   </div>
 
-                  {/* Right Column: QR Digital Witness */}
-                  <div className="flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-8">
-                    <div className="flex items-center gap-2 mb-4 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-                      <ShieldCheck className="h-4 w-4 text-[#FD8008]" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-[#FD8008]">Digital Witness Secured</span>
+                  {/* Right Column: QR Codes */}
+                  <div className="flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-8 space-y-5">
+                    {/* Track QR Code */}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="flex items-center gap-2 mb-2 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                        <ShieldCheck className="h-3.5 w-3.5 text-[#FD8008]" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[#FD8008]">Track Complaint</span>
+                      </div>
+                      <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm mb-1">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`https://suvidha.gov.in/track/${referenceId}`)}`} 
+                          alt="Tracking QR Code" 
+                          className="h-24 w-24"
+                        />
+                      </div>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Scan to track status</p>
                     </div>
-                    
-                    <div className="bg-white p-3 rounded-2xl border border-slate-200 mb-3 shadow-sm">
-                      <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://suvidha.gov.in/track/${referenceId}`} 
-                        alt="Tracking QR Code" 
-                        className="h-28 w-28"
-                      />
-                    </div>
-                    
-                    <div className="text-center w-full">
-                      <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1">Transaction Hash</p>
-                      <code className="text-[10px] bg-slate-100 px-2 py-1 rounded font-mono text-slate-600 break-all block truncate max-w-[200px] mx-auto">
-                        {Math.random().toString(36).substring(2, 15)}{Math.random().toString(36).substring(2, 15)}
-                      </code>
-                      <p className="mt-3 text-[10px] text-slate-400 italic">
-                        Scan with your phone to track status.
-                      </p>
+
+                    {/* Upload QR Code */}
+                    <div className="flex flex-col items-center text-center border-t border-slate-150 pt-4 w-full">
+                      <div className="flex items-center gap-2 mb-2 bg-[#FD8008]/10 px-3 py-1 rounded-full border border-[#FD8008]/20">
+                        <QrCode className="h-3.5 w-3.5 text-[#FD8008] animate-pulse" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[#FD8008]">Upload Docs via Mobile</span>
+                      </div>
+                      {successUploadedDoc ? (
+                        <div className="bg-emerald-50 border border-emerald-250 p-4 rounded-xl flex flex-col items-center gap-1.5 animate-in zoom-in-95 duration-300">
+                          <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Upload Successful!</span>
+                          <span className="text-[9px] text-slate-500 font-bold bg-white px-2 py-0.5 rounded border truncate max-w-[150px]">{successUploadedDoc}</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm mb-1">
+                            <img 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
+                                `http://${kioskIp}:8000/mobile-upload/${referenceId}/complaint`
+                              )}`} 
+                              alt="Upload QR Code" 
+                              className="h-24 w-24"
+                            />
+                          </div>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Scan to attach photo/evidence</p>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -961,16 +1080,30 @@ const ComplaintPage = () => {
 
                     {/* Photos Upload */}
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">Photo Upload</label>
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                        onDragLeave={() => setDragOver(false)}
-                        onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
-                        className={`cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all ${dragOver ? "border-[#FD8008] bg-[#FD8008]/10" : "border-slate-300 hover:border-[#FD8008]/50"} ${uploadedFiles.length >= 3 ? "pointer-events-none opacity-50" : ""}`}
-                      >
-                        <Camera className="mx-auto h-8 w-8 text-slate-400 mb-2" />
-                        <p className="text-sm font-bold text-slate-500">Tap to add Photos (Optional)</p>
+                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">Photo Upload (Max 3)</label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Local Upload */}
+                        <div
+                          onClick={() => fileInputRef.current?.click()}
+                          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                          onDragLeave={() => setDragOver(false)}
+                          onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
+                          className={`cursor-pointer rounded-xl border-2 border-dashed p-5 text-center transition-all flex flex-col justify-center items-center ${dragOver ? "border-[#FD8008] bg-[#FD8008]/10" : "border-slate-300 hover:border-[#FD8008]/50"} ${uploadedFiles.length >= 3 ? "pointer-events-none opacity-50" : ""}`}
+                        >
+                          <Camera className="mx-auto h-6 w-6 text-slate-450 mb-1.5" />
+                          <p className="text-xs font-bold text-slate-700 uppercase tracking-tight">Kiosk Local Photo</p>
+                          <p className="text-[10px] text-slate-400 font-medium mt-0.5">Tap or drag files from this device</p>
+                        </div>
+
+                        {/* QR Mobile Upload */}
+                        <div
+                          onClick={() => setActiveQrModal("complaint")}
+                          className={`cursor-pointer rounded-xl border-2 border-dashed p-5 text-center transition-all flex flex-col justify-center items-center border-slate-300 hover:border-[#FD8008]/50 ${uploadedFiles.length >= 3 ? "pointer-events-none opacity-50" : ""}`}
+                        >
+                          <QrCode className="mx-auto h-6 w-6 text-slate-450 mb-1.5" />
+                          <p className="text-xs font-bold text-slate-700 uppercase tracking-tight">Scan QR - Upload from Phone</p>
+                          <p className="text-[10px] text-slate-400 font-medium mt-0.5">Use your mobile phone to snap/select</p>
+                        </div>
                       </div>
                       <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
                     </div>
@@ -1016,6 +1149,76 @@ const ComplaintPage = () => {
           <div className="h-2 bg-gradient-to-r from-slate-100 via-[#192e59]/20 to-slate-100 flex-shrink-0"></div>
         </div>
       </div>
+      {activeQrModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.3)] text-center relative flex flex-col items-center animate-in zoom-in-95 duration-300">
+            <button
+              type="button"
+              onClick={() => setActiveQrModal(null)}
+              className="absolute right-6 top-6 rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <h3 className="text-xl font-[900] text-[#192e59] uppercase tracking-tight mb-2">
+              Upload Complaint Photo
+            </h3>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-6 leading-normal">
+              Scan with your mobile camera<br />to upload photos securely
+            </p>
+
+            <div className="relative bg-white p-3 rounded-2xl border border-slate-200 shadow-sm mb-4 flex justify-center items-center">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
+                  `http://${kioskIp}:8000/mobile-upload/${sessionId}/${activeQrModal}`
+                )}`}
+                alt="Photo Upload QR" 
+                className="w-48 h-48"
+              />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100">
+                <QrCode className="w-6 h-6 text-[#FD8008]" />
+              </div>
+            </div>
+
+            <div className="w-full bg-slate-50 border border-slate-150 rounded-2xl p-3.5 mb-5 text-left text-slate-800 font-sans">
+              <label className="block text-[10px] font-black text-slate-450 uppercase tracking-widest mb-1.5">
+                Kiosk IP Address Configuration
+              </label>
+              <input 
+                type="text"
+                value={kioskIp}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setKioskIp(val);
+                  localStorage.setItem("suvidha_kiosk_ip", val);
+                }}
+                placeholder="e.g. 192.168.1.10"
+                className="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FD8008]"
+              />
+              <p className="text-[9px] text-slate-400 font-medium mt-1 leading-normal">
+                Ensure your phone is connected to the same Wi-Fi network. Update to your machine's local IP address if default hostname doesn't resolve on mobile.
+              </p>
+            </div>
+
+            <div className="w-full flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const picName = `complaint_photo_${Math.floor(Math.random() * 9000 + 1000)}.jpg`;
+                  setUploadedFiles(prev => {
+                    if (prev.some(f => f.name === picName)) return prev;
+                    return [...prev, new File(["mock content"], picName, { type: "image/jpeg" })].slice(0, 3);
+                  });
+                  setActiveQrModal(null);
+                }}
+                className="w-full bg-[#192e59] text-white hover:bg-[#11203e] py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all"
+              >
+                Quick Simulate (Fallback)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
