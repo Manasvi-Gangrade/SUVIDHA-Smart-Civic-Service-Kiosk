@@ -1,5 +1,9 @@
 import { isFirebaseConfigured, db as firestore } from "./firebase";
 import { collection, onSnapshot, setDoc, updateDoc, doc } from "firebase/firestore";
+import { encryptData, decryptData } from "./crypto";
+import { addAuditLog } from "./audit";
+
+
 
 // A simulated and real-time cloud synced civic database
 export interface ComplaintRecord {
@@ -124,6 +128,7 @@ class LocalDatabase {
         const id = this.generateId('CMP');
         const newRecord: ComplaintRecord = {
             ...data,
+            phone: encryptData(data.phone),
             id,
             type: 'complaint',
             status: 'Pending',
@@ -134,6 +139,9 @@ class LocalDatabase {
         // Write locally first to ensure absolute 100% data retention (Offline-First)
         const records = this.getRecords();
         this.saveRecords([newRecord, ...records]);
+
+        // Cryptographic Audit Trail logging
+        addAuditLog("COMPLAINT_CREATED", `Grievance registered. ID: ${id}, Category: ${data.category}, Service: ${data.service}`);
 
         // Attempt cloud sync in the background
         if (isFirebaseConfigured && firestore) {
@@ -156,6 +164,8 @@ class LocalDatabase {
         const id = this.generateId('APP');
         const newRecord: ApplicationRecord = {
             ...data,
+            phone: encryptData(data.phone),
+            aadhaar: encryptData(data.aadhaar),
             id,
             type: 'application',
             status: 'Under Review',
@@ -166,6 +176,9 @@ class LocalDatabase {
         // Write locally first to ensure absolute 100% data retention (Offline-First)
         const records = this.getRecords();
         this.saveRecords([newRecord, ...records]);
+
+        // Cryptographic Audit Trail logging
+        addAuditLog("APPLICATION_CREATED", `Service request submitted. ID: ${id}, Category: ${data.category}, Service: ${data.service}`);
 
         // Attempt cloud sync in the background
         if (isFirebaseConfigured && firestore) {
@@ -190,6 +203,9 @@ class LocalDatabase {
         const updated = records.map(r => r.id === id ? { ...r, status, timestamp: Date.now() } : r);
         this.saveRecords(updated);
 
+        // Cryptographic Audit Trail logging
+        addAuditLog("STATUS_UPDATED", `Ticket ${id} status updated to: ${status}`);
+
         // Attempt cloud sync in the background
         if (isFirebaseConfigured && firestore) {
             updateDoc(doc(firestore, "records", id), { status, timestamp: Date.now() }).catch(error => {
@@ -199,7 +215,20 @@ class LocalDatabase {
     }
 
     public getAllRecords(): CitizenRecord[] {
-        return this.getRecords();
+        return this.getRecords().map(r => {
+            if (r.type === 'complaint') {
+                return {
+                    ...r,
+                    phone: decryptData(r.phone)
+                };
+            } else {
+                return {
+                    ...r,
+                    phone: decryptData(r.phone),
+                    aadhaar: decryptData(r.aadhaar)
+                };
+            }
+        });
     }
 
     public getStats() {

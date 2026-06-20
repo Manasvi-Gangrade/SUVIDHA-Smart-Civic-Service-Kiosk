@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Printer, X, Download } from "lucide-react";
+import { Printer, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface ReceiptPrinterProps {

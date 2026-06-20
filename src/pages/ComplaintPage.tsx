@@ -1,13 +1,43 @@
 import { useState, useMemo, useRef } from "react";
-import { MessageSquarePlus, CheckCircle2, Lightbulb, X, Camera, Paperclip, ShieldCheck, ArrowLeft } from "lucide-react";
+import { 
+  MessageSquarePlus, CheckCircle2, Lightbulb, X, Camera, Paperclip, ShieldCheck, ArrowLeft,
+  Search, AlertTriangle, FileText, ChevronRight, Loader2, AlertCircle, Wrench, Flame, Droplets, Info, Milestone
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { db } from "@/lib/database";
 import { VoiceDictation } from "@/components/VoiceDictation";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const categories = [
   "Electricity", "Gas Distribution", "Water Supply", "Waste Management", "Municipal Services", "Property & Tax", "Other"
 ];
+
+const mockBills: Record<string, {
+  consumerName: string;
+  caNumber: string;
+  averageKwh: number;
+  spikeMonth: string;
+  spikeKwh: number;
+  history: { month: string; kwh: number; amount: number }[];
+}> = {
+  "1004928371": {
+    consumerName: "Ramesh Kumar",
+    caNumber: "1004928371",
+    averageKwh: 202,
+    spikeMonth: "Feb 2026",
+    spikeKwh: 840,
+    history: [
+      { month: "Sep 25", kwh: 180, amount: 900 },
+      { month: "Oct 25", kwh: 195, amount: 980 },
+      { month: "Nov 25", kwh: 210, amount: 1050 },
+      { month: "Dec 25", kwh: 220, amount: 1100 },
+      { month: "Jan 26", kwh: 205, amount: 1025 },
+      { month: "Feb 26", kwh: 840, amount: 4200 }, // ⚠️ SPIKE!
+      { month: "Mar 26", kwh: 215, amount: 1075 }
+    ]
+  }
+};
 
 // Keyword → { category, suggestion } map for smart suggestions
 const KEYWORD_SUGGESTIONS = [
@@ -49,6 +79,34 @@ const ComplaintPage = () => {
   const [step, setStep] = useState(1);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [priority, setPriority] = useState("Low");
+
+  // ⚡ Electricity specialized states
+  const [caNumberInput, setCaNumberInput] = useState("");
+  const [isSearchingBill, setIsSearchingBill] = useState(false);
+  const [hasSearchedBill, setHasSearchedBill] = useState(false);
+  const [billAnalysisResult, setBillAnalysisResult] = useState<typeof mockBills[string] | null>(null);
+  const [electricityIssueType, setElectricityIssueType] = useState(""); // "billing" | "outage" | "meter" | "voltage" | ""
+  const [isNeighborhoodOutage, setIsNeighborhoodOutage] = useState(false);
+  const [isTransformerSparking, setIsTransformerSparking] = useState(false);
+  const [disputeMeterChecked, setDisputeMeterChecked] = useState(true);
+  const [disputeReadingChecked, setDisputeReadingChecked] = useState(false);
+  const [disputeMultiplierChecked, setDisputeMultiplierChecked] = useState(false);
+
+  // 🛢️ Gas specialized states
+  const [gasConsumerId, setGasConsumerId] = useState("");
+  const [gasIssueType, setGasIssueType] = useState(""); // "leakage" | "delay" | "subsidy" | ""
+  const [gasRefNum, setGasRefNum] = useState("");
+  const [lpgSafetyConfirmed, setLpgSafetyConfirmed] = useState(false);
+
+  // 🚰 Water specialized states
+  const [waterConnId, setWaterConnId] = useState("");
+  const [waterIssueType, setWaterIssueType] = useState(""); // "leakage" | "supply" | "contamination" | ""
+  const [waterContaminationType, setWaterContaminationType] = useState(""); // "muddy" | "smell" | "sewage" | "rusty" | ""
+
+  // 🛣️ Municipal specialized states
+  const [municipalIssueType, setMunicipalIssueType] = useState(""); // "pothole" | "streetlight" | "drainage" | ""
+  const [potholeSeverity, setPotholeSeverity] = useState(""); // "minor" | "medium" | "severe" | ""
+  const [streetlightPoleId, setStreetlightPoleId] = useState("");
 
   const addFiles = (files: FileList | null) => {
     if (!files) return;
@@ -126,7 +184,7 @@ const ComplaintPage = () => {
         <div className="absolute inset-0 bg-[#192e59]/20" />
       </div>
 
-      <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+      <div className="flex-1 w-full px-[5%] max-w-none relative z-10 flex items-center justify-center p-6">
         <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
           {/* Header Section */}
           <div className="bg-[#192e59] p-8 text-white relative flex-shrink-0">
@@ -233,10 +291,67 @@ const ComplaintPage = () => {
               // 📝 FORM STATE INSIDE CLEAN LIGHT CONSOLE!
               <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl mx-auto">
                 
-                {/* Step Indicator */}
-                <div className="flex justify-center gap-3 mb-8">
-                  <div className={`h-2.5 rounded-full transition-all ${step === 1 ? 'w-20 bg-[#FD8008]' : 'w-5 bg-slate-200'}`} />
-                  <div className={`h-2.5 rounded-full transition-all ${step === 2 ? 'w-20 bg-[#FD8008]' : 'w-5 bg-slate-200'}`} />
+                {/* 🚀 HYPER-PREMIUM STEP PROGRESS INDICATOR */}
+                <div className="w-full max-w-md mx-auto mb-12 mt-2 px-4 relative z-10">
+                  <div className="relative flex items-center justify-between">
+                    
+                    {/* Background Progress Line */}
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 rounded-full z-0" />
+                    
+                    {/* Active Progress Line Overlay */}
+                    <div 
+                      className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-[#FD8008] to-orange-400 rounded-full z-0 transition-all duration-500 ease-in-out" 
+                      style={{ width: `${((step - 1) / (2 - 1)) * 100}%` }}
+                    />
+
+                    {[
+                      { number: 1, label: "Citizen Details" },
+                      { number: 2, label: "Issue Details" }
+                    ].map((s) => {
+                      const isCompleted = step > s.number;
+                      const isActive = step === s.number;
+                      const isRemaining = step < s.number;
+
+                      return (
+                        <div key={s.number} className="relative z-10 flex flex-col items-center">
+                          
+                          {/* Step Bubble */}
+                          <div 
+                            className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm transition-all duration-500 border-2 shadow-md relative
+                              ${isCompleted 
+                                ? "bg-[#FD8008] border-[#FD8008] text-white scale-110" 
+                                : isActive 
+                                  ? "bg-white border-[#FD8008] text-[#FD8008] ring-4 ring-[#FD8008]/20 scale-110" 
+                                  : "bg-white border-slate-200 text-slate-400"
+                              }`}
+                          >
+                            {isCompleted ? (
+                              <svg className="w-5 h-5 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="3">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <span>{s.number}</span>
+                            )}
+
+                            {/* Pulsing glow ring for active step */}
+                            {isActive && (
+                              <span className="absolute inset-0 rounded-full bg-[#FD8008]/30 animate-ping opacity-75 pointer-events-none" style={{ animationDuration: '2s' }} />
+                            )}
+                          </div>
+
+                          {/* Step Text Label */}
+                          <span 
+                            className={`absolute top-12 whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all duration-300
+                              ${isActive ? "text-[#192e59]" : isCompleted ? "text-[#FD8008]" : "text-slate-400"}`}
+                          >
+                            {s.label}
+                          </span>
+
+                        </div>
+                      );
+                    })}
+
+                  </div>
                 </div>
 
                 {step === 1 && (
@@ -333,6 +448,439 @@ const ComplaintPage = () => {
                       <span className="w-1.5 h-6 bg-[#FD8008] rounded-full" /> Issue details
                     </h2>
 
+                    {/* ── DEPARTMENT DYNAMIC COMPLAINT FORMS ── */}
+
+                    {/* ⚡ ELECTRICITY FORMS */}
+                    {category === "Electricity" && (
+                      <div className="p-6 bg-slate-50 border-2 border-slate-100 rounded-3xl space-y-5 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2 text-[#192e59] font-black text-sm uppercase tracking-wider">
+                          <Wrench className="h-5 w-5 text-[#FD8008]" />
+                          <span>Electricity Diagnostics</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">Issue Classification</label>
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { id: "billing", label: "Billing Dispute" },
+                              { id: "outage", label: "Power Outage" },
+                              { id: "meter", label: "Meter Hardware Fault" },
+                              { id: "voltage", label: "Voltage Fluctuation" },
+                            ].map((issue) => (
+                              <button
+                                key={issue.id}
+                                type="button"
+                                onClick={() => {
+                                  setElectricityIssueType(issue.id);
+                                  if (issue.id === "billing") {
+                                    setPriority("Emergency");
+                                  } else {
+                                    setPriority("Low");
+                                  }
+                                }}
+                                className={`p-4 rounded-xl border-2 font-bold text-xs uppercase tracking-wider transition-all text-center
+                                  ${electricityIssueType === issue.id 
+                                    ? "bg-[#FD8008] border-[#FD8008] text-white shadow-lg shadow-[#FD8008]/20" 
+                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"}`}
+                              >
+                                {issue.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Electricity - Billing Dispute Widget */}
+                        {electricityIssueType === "billing" && (
+                          <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-300">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-black text-[#FD8008] bg-[#FD8008]/10 px-2 py-1 rounded-md uppercase tracking-wider">Smart Audit Enabled</span>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section 14A Priority</span>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Consumer CA Number</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="e.g. 1004928371 (Demo CA)"
+                                  value={caNumberInput}
+                                  onChange={(e) => setCaNumberInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                                  className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#FD8008] outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIsSearchingBill(true);
+                                    setTimeout(() => {
+                                      setIsSearchingBill(false);
+                                      setHasSearchedBill(true);
+                                      const data = mockBills[caNumberInput] || mockBills["1004928371"];
+                                      setBillAnalysisResult(data);
+                                      setPriority("Emergency");
+                                      setDescription(
+                                        `Automated Billing Dispute Audit: CA ${data.caNumber}. ` +
+                                        `Average: ${data.averageKwh} kWh. ` +
+                                        `Spike: ${data.spikeKwh} kWh in ${data.spikeMonth} (${Math.round((data.spikeKwh / data.averageKwh)*100)}% increase). ` +
+                                        `SLA Code: 48 Hours Emergency Resolve.`
+                                      );
+                                    }, 1500);
+                                  }}
+                                  className="bg-[#192e59] hover:bg-[#112040] text-white font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-xl flex items-center gap-1.5 transition-all"
+                                >
+                                  {isSearchingBill ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Search className="w-4 h-4" />}
+                                  <span>Audit Bill</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {hasSearchedBill && billAnalysisResult && (
+                              <div className="space-y-4 animate-in fade-in duration-300">
+                                <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl flex items-center gap-3">
+                                  <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0" />
+                                  <div>
+                                    <h4 className="font-black text-xs text-rose-800 uppercase tracking-wide">Anomaly Verified</h4>
+                                    <p className="text-[10px] text-rose-600 font-bold leading-normal">
+                                      Usage spiked 412% compared to historical median. High priority emergency status confirmed.
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="h-32 w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={billAnalysisResult.history}>
+                                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                      <XAxis dataKey="month" tick={{ fontSize: 9, fill: '#94a3b8' }} />
+                                      <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} />
+                                      <Tooltip />
+                                      <Bar dataKey="kwh" name="kWh Usage">
+                                        {billAnalysisResult.history.map((entry, index) => (
+                                          <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={entry.kwh > billAnalysisResult.averageKwh * 2 ? '#ef4444' : '#192e59'} 
+                                          />
+                                        ))}
+                                      </Bar>
+                                    </BarChart>
+                                  </ResponsiveContainer>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2">
+                                  <label className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer">
+                                    <input type="checkbox" defaultChecked className="accent-[#FD8008]" />
+                                    <span className="text-[9px] font-bold text-slate-600">Hardware Error</span>
+                                  </label>
+                                  <label className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer">
+                                    <input type="checkbox" defaultChecked className="accent-[#FD8008]" />
+                                    <span className="text-[9px] font-bold text-slate-600">Meter Logging</span>
+                                  </label>
+                                  <label className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer">
+                                    <input type="checkbox" className="accent-[#FD8008]" />
+                                    <span className="text-[9px] font-bold text-slate-600">Multiplier Err</span>
+                                  </label>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Electricity - Power Outage Widget */}
+                        {electricityIssueType === "outage" && (
+                          <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-300">
+                            <span className="text-[10px] font-black text-[#FD8008] bg-[#FD8008]/10 px-2 py-1 rounded-md uppercase tracking-wider">Outage Report Config</span>
+                            <div className="space-y-3">
+                              <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-150 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isNeighborhoodOutage}
+                                  onChange={(e) => {
+                                    setIsNeighborhoodOutage(e.target.checked);
+                                    setDescription(`Power Outage Complaint: Outage reported in neighborhood. ${e.target.checked ? "Affects multiple blocks." : ""} ${isTransformerSparking ? "ALERT: Sparking transformer." : ""}`);
+                                  }}
+                                  className="h-5 w-5 rounded border-slate-300 text-[#FD8008] focus:ring-[#FD8008] accent-[#FD8008]"
+                                />
+                                <div>
+                                  <p className="text-xs font-black text-slate-700 uppercase tracking-tight">Affecting Neighborhood</p>
+                                  <p className="text-[10px] text-slate-400 font-bold">Multiple houses/streetlights are also dark.</p>
+                                </div>
+                              </label>
+
+                              <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-150 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isTransformerSparking}
+                                  onChange={(e) => {
+                                    setIsTransformerSparking(e.target.checked);
+                                    setPriority(e.target.checked ? "Emergency" : "Low");
+                                    setDescription(`Power Outage Complaint: Outage reported in neighborhood. ${isNeighborhoodOutage ? "Affects multiple blocks." : ""} ${e.target.checked ? "ALERT: Sparking / Burning smell in Transformer." : ""}`);
+                                  }}
+                                  className="h-5 w-5 rounded border-slate-300 text-[#FD8008] focus:ring-[#FD8008] accent-[#FD8008]"
+                                />
+                                <div>
+                                  <p className="text-xs font-black text-rose-700 uppercase tracking-tight">Sparking / Burning Smell</p>
+                                  <p className="text-[10px] text-rose-500/80 font-bold">Transformer issue present. High risk fire threat!</p>
+                                </div>
+                              </label>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 🛢️ GAS DISTRIBUTION FORMS */}
+                    {category === "Gas Distribution" && (
+                      <div className="p-6 bg-slate-50 border-2 border-slate-100 rounded-3xl space-y-5 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2 text-[#192e59] font-black text-sm uppercase tracking-wider">
+                          <Flame className="h-5 w-5 text-rose-500 animate-pulse" />
+                          <span>Gas Safety & Supply Diagnostics</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">Issue Classification</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: "leakage", label: "LPG Leakage" },
+                              { id: "delay", label: "Refill Delay" },
+                              { id: "subsidy", label: "Subsidy Query" },
+                            ].map((issue) => (
+                              <button
+                                key={issue.id}
+                                type="button"
+                                onClick={() => {
+                                  setGasIssueType(issue.id);
+                                  if (issue.id === "leakage") {
+                                    setPriority("Emergency");
+                                    setDescription("CRITICAL: Gas Leakage reported. Safety warning checked. Immediate dispatch requested.");
+                                  } else {
+                                    setPriority("Low");
+                                    setDescription("");
+                                  }
+                                }}
+                                className={`p-3 rounded-xl border-2 font-bold text-[10px] uppercase tracking-wider transition-all text-center
+                                  ${gasIssueType === issue.id 
+                                    ? "bg-rose-600 border-rose-600 text-white shadow-lg shadow-rose-600/20" 
+                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"}`}
+                              >
+                                {issue.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {gasIssueType === "leakage" && (
+                          <div className="bg-white p-5 rounded-2xl border border-rose-100 space-y-4 animate-in zoom-in-95 duration-300">
+                            <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex gap-3 items-start">
+                              <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+                              <div>
+                                <h4 className="text-xs font-black text-rose-700 uppercase tracking-wider">⚠️ CRITICAL GAS EMERGENCY WARNING</h4>
+                                <ul className="text-[10px] text-rose-600/90 leading-relaxed mt-1 list-disc list-inside font-bold space-y-0.5">
+                                  <li>Do NOT switch on/off any electrical appliances or lights.</li>
+                                  <li>Open all doors & windows immediately for ventilation.</li>
+                                  <li>Close the primary gas cylinder regulator knob.</li>
+                                  <li>Move away to a safe distance and wait for the emergency squad.</li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <label className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-150 rounded-xl cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={lpgSafetyConfirmed}
+                                onChange={(e) => setLpgSafetyConfirmed(e.target.checked)}
+                                className="h-5 w-5 rounded border-slate-300 text-rose-600 focus:ring-rose-600 accent-rose-600"
+                              />
+                              <div>
+                                <p className="text-xs font-black text-slate-700 uppercase tracking-tight">I have followed safety steps</p>
+                                <p className="text-[10px] text-slate-400 font-bold">Ready to dispatch Emergency Service Response team.</p>
+                              </div>
+                            </label>
+                          </div>
+                        )}
+
+                        {gasIssueType === "delay" && (
+                          <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-300">
+                            <div className="space-y-2">
+                              <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">LPG Cylinder Booking Reference Number</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. LPG-BK-92831"
+                                value={gasRefNum}
+                                onChange={(e) => {
+                                  setGasRefNum(e.target.value);
+                                  setDescription(`Gas Cylinder Booking Delay: Booking Ref ${e.target.value}. Refill delivery is delayed past 48 hours.`);
+                                }}
+                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#FD8008] outline-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 🚰 WATER SUPPLY FORMS */}
+                    {category === "Water Supply" && (
+                      <div className="p-6 bg-slate-50 border-2 border-slate-100 rounded-3xl space-y-5 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2 text-[#192e59] font-black text-sm uppercase tracking-wider">
+                          <Droplets className="h-5 w-5 text-blue-500 animate-bounce" />
+                          <span>Water Quality & Utility Diagnostics</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">Issue Classification</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: "supply", label: "No Water Supply" },
+                              { id: "contamination", label: "Dirty/Muddy Water" },
+                              { id: "leakage", label: "Pipeline Leakage" },
+                            ].map((issue) => (
+                              <button
+                                key={issue.id}
+                                type="button"
+                                onClick={() => {
+                                  setWaterIssueType(issue.id);
+                                  if (issue.id === "contamination") {
+                                    setPriority("High");
+                                  } else {
+                                    setPriority("Low");
+                                  }
+                                  setDescription("");
+                                }}
+                                className={`p-3 rounded-xl border-2 font-bold text-[10px] uppercase tracking-wider transition-all text-center
+                                  ${waterIssueType === issue.id 
+                                    ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20" 
+                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"}`}
+                              >
+                                {issue.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {waterIssueType === "contamination" && (
+                          <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-300">
+                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest block ml-1">Contamination Properties</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {[
+                                { id: "muddy", label: "Muddy / Brown Water" },
+                                { id: "smell", label: "Bad Odor / Rotten Smell" },
+                                { id: "sewage", label: "Sewage Mix (Critical)" },
+                                { id: "rusty", label: "Rust/Yellow Tint" },
+                              ].map((item) => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setWaterContaminationType(item.id);
+                                    if (item.id === "sewage") setPriority("Emergency");
+                                    setDescription(`Water Quality Dispute: Contamination verified. Type: ${item.label}. High priority filtration squad review required.`);
+                                  }}
+                                  className={`p-3 rounded-lg border text-left text-[10px] font-bold transition-all
+                                    ${waterContaminationType === item.id
+                                      ? "bg-blue-50 border-blue-400 text-blue-700 font-extrabold"
+                                      : "bg-slate-50 border-slate-200 text-slate-600"}`}
+                                >
+                                  {item.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {waterIssueType === "leakage" && (
+                          <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-3 animate-in zoom-in-95 duration-300">
+                            <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs font-black text-blue-800 uppercase tracking-wide">💡 Quick Dispatch Tip</p>
+                              <p className="text-[10px] text-blue-600/90 leading-relaxed mt-0.5">
+                                Please snap a photo of the leaking tap or pipe burst, and upload it using the file attachment box below. This helps the plumber pack the correct piping sizes!
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 🛣️ MUNICIPAL SERVICES FORMS */}
+                    {category === "Municipal Services" && (
+                      <div className="p-6 bg-slate-50 border-2 border-slate-100 rounded-3xl space-y-5 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2 text-[#192e59] font-black text-sm uppercase tracking-wider">
+                          <Milestone className="h-5 w-5 text-emerald-600" />
+                          <span>Civic Grievance Diagnostics</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">Issue Classification</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: "pothole", label: "Pothole / Road" },
+                              { id: "streetlight", label: "Streetlight Out" },
+                              { id: "drainage", label: "Drain Blockage" },
+                            ].map((issue) => (
+                              <button
+                                key={issue.id}
+                                type="button"
+                                onClick={() => {
+                                  setMunicipalIssueType(issue.id);
+                                  setPriority("Low");
+                                  setDescription("");
+                                }}
+                                className={`p-3 rounded-xl border-2 font-bold text-[10px] uppercase tracking-wider transition-all text-center
+                                  ${municipalIssueType === issue.id 
+                                    ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-600/20" 
+                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"}`}
+                              >
+                                {issue.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {municipalIssueType === "pothole" && (
+                          <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-300">
+                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest block ml-1">Pothole Severity (Road Damage)</label>
+                            <div className="grid grid-cols-3 gap-2">
+                              {[
+                                { id: "minor", label: "Minor Crack", color: "hover:bg-slate-50" },
+                                { id: "medium", label: "Medium Hole", color: "hover:bg-amber-50" },
+                                { id: "severe", label: "Severe Axle-Breaker", color: "hover:bg-red-50" },
+                              ].map((item) => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setPotholeSeverity(item.id);
+                                    if (item.id === "severe") setPriority("High");
+                                    setDescription(`Civic Grievance: Road pothole reported. Severity classification: ${item.label}. High risk hazard for two-wheelers.`);
+                                  }}
+                                  className={`p-3 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all
+                                    ${potholeSeverity === item.id
+                                      ? "bg-slate-900 border-slate-900 text-white font-extrabold"
+                                      : `bg-slate-50 border-slate-200 text-slate-600 ${item.color}`}`}
+                                >
+                                  {item.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {municipalIssueType === "streetlight" && (
+                          <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-300">
+                            <div className="space-y-2">
+                              <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Streetlight Pole ID / Number (if visible)</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. POLE-GUW-928"
+                                value={streetlightPoleId}
+                                onChange={(e) => {
+                                  setStreetlightPoleId(e.target.value);
+                                  setDescription(`Civic Grievance: Streetlight outage. Location pole identifier: ${e.target.value}. Area is pitch dark at night.`);
+                                }}
+                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-[#192e59] focus:border-[#FD8008] outline-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {/* Description Area */}
                     <div className="relative space-y-2">
                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">

@@ -104,7 +104,7 @@ const LoadChangeRequestPage = () => {
           <div className="absolute inset-0 bg-[#192e59]/20" />
         </div>
 
-        <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+        <div className="flex-1 w-full px-[5%] max-w-none relative z-10 flex items-center justify-center p-6">
           <div className="w-full max-w-lg bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
             <Receipt
               transactionId={referenceId}
@@ -139,7 +139,7 @@ const LoadChangeRequestPage = () => {
         <div className="absolute inset-0 bg-[#192e59]/20" />
       </div>
 
-      <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+      <div className="flex-1 w-full px-[5%] max-w-none relative z-10 flex items-center justify-center p-6">
         <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
           
           {/* Header Section */}
@@ -159,24 +159,68 @@ const LoadChangeRequestPage = () => {
 
           <div className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar bg-white">
             
-            {/* Stepper */}
-            <div className="flex items-center justify-between mb-12 px-4">
-              {[
-                { num: 1, icon: Search, label: "Verify" },
-                { num: 2, icon: User, label: "Profile" },
-                { num: 3, icon: FileText, label: "Request" },
-              ].map(({ num, icon: Icon, label }) => (
-                <div key={num} className="flex flex-col items-center gap-3 flex-1 relative">
-                  {num < 3 && (
-                    <div className={`absolute left-1/2 right-[-50%] top-6 h-1 -z-10 ${step > num ? "bg-[#FD8008]" : "bg-slate-100"}`} />
-                  )}
-                  <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 shadow-xl border-4 border-white
-                    ${step >= num ? "bg-[#FD8008] text-white scale-110 shadow-[#FD8008]/40" : "bg-slate-50 text-slate-400 border-slate-100"}`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${step >= num ? "text-slate-700" : "text-slate-300"}`}>{label}</span>
-                </div>
-              ))}
+            {/* 🚀 HYPER-PREMIUM STEP PROGRESS INDICATOR */}
+            <div className="w-full max-w-2xl mx-auto mb-14 mt-2 px-4 relative z-10">
+              <div className="relative flex items-center justify-between">
+                
+                {/* Background Progress Line */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 rounded-full z-0" />
+                
+                {/* Active Progress Line Overlay */}
+                <div 
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-[#FD8008] to-orange-400 rounded-full z-0 transition-all duration-500 ease-in-out" 
+                  style={{ width: `${((step - 1) / (3 - 1)) * 100}%` }}
+                />
+
+                {[
+                  { number: 1, icon: Search, label: "Verify" },
+                  { number: 2, icon: User, label: "Profile" },
+                  { number: 3, icon: FileText, label: "Request" },
+                ].map((s) => {
+                  const isCompleted = step > s.number;
+                  const isActive = step === s.number;
+                  const isRemaining = step < s.number;
+
+                  return (
+                    <div key={s.number} className="relative z-10 flex flex-col items-center flex-1">
+                      
+                      {/* Step Bubble */}
+                      <div 
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 border-2 shadow-md relative
+                          ${isCompleted 
+                            ? "bg-[#FD8008] border-[#FD8008] text-white scale-115 shadow-lg shadow-[#FD8008]/20" 
+                            : isActive 
+                              ? "bg-white border-[#FD8008] text-[#FD8008] ring-4 ring-[#FD8008]/20 scale-115 shadow-md" 
+                              : "bg-white border-slate-200 text-slate-400"
+                          }`}
+                      >
+                        {isCompleted ? (
+                          <svg className="w-5 h-5 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <s.icon className="h-5 w-5 stroke-[2.2]" />
+                        )}
+
+                        {/* Pulsing glow ring for active step */}
+                        {isActive && (
+                          <span className="absolute inset-0 rounded-2xl bg-[#FD8008]/30 animate-ping opacity-75 pointer-events-none" style={{ animationDuration: '2s' }} />
+                        )}
+                      </div>
+
+                      {/* Step Text Label */}
+                      <span 
+                        className={`absolute top-14 whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all duration-300
+                          ${isActive ? "text-[#192e59]" : isCompleted ? "text-[#FD8008]" : "text-slate-400"}`}
+                      >
+                        {s.label}
+                      </span>
+
+                    </div>
+                  );
+                })}
+
+              </div>
             </div>
 
             {/* STEP 1: Verification */}

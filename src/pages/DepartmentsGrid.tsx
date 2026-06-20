@@ -114,7 +114,7 @@ const DepartmentsGrid = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-[#192e59] flex flex-col p-4 lg:p-6 justify-between relative overflow-hidden">
+    <div className="h-[calc(100vh-64px)] bg-[#192e59] flex flex-col p-4 lg:p-6 pb-28 lg:pb-32 justify-start gap-4 relative overflow-y-auto custom-scrollbar">
       
       {/* BACKGROUND VIDEO */}
       <div className="absolute inset-0 z-0">
@@ -178,8 +178,8 @@ const DepartmentsGrid = () => {
         </h2>
       </div>
 
-      {/* 🎬 DYNAMIC INF-SCROLL CINEMATIC MARQUEE FOR SQUARE DEPT CARDS */}
-      <div className="relative w-full overflow-hidden py-2 z-10 animate-slide-up shrink-0 pb-4 flex-1 flex items-center justify-center">
+      {/* 🎬 DYNAMIC INF-SCROLL CINEMATIC MARQUEE FOR SQUARE DEPT CARDS (LANDSCAPE ONLY) */}
+      <div className="relative w-full overflow-hidden py-4 z-10 animate-slide-up shrink-0 pb-8 show-landscape items-center justify-center">
         {/* Soft edge blur masks for premium transitions */}
         <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#192e59] via-[#192e59]/75 to-transparent z-20 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-28 bg-gradient-to-l from-[#192e59] via-[#192e59]/75 to-transparent z-20 pointer-events-none" />
@@ -189,7 +189,7 @@ const DepartmentsGrid = () => {
           {[...allDepartments, ...allDepartments, ...allDepartments].map((dept, idx) => (
             <div 
               key={`${dept.title}-${idx}`} 
-              className="w-[215px] lg:w-[265px] xl:w-[295px] shrink-0 mr-6 lg:mr-8"
+              className="w-[13.5rem] lg:w-[16.5rem] xl:w-[18.5rem] shrink-0 mr-6 lg:mr-8"
             >
               <DepartmentCard
                 icon={dept.icon}
@@ -218,6 +218,24 @@ const DepartmentsGrid = () => {
             animation-play-state: paused;
           }
         `}</style>
+      </div>
+
+      {/* 🏛️ PORTRAIT VIEWPORT: STATIC 2x3 GRID OF CARDS (Centered & Fully Tappable) */}
+      <div className="grid-portrait grid-cols-1 sm:grid-cols-2 gap-8 w-full max-w-5xl px-6 z-10 animate-slide-up pb-24 justify-items-center mx-auto items-start mt-4">
+        {allDepartments.map((dept, idx) => (
+          <div key={`p-${dept.title}-${idx}`} className="w-full max-w-[340px] transition-transform duration-300 hover:scale-105">
+            <DepartmentCard
+              icon={dept.icon}
+              title={dept.title}
+              description={dept.description}
+              path={dept.path}
+              color={dept.color}
+              serviceCount={dept.serviceCount}
+              status={dept.status}
+              features={dept.features}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );

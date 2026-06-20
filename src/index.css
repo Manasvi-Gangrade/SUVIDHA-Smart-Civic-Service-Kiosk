@@ -5,6 +5,8 @@
 @tailwind utilities;
 
 @layer base {
+
+
   html, body {
     margin: 0;
     padding: 0;
@@ -14,11 +16,16 @@
     position: fixed;
     /* 
       PERFECT KIOSK SCALING MAGIC:
-      Locks the font-size (and therefore all Tailwind rem units) to the exact 16:9 proportion.
-      Whether on a 14-inch laptop or 55-inch 4K Kiosk, the UI will scale like an image.
-      It will never overflow or break its layout.
+      Locks the font-size (and therefore all Tailwind rem units) to the exact 16:9 proportion in landscape,
+      or the 9:16 proportion in portrait.
     */
     font-size: min(0.8333vw, 1.481vh); 
+  }
+
+  @media (max-aspect-ratio: 1/1) {
+    html, body {
+      font-size: min(1.481vw, 0.8333vh);
+    }
   }
 
   #root {
@@ -499,4 +506,18 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(253, 128, 8, 0.6); /* Vibrant saffron on hover */
+}
+
+/* Custom Orientation-Based Layout Helper Classes (Crucial for 4K Vertical displays) */
+@media (min-aspect-ratio: 1/1) {
+  .show-landscape { display: flex !important; }
+  .show-portrait { display: none !important; }
+  .grid-landscape { display: grid !important; }
+  .grid-portrait { display: none !important; }
+}
+@media (max-aspect-ratio: 1/1) {
+  .show-landscape { display: none !important; }
+  .show-portrait { display: flex !important; }
+  .grid-landscape { display: none !important; }
+  .grid-portrait { display: grid !important; }
 }

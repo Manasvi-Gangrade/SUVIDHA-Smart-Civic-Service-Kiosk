@@ -54,7 +54,7 @@ const CivicMapPage = () => {
     const [activeCenter, setActiveCenter] = useState<[number, number]>(center);
 
     return (
-        <div className="min-h-screen bg-[#192e59] text-white flex flex-col font-sans overflow-hidden relative">
+        <div className="h-[calc(100vh-64px)] bg-[#192e59] text-white flex flex-col font-sans overflow-hidden relative">
             
             {/* 🎥 THE DYNAMIC BACKGROUND VIDEO */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -91,12 +91,12 @@ const CivicMapPage = () => {
                 </div>
             </div>
 
-            <div className="flex-1 flex p-6 gap-6 relative z-10">
+            <div className="flex-1 flex p-6 gap-6 relative z-10 overflow-hidden">
                 {/* Sidebar Controls */}
-                <div className="w-80 flex flex-col gap-4">
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-md shadow-xl">
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><MapPin className="h-5 w-5 text-[#FD8008]" /> Focus Target</h2>
-                        <div className="space-y-3">
+                <div className="w-80 flex flex-col h-full">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-md shadow-xl flex flex-col max-h-full overflow-hidden">
+                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 shrink-0"><MapPin className="h-5 w-5 text-[#FD8008]" /> Focus Target</h2>
+                        <div className="space-y-3 overflow-y-auto custom-scrollbar pr-1 flex-1">
                             <button
                                 onClick={() => setActiveCenter(center)}
                                 className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 transition-colors text-sm font-semibold flex items-center justify-between"

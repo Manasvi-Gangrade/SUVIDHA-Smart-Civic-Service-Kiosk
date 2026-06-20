@@ -141,7 +141,7 @@ const KioskHeader = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-sm shadow-sm transition-all duration-300">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="w-full px-[5%] flex h-16 items-center justify-between max-w-none">
         <div className="flex items-center gap-4">
           {!isHome && (
             <button
@@ -152,7 +152,20 @@ const KioskHeader = () => {
             </button>
           )}
 
-
+          {/* BRANDING LOGO & TITLE */}
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+            <div className="h-10 w-10 bg-[#FD8008] rounded-xl flex items-center justify-center shadow-md border border-white/10 shrink-0">
+              <span className="text-white font-black text-base tracking-tighter">SU</span>
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="font-[950] text-sm lg:text-[1.1rem] leading-none text-[#192e59] tracking-widest uppercase">
+                SUVIDHA
+              </span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 leading-none">
+                Smart Civic Kiosk
+              </span>
+            </div>
+          </div>
 
           <div className="hidden lg:flex items-center gap-5 ml-6 border-l border-slate-200 pl-6 text-sm font-medium text-slate-600">
             <div className="flex items-center gap-2">

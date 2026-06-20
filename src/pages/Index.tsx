@@ -63,7 +63,7 @@ const Index = () => {
   }, [currentText, isDeleting, greetingIndex]);
 
   return (
-    <div className="relative h-[calc(100vh-64px)] flex bg-[#192e59] overflow-hidden font-sans">
+    <div className="relative h-[calc(100vh-64px)] flex bg-[#192e59] overflow-y-auto font-sans custom-scrollbar">
       
       {/* BACKGROUND VIDEO */}
       <div className="absolute inset-0 z-0">
@@ -79,20 +79,20 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#192e59]/50 via-[#192e59]/20 to-[#192e59]/80" />
       </div>
 
-      <div className="container relative z-10 mx-auto h-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 py-4 items-center max-w-[1600px]">
+      <div className="w-full px-[5%] relative z-10 mx-auto h-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 py-4 items-center max-w-none">
         
         {/* LEFT COLUMN: Typography & Actions (Shifted slightly upwards using relative top offset) */}
-        <div className="flex flex-col justify-center space-y-4 pl-4 lg:pl-12 relative -top-8">
+        <div className="flex flex-col justify-center space-y-4 px-4 lg:pl-12 lg:pr-0 items-center lg:items-start text-center lg:text-left relative -top-4 lg:top-0 h-full lg:col-span-5">
             
             {/* Dynamic Typewriter */}
-            <div className="h-8 flex items-center justify-start" translate="no">
+            <div className="h-8 flex items-center justify-center lg:justify-start" translate="no">
               <span className="text-xl md:text-2xl font-bold text-[#FD8008] tracking-widest uppercase flex items-center">
                 <span key={currentText}>{currentText}</span>
                 <span className="animate-pulse opacity-70 ml-1">|</span>
               </span>
             </div>
 
-            <h1 className="flex flex-col text-[4rem] lg:text-[5.5rem] xl:text-[6.5rem] font-[900] leading-[1.15] tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-slate-400 drop-shadow-2xl uppercase">
+            <h1 className="flex flex-col text-[4.5rem] lg:text-[5.5rem] xl:text-[6.5rem] font-[900] leading-[1.15] tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-slate-400 drop-shadow-2xl uppercase">
                 <span>SUVIDHA</span>
                 <span className="text-[1.4rem] lg:text-[1.8rem] xl:text-[2.1rem] leading-[1.45] text-[#38bdf8] drop-shadow-lg tracking-normal font-bold mt-4">
                     Smart Urban Virtual Interactive<br />
@@ -117,10 +117,10 @@ const Index = () => {
               }
             `}</style>
             
-            <div className="w-[90%] max-w-2xl overflow-hidden relative flex mt-4 mb-2" translate="no">
+            <div className="w-[90%] max-w-2xl overflow-hidden relative flex mt-4 mb-2 mx-auto lg:mx-0" translate="no">
                 <div className="flex w-max animate-marquee-left">
                     {[...galleryImages.slice(5, 11), ...galleryImages.slice(5, 11)].map((img, idx) => (
-                        <div key={`ml-${idx}`} className="w-[140px] xl:w-[160px] aspect-[4/3] rounded-xl overflow-hidden shadow-md border-2 border-white/20 bg-slate-100 flex-shrink-0 mr-4">
+                        <div key={`ml-${idx}`} className="w-[8.75rem] xl:w-[10rem] aspect-[4/3] rounded-xl overflow-hidden shadow-md border-2 border-white/20 bg-slate-100 flex-shrink-0 mr-4">
                             <img src={img} className="w-full h-full object-cover opacity-90" alt="Civic Thumbnail" />
                         </div>
                     ))}
@@ -131,7 +131,7 @@ const Index = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
                 <button onClick={() => navigate("/departments")} className="bg-[#FD8008] hover:bg-[#e67000] text-white px-8 py-3.5 rounded-xl font-bold text-lg shadow-[0_10px_30px_-10px_rgba(253,128,8,0.6)] transition-transform hover:-translate-y-1 flex items-center gap-2">
                     ENTER KIOSK <ChevronRight className="w-5 h-5" />
                 </button>
@@ -146,7 +146,7 @@ const Index = () => {
         </div>
 
         {/* RIGHT COLUMN: Live Feeds */}
-        <div className="flex flex-col h-full justify-center pr-4 lg:pr-12 pb-24 lg:pb-32 mt-[2rem]">
+        <div className="flex flex-col justify-center px-4 lg:pr-12 lg:pb-12 mt-4 lg:mt-[2rem] w-full max-w-[600px] lg:max-w-none mx-auto pb-10 lg:col-span-7">
             {/* Main Video */}
             <div className="w-full aspect-video rounded-3xl overflow-hidden border-[6px] border-[#1e293b]/60 shadow-2xl relative bg-black mb-3">
                 <video autoPlay loop muted playsInline className="w-full h-full object-cover">
@@ -168,10 +168,10 @@ const Index = () => {
               }
             `}</style>
             
-            <div className="w-full overflow-hidden relative flex group">
+            <div className="hidden lg:block w-full overflow-hidden relative flex group">
                 <div className="flex w-max animate-marquee">
                     {[...galleryImages.slice(0, 5), ...galleryImages.slice(0, 5)].map((img, idx) => (
-                        <div key={`m-${idx}`} className="w-[300px] xl:w-[340px] aspect-video relative flex-shrink-0 mr-5 rounded-2xl overflow-hidden border-[4px] border-[#1e293b]/50 shadow-lg bg-black">
+                        <div key={`m-${idx}`} className="w-[18.75rem] xl:w-[21.25rem] aspect-video relative flex-shrink-0 mr-5 rounded-2xl overflow-hidden border-[4px] border-[#1e293b]/50 shadow-lg bg-black">
                             <img src={img} className="w-full h-full object-cover opacity-85 hover:opacity-100 transition-opacity" alt={`marquee feed ${idx}`} />
                         </div>
                     ))}

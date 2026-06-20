@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Gauge, ChevronRight, Loader2, ArrowLeft, Search,
   CheckCircle2, QrCode, AlertTriangle, Wrench, MoveHorizontal,
-  Clock, User, ShieldCheck, Zap
+  Clock, User, ShieldCheck, Zap, X
 } from "lucide-react";
 import { db } from "@/lib/database";
 import Receipt from "@/components/Receipt";
+import { isFirebaseConfigured, db as firestore } from "../lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SubCategory = "malfunction" | "shifting" | null;
@@ -55,6 +57,48 @@ const MeterComplaintPage = () => {
   const [selectedIssue, setSelectedIssue] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedPhotos, setUploadedPhotos] = useState({
+    meterPhoto: null as string | null,
+    sitePhoto: null as string | null,
+  });
+  const [activeQrModal, setActiveQrModal] = useState<"meter" | "site" | null>(null);
+  const [sessionId] = useState(() => "session_" + Math.floor(Math.random() * 900000 + 100000));
+  const [kioskIp, setKioskIp] = useState(() => localStorage.getItem("suvidha_kiosk_ip") || window.location.hostname);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured || !firestore) return;
+
+    const unsubscribeMeter = onSnapshot(
+      doc(firestore, "mobile_uploads", `${sessionId}_meter`),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.uploaded && data.fileName) {
+            setUploadedPhotos(prev => ({ ...prev, meterPhoto: data.fileName }));
+            setActiveQrModal(null);
+          }
+        }
+      }
+    );
+
+    const unsubscribeSite = onSnapshot(
+      doc(firestore, "mobile_uploads", `${sessionId}_site`),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.uploaded && data.fileName) {
+            setUploadedPhotos(prev => ({ ...prev, sitePhoto: data.fileName }));
+            setActiveQrModal(null);
+          }
+        }
+      }
+    );
+
+    return () => {
+      unsubscribeMeter();
+      unsubscribeSite();
+    };
+  }, [sessionId]);
 
   // Output
   const [referenceId, setReferenceId] = useState("");
@@ -113,7 +157,7 @@ const MeterComplaintPage = () => {
           <div className="absolute inset-0 bg-[#192e59]/20" />
         </div>
 
-        <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+        <div className="flex-1 w-full px-[5%] max-w-none relative z-10 flex items-center justify-center p-6">
           <div className="w-full max-w-lg bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
             <Receipt
               transactionId={referenceId}
@@ -148,7 +192,7 @@ const MeterComplaintPage = () => {
         <div className="absolute inset-0 bg-[#192e59]/20" />
       </div>
 
-      <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+      <div className="flex-1 w-full px-[5%] max-w-none relative z-10 flex items-center justify-center p-6">
         <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
           
           {/* Header Section */}
@@ -168,24 +212,68 @@ const MeterComplaintPage = () => {
 
           <div className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar bg-white">
             
-            {/* Stepper */}
+            {/* 🚀 HYPER-PREMIUM STEP PROGRESS INDICATOR */}
             {step > 1 && (
-              <div className="flex items-center justify-between mb-12 px-4 max-w-2xl mx-auto">
-                {[
-                  { num: 2, label: "Verify" },
-                  { num: 3, label: "Details" },
-                ].map(({ num, label }) => (
-                  <div key={num} className="flex flex-col items-center gap-3 flex-1 relative">
-                    {num < 3 && (
-                      <div className={`absolute left-1/2 right-[-50%] top-6 h-1 -z-10 ${step > num ? "bg-[#FD8008]" : "bg-slate-100"}`} />
-                    )}
-                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 shadow-xl border-4 border-white
-                      ${step >= num ? "bg-[#FD8008] text-white scale-110 shadow-[#FD8008]/40" : "bg-slate-50 text-slate-400 border-slate-100"}`}>
-                      {step > num ? <CheckCircle2 className="h-5 w-5" /> : num === 2 ? <Search className="h-5 w-5" /> : <Gauge className="h-5 w-5" />}
-                    </div>
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${step >= num ? "text-slate-700" : "text-slate-300"}`}>{label}</span>
-                  </div>
-                ))}
+              <div className="w-full max-w-lg mx-auto mb-14 mt-2 px-4 relative z-10">
+                <div className="relative flex items-center justify-between">
+                  
+                  {/* Background Progress Line */}
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 rounded-full z-0" />
+                  
+                  {/* Active Progress Line Overlay */}
+                  <div 
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-[#FD8008] to-orange-400 rounded-full z-0 transition-all duration-500 ease-in-out" 
+                    style={{ width: `${((step - 2) / (3 - 2)) * 100}%` }}
+                  />
+
+                  {[
+                    { number: 2, icon: Search, label: "Verify" },
+                    { number: 3, icon: Gauge, label: "Details" },
+                  ].map((s) => {
+                    const isCompleted = step > s.number;
+                    const isActive = step === s.number;
+                    const isRemaining = step < s.number;
+
+                    return (
+                      <div key={s.number} className="relative z-10 flex flex-col items-center flex-1">
+                        
+                        {/* Step Bubble */}
+                        <div 
+                          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 border-2 shadow-md relative
+                            ${isCompleted 
+                              ? "bg-[#FD8008] border-[#FD8008] text-white scale-115 shadow-lg shadow-[#FD8008]/20" 
+                              : isActive 
+                                ? "bg-white border-[#FD8008] text-[#FD8008] ring-4 ring-[#FD8008]/20 scale-115 shadow-md" 
+                                : "bg-white border-slate-200 text-slate-400"
+                            }`}
+                        >
+                          {isCompleted ? (
+                            <svg className="w-5 h-5 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <s.icon className="h-5 w-5 stroke-[2.2]" />
+                          )}
+
+                          {/* Pulsing glow ring for active step */}
+                          {isActive && (
+                            <span className="absolute inset-0 rounded-2xl bg-[#FD8008]/30 animate-ping opacity-75 pointer-events-none" style={{ animationDuration: '2s' }} />
+                          )}
+                        </div>
+
+                        {/* Step Text Label */}
+                        <span 
+                          className={`absolute top-14 whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all duration-300
+                            ${isActive ? "text-[#192e59]" : isCompleted ? "text-[#FD8008]" : "text-slate-400"}`}
+                        >
+                          {s.label}
+                        </span>
+
+                      </div>
+                    );
+                  })}
+
+                </div>
               </div>
             )}
 
@@ -372,17 +460,49 @@ const MeterComplaintPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-7 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer relative overflow-hidden group text-center">
                       <div className="absolute inset-0 bg-[#FD8008]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                      <QrCode className="h-12 w-12 text-slate-300 mb-3 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                      {uploadedPhotos.meterPhoto ? (
+                        <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-3 scale-110 duration-500" />
+                      ) : (
+                        <QrCode className="h-12 w-12 text-slate-300 mb-3 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                      )}
                       <p className="text-slate-700 font-black uppercase tracking-tight relative z-10 text-sm">Scan QR – Upload Meter Photo</p>
                       <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-2 relative z-10 leading-relaxed">Clear photo of meter/damage<br />(Secure Mobile Upload)</p>
-                      <button className="mt-4 bg-[#FD8008] hover:bg-[#e67300] px-5 py-2 rounded-xl text-[10px] font-black text-white hover:bg-primary transition-colors shadow-lg relative z-10 uppercase tracking-widest">Show QR Code</button>
+                      {uploadedPhotos.meterPhoto ? (
+                        <span className="mt-4 bg-emerald-50 text-emerald-600 border border-emerald-200 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest relative z-10 flex items-center gap-1.5 shadow-sm">
+                          {uploadedPhotos.meterPhoto}
+                        </span>
+                      ) : (
+                        <button 
+                          type="button"
+                          onClick={() => setActiveQrModal("meter")}
+                          className="mt-4 bg-[#FD8008] hover:bg-[#e67300] px-5 py-2 rounded-xl text-[10px] font-black text-white hover:bg-[#e67300] transition-colors shadow-lg relative z-10 uppercase tracking-widest"
+                        >
+                          Show QR Code
+                        </button>
+                      )}
                     </div>
                     <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-7 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer relative overflow-hidden group text-center">
                       <div className="absolute inset-0 bg-[#FD8008]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                      <QrCode className="h-12 w-12 text-slate-300 mb-3 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                      {uploadedPhotos.sitePhoto ? (
+                        <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-3 scale-110 duration-500" />
+                      ) : (
+                        <QrCode className="h-12 w-12 text-slate-300 mb-3 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                      )}
                       <p className="text-slate-700 font-black uppercase tracking-tight relative z-10 text-sm">Scan QR – Upload Site Photo</p>
                       <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-2 relative z-10 leading-relaxed">Wide shot of installation area<br />(Secure Mobile Upload)</p>
-                      <button className="mt-4 bg-[#FD8008] hover:bg-[#e67300] px-5 py-2 rounded-xl text-[10px] font-black text-white hover:bg-primary transition-colors shadow-lg relative z-10 uppercase tracking-widest">Show QR Code</button>
+                      {uploadedPhotos.sitePhoto ? (
+                        <span className="mt-4 bg-emerald-50 text-emerald-600 border border-emerald-200 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest relative z-10 flex items-center gap-1.5 shadow-sm">
+                          {uploadedPhotos.sitePhoto}
+                        </span>
+                      ) : (
+                        <button 
+                          type="button"
+                          onClick={() => setActiveQrModal("site")}
+                          className="mt-4 bg-[#FD8008] hover:bg-[#e67300] px-5 py-2 rounded-xl text-[10px] font-black text-white hover:bg-[#e67300] transition-colors shadow-lg relative z-10 uppercase tracking-widest"
+                        >
+                          Show QR Code
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -406,6 +526,76 @@ const MeterComplaintPage = () => {
           <div className="h-2 bg-gradient-to-r from-slate-100 via-[#192e59]/20 to-slate-100 flex-shrink-0"></div>
         </div>
       </div>
+      {activeQrModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.3)] text-center relative flex flex-col items-center animate-in zoom-in-95 duration-300">
+            <button
+              type="button"
+              onClick={() => setActiveQrModal(null)}
+              className="absolute right-6 top-6 rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <h3 className="text-xl font-[900] text-[#192e59] uppercase tracking-tight mb-2">
+              {activeQrModal === "meter" ? "Upload Meter Photo" : "Upload Site Photo"}
+            </h3>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-6 leading-normal">
+              Scan with your mobile camera<br />to upload photos securely
+            </p>
+
+            <div className="relative bg-white p-3 rounded-2xl border border-slate-200 shadow-sm mb-4 flex justify-center items-center">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
+                  `http://${kioskIp}:8000/mobile-upload/${sessionId}/${activeQrModal}`
+                )}`}
+                alt="Photo Upload QR" 
+                className="w-48 h-48"
+              />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100">
+                <QrCode className="w-6 h-6 text-[#FD8008]" />
+              </div>
+            </div>
+
+            <div className="w-full bg-slate-50 border border-slate-150 rounded-2xl p-3.5 mb-5 text-left text-slate-800">
+              <label className="block text-[10px] font-black text-slate-450 uppercase tracking-widest mb-1.5">
+                Kiosk IP Address Configuration
+              </label>
+              <input 
+                type="text"
+                value={kioskIp}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setKioskIp(val);
+                  localStorage.setItem("suvidha_kiosk_ip", val);
+                }}
+                placeholder="e.g. 192.168.1.10"
+                className="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FD8008]"
+              />
+              <p className="text-[9px] text-slate-400 font-medium mt-1 leading-normal">
+                Ensure your phone is connected to the same Wi-Fi network. Update to your machine's local IP address if default hostname doesn't resolve on mobile.
+              </p>
+            </div>
+
+            <div className="w-full flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const picName = activeQrModal === "meter" ? "meter_photo_uploaded.jpg" : "site_photo_uploaded.jpg";
+                  setUploadedPhotos(prev => ({
+                    ...prev,
+                    [activeQrModal === "meter" ? "meterPhoto" : "sitePhoto"]: picName
+                  }));
+                  setActiveQrModal(null);
+                }}
+                className="w-full bg-slate-100 text-slate-600 hover:bg-slate-200 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all"
+              >
+                Quick Simulate (Fallback)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

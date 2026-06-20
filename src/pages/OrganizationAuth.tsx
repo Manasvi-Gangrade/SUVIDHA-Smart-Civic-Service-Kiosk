@@ -198,7 +198,7 @@ export const OrganizationAuth = () => {
         />
       )}
 
-      <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+      <div className="flex-1 w-full px-[5%] max-w-none relative z-10 flex items-center justify-center p-6">
         <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
           
           {/* Header Section */}

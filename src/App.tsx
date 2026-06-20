@@ -23,6 +23,7 @@ import EditProfile from "./pages/EditProfile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import LoadChangeRequestPage from "./pages/LoadChangeRequestPage";
 import MeterComplaintPage from "./pages/MeterComplaintPage";
+import MobileUpload from "./pages/MobileUpload";
 
 import Chatbot from "./components/Chatbot";
 import KioskHeader from "./components/KioskHeader";
@@ -34,7 +35,7 @@ import { AccessibilityProvider, useAccessibility } from "./contexts/Accessibilit
 import AccessibilityMenu from "./components/AccessibilityMenu";
 import { useEffect } from "react";
 import VirtualKeyboard from "./components/VirtualKeyboard";
-import { useSwipeGestures } from "./hooks/useSwipeGestures";
+
 import { IdleScreensaver } from "./components/IdleScreensaver";
 import { TTSProvider } from "./context/TTSContext";
 import { VoiceAssistantProvider } from "./context/VoiceAssistantContext";
@@ -48,11 +49,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Global gesture handler component
-const GestureHandler = ({ children }: { children: React.ReactNode }) => {
-  useSwipeGestures();
-  return <>{children}</>;
-};
+
 
 // Font size wrapper component
 const FontSizeWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -109,12 +106,14 @@ class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean,
 const AppContent = () => {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isMobileUpload = location.pathname.startsWith('/mobile-upload');
+  const hideHeader = isAdminPage || isMobileUpload;
 
   return (
-    <GestureHandler>
+    <>
       <ScreenMagnifier />
       <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
-        {!isAdminPage && <KioskHeader />}
+        {!hideHeader && <KioskHeader />}
         <main className="flex-1 transition-all duration-300">
           <Routes>
             <Route path="/" element={<Index />} />
@@ -131,6 +130,7 @@ const AppContent = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/load-change" element={<LoadChangeRequestPage />} />
             <Route path="/meter-complaint" element={<MeterComplaintPage />} />
+            <Route path="/mobile-upload/:sessionId/:docType" element={<MobileUpload />} />
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -138,18 +138,20 @@ const AppContent = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
-        {!isAdminPage && <IdleScreensaver />}
-        <VirtualKeyboard />
-        
+        {!hideHeader && <IdleScreensaver />}
+        {!hideHeader && <VirtualKeyboard />}
+
         {/* Global Action Dock */}
-        <div className="fixed bottom-6 right-6 z-50 flex flex-row items-center gap-4 justify-end pointer-events-none [&>*]:pointer-events-auto">
-          <AccessibilityMenu />
-          <VirtualHelpdesk />
-          <Chatbot />
-          <SystemSettings />
-        </div>
+        {!hideHeader && (
+          <div className="fixed bottom-6 right-6 z-50 flex flex-row items-center gap-4 justify-end pointer-events-none [&>*]:pointer-events-auto">
+            <AccessibilityMenu />
+            <VirtualHelpdesk />
+            <Chatbot />
+            <SystemSettings />
+          </div>
+        )}
       </div>
-    </GestureHandler>
+    </>
   );
 };
 

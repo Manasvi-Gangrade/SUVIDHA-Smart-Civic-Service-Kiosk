@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Printer, Download, Mail, CheckCircle2 } from "lucide-react";
+import { Printer, Mail, CheckCircle2 } from "lucide-react";
 
 interface ReceiptProps {
   transactionId: string;

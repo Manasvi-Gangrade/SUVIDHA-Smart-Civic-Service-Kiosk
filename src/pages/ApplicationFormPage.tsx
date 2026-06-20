@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { ArrowLeft, PlusCircle, FileText, CheckCircle2, ChevronRight, User, Home, UploadCloud, ScanFace, FileKey, ShieldCheck, Loader2, Gauge, MapPin, Zap, QrCode, Printer } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, PlusCircle, FileText, CheckCircle2, ChevronRight, User, Home, UploadCloud, ScanFace, FileKey, ShieldCheck, Loader2, Gauge, MapPin, Zap, QrCode, Printer, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ScannerOverlay from "../components/ScannerOverlay";
 import { db } from "@/lib/database";
 import { VoiceDictation } from "@/components/VoiceDictation";
 import Receipt from "@/components/Receipt";
+import { isFirebaseConfigured, db as firestore } from "../lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 const ApplicationFormPage = () => {
     const location = useLocation();
@@ -27,6 +29,76 @@ const ApplicationFormPage = () => {
     const [showScanner, setShowScanner] = useState(false);
     const [isDigilockerConnecting, setIsDigilockerConnecting] = useState(false);
     const [isDigilockerVerified, setIsDigilockerVerified] = useState(false);
+    const [uploadedDocs, setUploadedDocs] = useState({
+        identityProof: null as string | null,
+        ownershipProof: null as string | null,
+    });
+    const [activeQrModal, setActiveQrModal] = useState<"identity" | "ownership" | null>(null);
+    const [sessionId] = useState(() => "session_" + Math.floor(Math.random() * 900000 + 100000));
+    const [kioskIp, setKioskIp] = useState(() => localStorage.getItem("suvidha_kiosk_ip") || window.location.hostname);
+
+    const dataURLtoFile = (dataurl: string, filename: string) => {
+        const arr = dataurl.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || 'application/octet-stream';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while(n--){
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, {type:mime});
+    };
+
+    useEffect(() => {
+        if (!isFirebaseConfigured || !firestore) return;
+
+        const unsubscribeIdentity = onSnapshot(
+            doc(firestore, "mobile_uploads", `${sessionId}_identity`),
+            (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.uploaded && data.fileName) {
+                        setUploadedDocs(prev => ({ ...prev, identityProof: data.fileName }));
+                        if (data.fileData) {
+                            try {
+                                const file = dataURLtoFile(data.fileData, data.fileName);
+                                setFormData(prev => ({ ...prev, docFile: file }));
+                            } catch (e) {
+                                console.error("Error recreating file from base64", e);
+                            }
+                        }
+                        setActiveQrModal(null);
+                    }
+                }
+            }
+        );
+
+        const unsubscribeOwnership = onSnapshot(
+            doc(firestore, "mobile_uploads", `${sessionId}_ownership`),
+            (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.uploaded && data.fileName) {
+                        setUploadedDocs(prev => ({ ...prev, ownershipProof: data.fileName }));
+                        if (data.fileData) {
+                            try {
+                                const file = dataURLtoFile(data.fileData, data.fileName);
+                                setFormData(prev => ({ ...prev, docFile: file }));
+                            } catch (e) {
+                                console.error("Error recreating file from base64", e);
+                            }
+                        }
+                        setActiveQrModal(null);
+                    }
+                }
+            }
+        );
+
+        return () => {
+            unsubscribeIdentity();
+            unsubscribeOwnership();
+        };
+    }, [sessionId]);
 
     const [formData, setFormData] = useState({
         // Step 1: Personal
@@ -124,7 +196,7 @@ const ApplicationFormPage = () => {
                     <div className="absolute inset-0 bg-[#192e59]/20" />
                 </div>
 
-                <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+                <div className="flex-1 w-full px-[5%] max-w-none relative z-10 flex items-center justify-center p-6">
                     <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
                         {/* Header */}
                         <div className="bg-[#192e59] p-8 text-white relative flex-shrink-0 text-center">
@@ -208,7 +280,7 @@ const ApplicationFormPage = () => {
                 <div className="absolute inset-0 bg-[#192e59]/20" />
             </div>
 
-            <div className="flex-1 container relative z-10 flex items-center justify-center p-6">
+            <div className="flex-1 w-full px-[5%] max-w-none relative z-10 flex items-center justify-center p-6">
                 <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(25,46,89,0.2)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
                     
                     {/* Header Section */}
@@ -228,24 +300,68 @@ const ApplicationFormPage = () => {
 
                     <div className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar bg-white">
                         
-                        {/* Stepper */}
-                        <div className="flex items-center justify-between mb-12 px-4">
-                            {[1, 2, 3].map((num) => (
-                                <div key={num} className="flex flex-col items-center gap-3 flex-1 relative">
-                                    {num < 3 && (
-                                        <div className={`absolute left-1/2 right-[-50%] top-6 h-1 -z-10 ${step > num ? 'bg-[#FD8008]' : 'bg-slate-100'}`} />
-                                    )}
-                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 shadow-xl border-4 border-white
-                                        ${step >= num ? "bg-[#FD8008] text-white scale-110 shadow-[#FD8008]/40" : "bg-slate-50 text-slate-400 border-slate-100"}`}>
-                                        {num === 1 && <User className="h-5 w-5" />}
-                                        {num === 2 && <Zap className="h-5 w-5" />}
-                                        {num === 3 && <UploadCloud className="h-5 w-5" />}
-                                    </div>
-                                    <span className={`text-[10px] font-black uppercase tracking-widest ${step >= num ? "text-slate-700" : "text-slate-300"}`}>
-                                        {num === 1 ? "Personal" : num === 2 ? "Details" : "Documents"}
-                                    </span>
-                                </div>
-                            ))}
+                        {/* 🚀 HYPER-PREMIUM STEP PROGRESS INDICATOR */}
+                        <div className="w-full max-w-2xl mx-auto mb-14 mt-2 px-4 relative z-10">
+                            <div className="relative flex items-center justify-between">
+                                
+                                {/* Background Progress Line */}
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 rounded-full z-0" />
+                                
+                                {/* Active Progress Line Overlay */}
+                                <div 
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-[#FD8008] to-orange-400 rounded-full z-0 transition-all duration-500 ease-in-out" 
+                                    style={{ width: `${((step - 1) / (3 - 1)) * 100}%` }}
+                                />
+
+                                {[
+                                    { number: 1, label: "Personal Details", icon: User },
+                                    { number: 2, label: "Service Details", icon: Zap },
+                                    { number: 3, label: "Upload Documents", icon: UploadCloud }
+                                ].map((s) => {
+                                    const isCompleted = step > s.number;
+                                    const isActive = step === s.number;
+                                    const isRemaining = step < s.number;
+
+                                    return (
+                                        <div key={s.number} className="relative z-10 flex flex-col items-center flex-1">
+                                            
+                                            {/* Step Bubble */}
+                                            <div 
+                                                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 border-2 shadow-md relative
+                                                    ${isCompleted 
+                                                        ? "bg-[#FD8008] border-[#FD8008] text-white scale-115 shadow-lg shadow-[#FD8008]/20" 
+                                                        : isActive 
+                                                            ? "bg-white border-[#FD8008] text-[#FD8008] ring-4 ring-[#FD8008]/20 scale-115 shadow-md" 
+                                                            : "bg-white border-slate-200 text-slate-400"
+                                                    }`}
+                                            >
+                                                {isCompleted ? (
+                                                    <svg className="w-5 h-5 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="3">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                ) : (
+                                                    <s.icon className="h-5 w-5 stroke-[2.2]" />
+                                                )}
+
+                                                {/* Pulsing glow ring for active step */}
+                                                {isActive && (
+                                                    <span className="absolute inset-0 rounded-2xl bg-[#FD8008]/30 animate-ping opacity-75 pointer-events-none" style={{ animationDuration: '2s' }} />
+                                                )}
+                                            </div>
+
+                                            {/* Step Text Label */}
+                                            <span 
+                                                className={`absolute top-14 whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all duration-300
+                                                    ${isActive ? "text-[#192e59]" : isCompleted ? "text-[#FD8008]" : "text-slate-400"}`}
+                                            >
+                                                {s.label}
+                                            </span>
+
+                                        </div>
+                                    );
+                                })}
+
+                            </div>
                         </div>
 
                         {/* Step 1: Personal Details */}
@@ -456,17 +572,49 @@ const ApplicationFormPage = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer relative overflow-hidden group text-center">
                                             <div className="absolute inset-0 bg-[#FD8008]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                                            <QrCode className="h-12 w-12 text-slate-300 mb-4 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                                            {uploadedDocs.identityProof ? (
+                                                <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-4 scale-110 duration-500" />
+                                            ) : (
+                                                <QrCode className="h-12 w-12 text-slate-300 mb-4 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                                            )}
                                             <p className="text-slate-700 font-black uppercase tracking-tight relative z-10 text-sm">Scan QR to Upload Identity Proof</p>
                                             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-2 relative z-10 leading-relaxed">Aadhaar / PAN<br />(Secure Mobile Upload)</p>
-                                            <button className="mt-6 bg-[#FD8008] hover:bg-[#e67300] px-6 py-2.5 rounded-xl text-[10px] font-black text-white hover:bg-primary transition-colors shadow-lg relative z-10 uppercase tracking-widest">Show QR Code</button>
+                                            {uploadedDocs.identityProof ? (
+                                                <span className="mt-6 bg-emerald-50 text-emerald-600 border border-emerald-200 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest relative z-10 flex items-center gap-1.5 shadow-sm">
+                                                    {uploadedDocs.identityProof}
+                                                </span>
+                                            ) : (
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setActiveQrModal("identity")} 
+                                                    className="mt-6 bg-[#FD8008] hover:bg-[#e67300] px-6 py-2.5 rounded-xl text-[10px] font-black text-white hover:bg-[#e67300] transition-colors shadow-lg relative z-10 uppercase tracking-widest"
+                                                >
+                                                    Show QR Code
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer relative overflow-hidden group text-center">
                                             <div className="absolute inset-0 bg-[#FD8008]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                                            <QrCode className="h-12 w-12 text-slate-300 mb-4 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                                            {uploadedDocs.ownershipProof ? (
+                                                <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-4 scale-110 duration-500" />
+                                            ) : (
+                                                <QrCode className="h-12 w-12 text-slate-300 mb-4 group-hover:text-[#FD8008] transition-colors group-hover:scale-110 duration-500" />
+                                            )}
                                             <p className="text-slate-700 font-black uppercase tracking-tight relative z-10 text-sm">Scan QR to Upload Ownership Proof</p>
                                             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-2 relative z-10 leading-relaxed">Registry Papers / Tax Receipt<br />(Secure Mobile Upload)</p>
-                                            <button className="mt-6 bg-[#FD8008] hover:bg-[#e67300] px-6 py-2.5 rounded-xl text-[10px] font-black text-white hover:bg-primary transition-colors shadow-lg relative z-10 uppercase tracking-widest">Show QR Code</button>
+                                            {uploadedDocs.ownershipProof ? (
+                                                <span className="mt-6 bg-emerald-50 text-emerald-600 border border-emerald-200 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest relative z-10 flex items-center gap-1.5 shadow-sm">
+                                                    {uploadedDocs.ownershipProof}
+                                                </span>
+                                            ) : (
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setActiveQrModal("ownership")} 
+                                                    className="mt-6 bg-[#FD8008] hover:bg-[#e67300] px-6 py-2.5 rounded-xl text-[10px] font-black text-white hover:bg-[#e67300] transition-colors shadow-lg relative z-10 uppercase tracking-widest"
+                                                >
+                                                    Show QR Code
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -506,6 +654,81 @@ const ApplicationFormPage = () => {
                         setShowScanner(false);
                     }}
                 />
+            )}
+
+            {activeQrModal && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.3)] text-center relative flex flex-col items-center">
+                        <button
+                            type="button"
+                            onClick={() => setActiveQrModal(null)}
+                            className="absolute right-6 top-6 rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 transition-colors"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+
+                        <h3 className="text-xl font-[900] text-[#192e59] uppercase tracking-tight mb-2">
+                            {activeQrModal === "identity" ? "Upload Identity Proof" : "Upload Ownership Proof"}
+                        </h3>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-6 leading-normal">
+                            Scan with your mobile camera<br />to upload documents securely
+                        </p>
+
+                        <div className="relative bg-white p-3 rounded-2xl border border-slate-200 shadow-sm mb-4 flex justify-center items-center">
+                            <img 
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
+                                    `http://${kioskIp}:8000/mobile-upload/${sessionId}/${activeQrModal}`
+                                )}`}
+                                alt="Document Upload QR" 
+                                className="w-48 h-48"
+                            />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100">
+                                <QrCode className="w-6 h-6 text-[#FD8008]" />
+                            </div>
+                        </div>
+
+                        <div className="w-full bg-slate-50 border border-slate-150 rounded-2xl p-3.5 mb-5 text-left">
+                            <label className="block text-[10px] font-black text-slate-450 uppercase tracking-widest mb-1.5">
+                                Kiosk IP Address Configuration
+                            </label>
+                            <input 
+                                type="text"
+                                value={kioskIp}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setKioskIp(val);
+                                    localStorage.setItem("suvidha_kiosk_ip", val);
+                                }}
+                                placeholder="e.g. 192.168.1.10"
+                                className="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FD8008]"
+                            />
+                            <p className="text-[9px] text-slate-400 font-medium mt-1 leading-normal">
+                                Ensure your phone is connected to the same Wi-Fi network. Update to your machine's local IP address if default hostname doesn't resolve on mobile.
+                            </p>
+                        </div>
+
+                        <div className="w-full flex flex-col gap-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const docName = activeQrModal === "identity" ? "Aadhaar_Mobile_Upload.pdf" : "Land_Receipt_Mobile_Upload.pdf";
+                                    setUploadedDocs(prev => ({
+                                        ...prev,
+                                        [activeQrModal === "identity" ? "identityProof" : "ownershipProof"]: docName
+                                    }));
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        docFile: new File(["mock content"], docName, { type: "application/pdf" })
+                                    }));
+                                    setActiveQrModal(null);
+                                }}
+                                className="w-full bg-slate-100 text-slate-600 hover:bg-slate-200 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all"
+                            >
+                                Quick Simulate (Fallback)
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

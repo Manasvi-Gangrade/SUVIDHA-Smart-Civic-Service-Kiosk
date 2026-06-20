@@ -131,7 +131,7 @@ const DashboardPage = () => {
 
       {/* Header */}
       <div className="border-b border-white/10 bg-[#122242] py-8 relative z-10">
-        <div className="container flex items-center justify-between">
+        <div className="w-full px-[5%] flex items-center justify-between max-w-none">
           <div className="flex items-center gap-4">
             <div className="rounded-2xl bg-[#FD8008] p-4 text-white shadow-lg shadow-[#FD8008]/20">
               <ClipboardList className="h-8 w-8" />
@@ -151,7 +151,7 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      <div className="container py-10 space-y-10 relative z-10">
+      <div className="w-full px-[5%] py-10 space-y-10 relative z-10 max-w-none">
 
         {/* Active Token Banner */}
         {activeToken && (

@@ -214,7 +214,7 @@ const DepartmentPage = () => {
   const titleKey = `dept.${id}.title`;
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar font-display relative flex flex-col justify-between bg-[#192e59] text-white pb-2">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar font-display relative flex flex-col justify-between bg-[#192e59] text-white pb-32">
       
       {/* 🎥 THE UNIFIED BACKGROUND BACKGROUND VIDEO FOR DEPARTMENT PAGE */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -237,7 +237,7 @@ const DepartmentPage = () => {
       <div className="relative z-10 w-full">
         
         {/* 🏛️ FLOATING COMPACT TOP BACK ACTION DECK */}
-        <div className="container pt-2 pb-0 flex justify-end shrink-0 relative z-50">
+        <div className="w-full px-[5%] pt-2 pb-0 flex justify-end shrink-0 relative z-50 max-w-none">
           <button
             onClick={() => navigate('/departments')}
             className="flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)]"
@@ -262,7 +262,7 @@ const DepartmentPage = () => {
         </div>
 
         {/* 📑 3. BRAND NEW ROUNDED-SQUARE ICON SERVICE TABS GRID */}
-        <div className="container mt-0 mb-1">
+        <div className="w-full px-[5%] mt-0 mb-1 max-w-none">
           
           {/* Centered horizontal flexbox of features floating directly on the page! */}
           <div className="flex flex-wrap items-start justify-center gap-6 lg:gap-10 py-6">
@@ -319,7 +319,7 @@ const DepartmentPage = () => {
         </div>
 
         {/* 🎬 4. CINEMATIC INFINITE-SCROLLING DYNAMIC IMAGE MARQUEE */}
-        <div className="container mt-8">
+        <div className="w-full px-[5%] mt-2 max-w-none">
           <div className="overflow-hidden relative py-2">
 
             <div className="flex w-max animate-img-marquee gap-8">
@@ -354,7 +354,7 @@ const DepartmentPage = () => {
 
       {/* 🏛️ Lower Extras Grid */}
       {["gas", "water", "waste", "property"].includes(id || "") && (
-        <div className="container mt-8 relative z-10 shrink-0">
+        <div className="w-full px-[5%] mt-8 relative z-10 shrink-0 max-w-none">
           <div className="w-full">
             <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/10 shadow-2xl h-full text-white [&>div]:mt-0 [&>div]:bg-transparent [&>div]:border-none [&>div]:p-0 [&>div]:shadow-none">
               <DepartmentExtras departmentId={id || ""} />

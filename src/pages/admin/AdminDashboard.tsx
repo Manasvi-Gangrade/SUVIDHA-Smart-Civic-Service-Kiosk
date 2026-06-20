@@ -43,6 +43,7 @@ import {
   ChevronRight,
   Plus,
   X,
+  Loader2,
   BarChart as BarChartIcon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -91,12 +92,40 @@ const AdminDashboard = () => {
   // Fetch live data as state from local database to support real-time reactivity
   const [recordsList, setRecordsList] = useState(() => db.getAllRecords());
   
+  // Cryptographic audit log states
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; tamperedIndex: number | null }>({ isValid: true, tamperedIndex: null });
+  const [isVerifying, setIsVerifying] = useState(false);
+
   useEffect(() => {
     const handleSync = () => {
       setRecordsList(db.getAllRecords());
     };
     window.addEventListener("suvidha_db_sync", handleSync);
     return () => window.removeEventListener("suvidha_db_sync", handleSync);
+  }, []);
+
+  useEffect(() => {
+    // Dynamically load and verify cryptographic audit log on mount
+    const initAudit = async () => {
+      const mod = await import("@/lib/audit");
+      await mod.seedAuditLogsIfEmpty();
+      const logs = mod.getAuditLogs();
+      setAuditLogs(logs);
+      const res = await mod.verifyAuditLogs();
+      setVerificationResult(res);
+    };
+    initAudit();
+
+    const handleAuditSync = async () => {
+      const mod = await import("@/lib/audit");
+      const logs = mod.getAuditLogs();
+      setAuditLogs(logs);
+      const res = await mod.verifyAuditLogs();
+      setVerificationResult(res);
+    };
+    window.addEventListener("suvidha_audit_sync", handleAuditSync);
+    return () => window.removeEventListener("suvidha_audit_sync", handleAuditSync);
   }, []);
   
   const statsData = useMemo(() => db.getStats(), [recordsList]);
@@ -145,6 +174,39 @@ const AdminDashboard = () => {
     setRecordsList(db.getAllRecords());
     toast.success(`Ticket ${id} successfully updated to ${newStatus}!`);
   };
+
+  const handleVerifyChain = async () => {
+    setIsVerifying(true);
+    const mod = await import("@/lib/audit");
+    const res = await mod.verifyAuditLogs();
+    setVerificationResult(res);
+    setTimeout(() => {
+      setIsVerifying(false);
+      if (res.isValid) {
+        toast.success("Cryptographic Hash Chain Verified: 100% Intact!");
+      } else {
+        toast.error(`TAMPER DETECTED at Block #${res.tamperedIndex !== null ? res.tamperedIndex + 1 : "?"}!`);
+      }
+    }, 800);
+  };
+
+  const handleSimulateTamper = async (index: number) => {
+    const mod = await import("@/lib/audit");
+    mod.simulateTampering(index, "ATTACKER_INJECTION::Modified log parameters. Unauthorized entry.");
+    toast.warning("Tampered simulation injected successfully!");
+  };
+
+  const handleHealChain = async () => {
+    localStorage.removeItem("suvidha_audit_logs");
+    const mod = await import("@/lib/audit");
+    await mod.seedAuditLogsIfEmpty();
+    const logs = mod.getAuditLogs();
+    setAuditLogs(logs);
+    const res = await mod.verifyAuditLogs();
+    setVerificationResult(res);
+    toast.success("Cryptographic chain re-synchronized and healed!");
+  };
+
 
   const handleExportData = () => {
     if (recordsList.length === 0) {
@@ -647,6 +709,133 @@ const AdminDashboard = () => {
             </div>
           </div>
         );
+      case "audit":
+        return (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Security Integrity Header Status */}
+            <div className={`p-6 rounded-3xl border flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-300
+              ${verificationResult.isValid 
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-800" 
+                : "bg-rose-500/10 border-rose-500/20 text-rose-800"}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-2xl ${verificationResult.isValid ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}>
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-wider leading-none mb-1">
+                    {verificationResult.isValid ? "Cryptographic Chain Intact" : "Tamper Alert: Integrity Broken!"}
+                  </h3>
+                  <p className="text-xs font-bold opacity-80 uppercase tracking-widest">
+                    {verificationResult.isValid 
+                      ? "✓ All SHA-256 block linkages verified. 0 modifications detected." 
+                      : `⚠️ Chain broken at Block #${verificationResult.tamperedIndex !== null ? verificationResult.tamperedIndex + 1 : "?"}!`
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleVerifyChain}
+                  disabled={isVerifying}
+                  className={`px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 text-white
+                    ${verificationResult.isValid ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"}`}
+                >
+                  {isVerifying ? <Loader2 className="w-4 h-4 animate-spin animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                  <span>{isVerifying ? "Verifying..." : "Verify Integrity"}</span>
+                </button>
+
+                {!verificationResult.isValid && (
+                  <button
+                    onClick={handleHealChain}
+                    className="px-5 py-3 bg-[#192e59] hover:bg-[#112040] text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
+                  >
+                    <Activity className="w-4 h-4" />
+                    <span>Heal & Sync Chain</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Audit Logs Table */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h3 className="font-black text-[#192e59] uppercase tracking-wider">Immutable Audit Logs</h3>
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">Blockchain-inspired SHA-256 event chaining</p>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold text-xs uppercase tracking-wider">
+                    <tr>
+                      <th className="px-6 py-4">Block #</th>
+                      <th className="px-6 py-4">Timestamp</th>
+                      <th className="px-6 py-4">Action</th>
+                      <th className="px-6 py-4">Details</th>
+                      <th className="px-6 py-4 font-mono">Current Hash / Link</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {auditLogs.map((log, idx) => {
+                      const isBroken = verificationResult.tamperedIndex !== null && idx >= verificationResult.tamperedIndex;
+                      return (
+                        <tr 
+                          key={log.id} 
+                          className={`transition-colors 
+                            ${isBroken ? "bg-rose-500/5 hover:bg-rose-500/10 text-rose-800 animate-pulse" : "hover:bg-slate-50"}`}
+                        >
+                          <td className="px-6 py-4 font-mono font-black text-[#192e59]">
+                            #{idx + 1}
+                          </td>
+                          <td className="px-6 py-4 text-slate-400 font-bold">
+                            {new Date(log.timestamp).toLocaleString("en-IN")}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider
+                              ${log.action.includes("BOOT") || log.action.includes("INIT") 
+                                ? "bg-slate-100 text-slate-600" 
+                                : log.action.includes("CREATED") 
+                                ? "bg-blue-50 text-blue-700" 
+                                : "bg-amber-50 text-amber-700"}`}
+                            >
+                              {log.action}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-medium max-w-xs truncate">
+                            {log.details}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-[10px] text-slate-400">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="truncate w-40 block" title={log.hash}>
+                                Curr: {log.hash}
+                              </span>
+                              <span className="truncate w-40 block text-[9px] opacity-75" title={log.prevHash}>
+                                Prev: {log.prevHash}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            {verificationResult.isValid && (
+                              <button
+                                onClick={() => handleSimulateTamper(idx)}
+                                className="px-3.5 py-2 border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
+                              >
+                                Simulate Tamper
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return (
           <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center">
@@ -679,6 +868,7 @@ const AdminDashboard = () => {
             { label: "Applications", icon: FileText, id: "apps" },
             { label: "Complaints", icon: AlertCircle, id: "complaints" },
             { label: "Kiosk Status", icon: Globe, id: "users" },
+            { label: "Audit Logs", icon: ShieldCheck, id: "audit" },
             { label: "Settings", icon: SettingsIcon, id: "settings" },
           ].map((item) => (
             <button
