@@ -35,7 +35,7 @@ const GoogleTranslateWidget = memo(() => {
     }
   }, []);
 
-  return <div id="google_translate_element" className="flex items-center min-w-[140px] [&>div]:m-0 overflow-visible transition-all"></div>;
+  return <div id="google_translate_element" className="flex items-center min-w-[190px] [&>div]:m-0 overflow-visible transition-all"></div>;
 });
 
 const KioskHeader = () => {

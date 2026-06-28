@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-// Trigger nodemon reload for short MiroTalk SMS URL
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const connectDB = require("./config/database");
 const { getMongoStatus } = require("./config/database");

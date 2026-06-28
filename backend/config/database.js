@@ -1,5 +1,5 @@
+const path = require('path');
 const mongoose = require('mongoose');
-require('dotenv').config();
 
 const isProduction = process.env.NODE_ENV === 'production';
 

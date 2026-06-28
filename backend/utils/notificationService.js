@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 // For development, we use Ethereal Email which guarantees fake delivery testing
 // You can replacing these with real SMTP details (SendGrid/AWS) when deploying.

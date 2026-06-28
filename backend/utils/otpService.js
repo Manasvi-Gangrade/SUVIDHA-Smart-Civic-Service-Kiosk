@@ -1,5 +1,6 @@
 const twilio = require('twilio');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 // Initialize Twilio client
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -7,7 +8,7 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
 let client;
-if (accountSid && authToken && accountSid.startsWith('AC')) {
+if (accountSid && authToken) {
     client = twilio(accountSid, authToken);
 } else {
     console.warn('Twilio credentials not found or invalid (must start with AC). Mobile OTP will not work.');
