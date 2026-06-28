@@ -47,25 +47,24 @@ app.use((req, res, next) => {
   next();
 });
 
-const allowedOrigins =
-  process.env.NODE_ENV === "production"
-    ? [process.env.FRONTEND_URL || "https://yourdomain.com"]
-    : [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://localhost:8080",
-        "http://localhost:8081",
-        "http://localhost:8082",
-        "http://localhost:8083",
-      ];
+const allowedOriginsStr = process.env.FRONTEND_URL || "*";
+const allowedOrigins = allowedOriginsStr.split(",").map(s => s.trim());
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || (process.env.NODE_ENV === "development" && origin && origin.startsWith("http://localhost:"))) {
+      if (
+        !origin || 
+        allowedOriginsStr === "*" || 
+        allowedOrigins.includes(origin) || 
+        (process.env.NODE_ENV === "development" && origin.startsWith("http://localhost:"))
+      ) {
         callback(null, true);
       } else {
-        callback(new Error(`CORS blocked by policy: ${origin}`));
+        // By default for this hackathon, we'll allow unknown origins but log a warning
+        // to prevent 500 Internal Server Errors on OPTIONS requests.
+        console.warn(`[CORS Warning] Origin ${origin} is not in FRONTEND_URL. Allowing for demo purposes.`);
+        callback(null, true);
       }
     },
     credentials: true,
