@@ -80,13 +80,13 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#192e59]/50 via-[#192e59]/20 to-[#192e59]/80" />
       </div>
 
-      <div className="w-full px-[5%] relative z-10 mx-auto min-h-full flex flex-col justify-between py-10 gap-8 max-w-none">
+      <div className="w-full px-[5%] relative z-10 mx-auto min-h-full flex flex-col justify-start lg:justify-between py-10 gap-6 lg:gap-8 max-w-none">
         
         {/* TOP SECTION: GRID LAYOUT FOR LEFT & RIGHT COLUMNS */}
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-16 items-center">
         
         {/* LEFT COLUMN: Typography & Actions (Shifted downwards to avoid header overlap) */}
-        <div className="flex flex-col justify-center space-y-6 lg:space-y-8 px-4 lg:pl-12 lg:pr-0 items-center lg:items-start text-center lg:text-left relative top-2 lg:top-4 h-full lg:col-span-6">
+        <div className="flex flex-col justify-center space-y-4 lg:space-y-8 px-4 lg:pl-12 lg:pr-0 items-center lg:items-start text-center lg:text-left relative lg:top-4 h-full lg:col-span-6">
             
             {/* Dynamic Typewriter */}
             <div className="h-10 flex items-center justify-center lg:justify-start" translate="no">
@@ -96,9 +96,9 @@ const Index = () => {
               </span>
             </div>
 
-            <h1 className="flex flex-col text-[4.5rem] lg:text-[5.5rem] xl:text-[6.5rem] font-[900] leading-[1.15] tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-slate-400 drop-shadow-2xl uppercase">
+            <h1 className="flex flex-col text-[3.5rem] md:text-[4.5rem] lg:text-[5.5rem] xl:text-[6.5rem] font-[900] leading-[1.15] tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-slate-400 drop-shadow-2xl uppercase">
                 <span>SUVIDHA</span>
-                <span className="text-[1.85rem] lg:text-[2.25rem] xl:text-[2.6rem] leading-[1.4] text-[#38bdf8] drop-shadow-lg tracking-normal font-bold mt-4">
+                <span className="text-[1.25rem] md:text-[1.85rem] lg:text-[2.25rem] xl:text-[2.6rem] leading-[1.4] text-[#38bdf8] drop-shadow-lg tracking-normal font-bold mt-2 lg:mt-4">
                     Smart Urban Virtual Interactive<br />
                     Digital Helpdesk Assistant
                 </span>
@@ -117,38 +117,38 @@ const Index = () => {
               <div className="flex gap-8 items-center justify-center lg:justify-start">
                 {/* Android App QR */}
                 <div className="flex flex-col items-center gap-2.5 group cursor-pointer">
-                  <div className="p-4 bg-white rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] border border-white/25 hover:scale-105 transition-all duration-300 w-32 h-32 lg:w-44 lg:h-44 xl:w-48 xl:h-48 flex items-center justify-center">
+                  <div className="p-2 md:p-4 bg-white rounded-xl md:rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] border border-white/25 hover:scale-105 transition-all duration-300 w-20 h-20 md:w-32 md:h-32 lg:w-44 lg:h-44 xl:w-48 xl:h-48 flex items-center justify-center">
                     <img 
                       src="/images/qr.png" 
                       alt="Android QR Code" 
-                      className="w-22 h-22 lg:w-32 lg:h-32 xl:w-36 xl:h-36 object-contain" 
+                      className="w-16 h-16 md:w-22 md:h-22 lg:w-32 lg:h-32 xl:w-36 xl:h-36 object-contain" 
                     />
                   </div>
-                  <span className="text-sm lg:text-base font-black text-slate-300 uppercase tracking-wider group-hover:text-white transition-colors">Android App</span>
+                  <span className="text-xs md:text-sm lg:text-base font-black text-slate-300 uppercase tracking-wider group-hover:text-white transition-colors">Android App</span>
                 </div>
 
                 {/* Mobile App Screen Mockup Preview */}
                 <div className="flex flex-col items-center gap-2.5 group cursor-pointer">
-                  <div className="p-4 bg-white rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] border border-white/25 hover:scale-105 transition-all duration-300 w-32 h-32 lg:w-44 lg:h-44 xl:w-48 xl:h-48 flex items-center justify-center">
+                  <div className="p-2 md:p-4 bg-white rounded-xl md:rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] border border-white/25 hover:scale-105 transition-all duration-300 w-20 h-20 md:w-32 md:h-32 lg:w-44 lg:h-44 xl:w-48 xl:h-48 flex items-center justify-center">
                     <img 
                       src="/images/mobile.png" 
                       alt="SUVIDHA Mobile App Preview" 
-                      className="w-22 h-22 lg:w-32 lg:h-32 xl:w-36 xl:h-36 object-contain" 
+                      className="w-16 h-16 md:w-22 md:h-22 lg:w-32 lg:h-32 xl:w-36 xl:h-36 object-contain" 
                     />
                   </div>
-                  <span className="text-sm lg:text-base font-black uppercase tracking-wider opacity-0 select-none pointer-events-none">Spacer</span>
+                  <span className="text-xs md:text-sm lg:text-base font-black uppercase tracking-wider opacity-0 select-none pointer-events-none">Spacer</span>
                 </div>
 
                 {/* iOS App QR */}
                 <div className="flex flex-col items-center gap-2.5 group cursor-pointer">
-                  <div className="p-4 bg-white rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] border border-white/25 hover:scale-105 transition-all duration-300 w-32 h-32 lg:w-44 lg:h-44 xl:w-48 xl:h-48 flex items-center justify-center">
+                  <div className="p-2 md:p-4 bg-white rounded-xl md:rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] border border-white/25 hover:scale-105 transition-all duration-300 w-20 h-20 md:w-32 md:h-32 lg:w-44 lg:h-44 xl:w-48 xl:h-48 flex items-center justify-center">
                     <img 
                       src="/images/qr.png" 
                       alt="iOS QR Code" 
-                      className="w-22 h-22 lg:w-32 lg:h-32 xl:w-36 xl:h-36 object-contain" 
+                      className="w-16 h-16 md:w-22 md:h-22 lg:w-32 lg:h-32 xl:w-36 xl:h-36 object-contain" 
                     />
                   </div>
-                  <span className="text-sm lg:text-base font-black text-slate-300 uppercase tracking-wider group-hover:text-white transition-colors">iOS App</span>
+                  <span className="text-xs md:text-sm lg:text-base font-black text-slate-300 uppercase tracking-wider group-hover:text-white transition-colors">iOS App</span>
                 </div>
               </div>
             </div>
@@ -156,9 +156,9 @@ const Index = () => {
         </div>
 
         {/* RIGHT COLUMN: Live Feeds (Shifted downwards for better layout flow) */}
-        <div className="flex flex-col justify-center px-4 lg:pr-12 lg:pb-12 mt-4 lg:mt-[2rem] w-full max-w-[600px] lg:max-w-none mx-auto pb-10 lg:col-span-6 relative top-2 lg:top-4">
+        <div className="flex flex-col justify-center px-4 lg:pr-12 lg:pb-12 mt-4 lg:mt-[2rem] w-full max-w-[600px] lg:max-w-none mx-auto pb-4 lg:pb-10 lg:col-span-6 relative lg:top-4">
             {/* Main Video */}
-            <div className="w-full aspect-video rounded-3xl overflow-hidden border-[6px] border-[#1e293b]/60 shadow-2xl relative -top-3 lg:-top-6 bg-black mb-4 group/video">
+            <div className="w-full aspect-video rounded-3xl overflow-hidden border-[4px] lg:border-[6px] border-[#1e293b]/60 shadow-2xl relative lg:-top-6 bg-black mb-4 group/video">
                 <video 
                   autoPlay 
                   loop 
@@ -195,10 +195,10 @@ const Index = () => {
               }
             `}</style>
             
-            <div className="hidden lg:block w-full overflow-hidden relative flex group mt-1">
+            <div className="flex w-full overflow-hidden relative group mt-1">
                 <div className="flex w-max animate-marquee">
                     {[...galleryImages.slice(0, 5), ...galleryImages.slice(0, 5)].map((img, idx) => (
-                        <div key={`m-${idx}`} className="w-[18.75rem] xl:w-[21.25rem] aspect-video relative flex-shrink-0 mr-8 rounded-2xl overflow-hidden border-[4px] border-[#1e293b]/50 shadow-lg bg-black">
+                        <div key={`m-${idx}`} className="w-[18.75rem] xl:w-[21.25rem] aspect-video relative flex-shrink-0 mr-6 lg:mr-8 rounded-2xl overflow-hidden border-[4px] border-[#1e293b]/50 shadow-lg bg-black">
                             <img src={img} className="w-full h-full object-cover opacity-85 hover:opacity-100 transition-opacity" alt={`marquee feed ${idx}`} />
                         </div>
                     ))}
@@ -209,7 +209,7 @@ const Index = () => {
         </div>
 
         {/* BOTTOM SECTION: Centered Action Buttons (Span Full Width below both columns) */}
-        <div className="w-full flex flex-wrap items-center justify-center gap-8 py-6 z-20 relative -top-8 lg:-top-12">
+        <div className="w-full flex flex-wrap items-center justify-center gap-4 lg:gap-8 py-4 lg:py-6 z-20 relative lg:-top-12 mt-2 lg:mt-0 pb-6 lg:pb-0">
             <button 
               onClick={() => navigate("/complaint")} 
               className="group bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl border-2 border-white/20 text-white w-[290px] lg:w-[340px] h-[80px] lg:h-[90px] rounded-[2.5rem] font-black text-xl lg:text-2xl hover:border-[#38bdf8]/50 hover:bg-white/15 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-3.5 shadow-2xl whitespace-nowrap flex-shrink-0"

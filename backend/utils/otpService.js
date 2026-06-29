@@ -126,7 +126,13 @@ const sendMobileOTP = async (phoneNumber) => {
  */
 const verifyMobileOTP = async (phoneNumber, code) => {
     const formattedNumber = formatPhoneNumber(phoneNumber);
-
+    
+    // Development shortcut: accept any OTP
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEV] Bypassing OTP verification for ${formattedNumber} with code ${code}`);
+        return { success: true };
+    }
+    
     // 1. Check local tempOtps memory first
     const record = tempOtps.get(formattedNumber);
     if (record) {

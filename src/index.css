@@ -203,7 +203,7 @@
 
 @layer utilities {
   .kiosk-touch-target {
-    @apply min-h-[56px] min-w-[56px];
+    @apply min-h-[3.5rem] min-w-[3.5rem];
   }
 
   .kiosk-card-shadow {
@@ -522,30 +522,4 @@
   .show-portrait { display: flex !important; }
   .grid-landscape { display: none !important; }
   .grid-portrait { display: grid !important; }
-}
-
-/* --- KIOSK HARDWARE ROTATION FIX --- */
-/* Use when the OS is Landscape, but physical monitor is Portrait */
-.hardware-rotate-left {
-  position: absolute !important;
-  top: 100% !important;
-  left: 0 !important;
-  width: 100vh !important;
-  height: 100vw !important;
-  transform: rotate(-90deg) !important;
-  transform-origin: top left !important;
-  overflow: hidden !important;
-  background-color: hsl(var(--background)) !important;
-}
-
-.hardware-rotate-right {
-  position: absolute !important;
-  top: 0 !important;
-  left: 100% !important;
-  width: 100vh !important;
-  height: 100vw !important;
-  transform: rotate(90deg) !important;
-  transform-origin: top left !important;
-  overflow: hidden !important;
-  background-color: hsl(var(--background)) !important;
 }

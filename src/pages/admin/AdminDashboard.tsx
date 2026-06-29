@@ -75,6 +75,8 @@ const AdminDashboard = () => {
     language: "English"
   });
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
   const [newServiceType, setNewServiceType] = useState<"complaint" | "application">("complaint");
   const [newServiceData, setNewServiceData] = useState({
@@ -454,7 +456,13 @@ const AdminDashboard = () => {
           </div>
         );
       case "apps": {
-        const apps = recordsList.filter(r => r.type === "application");
+        const apps = recordsList.filter(r => 
+          r.type === "application" && 
+          (!searchQuery || 
+           r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+           r.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           r.phone.includes(searchQuery))
+        );
         return (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -536,7 +544,14 @@ const AdminDashboard = () => {
         );
       }
       case "complaints": {
-        const comps = recordsList.filter(r => r.type === "complaint");
+        const comps = recordsList.filter(r => 
+          r.type === "complaint" &&
+          (!searchQuery || 
+           r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+           r.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           r.phone.includes(searchQuery) ||
+           (r.description && r.description.toLowerCase().includes(searchQuery.toLowerCase())))
+        );
         return (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -919,7 +934,9 @@ const AdminDashboard = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Global Search..." 
+                placeholder="Global Search (Name, Phone, ID)..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-slate-100 border-none rounded-xl py-2 pl-10 pr-4 text-xs w-64 focus:ring-2 focus:ring-indigo-600/20 transition-all"
               />
             </div>

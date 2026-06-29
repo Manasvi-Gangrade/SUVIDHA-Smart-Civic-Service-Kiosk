@@ -27,6 +27,7 @@ import MobileUpload from "./pages/MobileUpload";
 
 import Chatbot from "./components/Chatbot";
 import KioskHeader from "./components/KioskHeader";
+import KioskFooter from "./components/KioskFooter";
 import VirtualHelpdesk from "./components/VirtualHelpdesk";
 import { ScreenMagnifier } from "./components/ScreenMagnifier";
 import SystemSettings from "./components/SystemSettings";
@@ -138,8 +139,9 @@ const AppContent = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
+        {!hideHeader && <KioskFooter />}
         {!hideHeader && <IdleScreensaver />}
-        {!hideHeader && <VirtualKeyboard />}
+        {!isMobileUpload && <VirtualKeyboard />}
 
         {/* Global Action Dock */}
         {!hideHeader && (

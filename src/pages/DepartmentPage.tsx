@@ -1,12 +1,10 @@
-import ServiceItem from "@/components/ServiceItem";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { 
   PlusCircle, Receipt, AlertTriangle, Gauge, PlugZap, 
-  ShieldAlert, Truck, Phone, ArrowLeft, Building2, ChevronRight, FileText
+  ShieldAlert, Truck, Phone, ArrowLeft, Building2, ChevronRight, FileText, UserCog
 } from "lucide-react";
-import { DepartmentExtras } from "@/components/DepartmentExtras";
 
 const departmentData: Record<string, {
   title: string;
@@ -24,6 +22,7 @@ const departmentData: Record<string, {
       { icon: Gauge, title: "Meter-Related Complaints", description: "Report faulty meters, meter reading disputes" },
       { icon: AlertTriangle, title: "Power Outage Reporting", description: "Report power cuts and outages in your area" },
       { icon: PlugZap, title: "Load Change Request", description: "Request increase or decrease in sanctioned load" },
+      { icon: UserCog, title: "Edit Credentials", description: "Update your personal and contact details" },
     ],
   },
   gas: {
@@ -35,6 +34,7 @@ const departmentData: Record<string, {
       { icon: Truck, title: "Cylinder Booking Assistance", description: "Book refill cylinders and track delivery" },
       { icon: ShieldAlert, title: "Leakage & Safety Complaints", description: "Report gas leaks and safety hazards" },
       { icon: Receipt, title: "Subsidy Status Enquiry", description: "Check your LPG subsidy credit status" },
+      { icon: UserCog, title: "Edit Consumer Profile", description: "Update your profile details" },
     ],
   },
   municipal: {
@@ -45,6 +45,7 @@ const departmentData: Record<string, {
       { icon: FileText, title: "Property Tax Information", description: "View property tax details and payment status" },
       { icon: AlertTriangle, title: "Local Grievance Submission", description: "Submit complaints about civic issues" },
       { icon: Phone, title: "Contact Municipal Office", description: "Get helpline numbers and office addresses" },
+      { icon: UserCog, title: "Update Profile", description: "Update your credentials" },
     ],
   },
   water: {
@@ -55,6 +56,7 @@ const departmentData: Record<string, {
       { icon: PlusCircle, title: "New Water Connection", description: "Apply for a new water supply connection" },
       { icon: Receipt, title: "Water Bill Enquiry", description: "View and pay your water supply bills" },
       { icon: AlertTriangle, title: "Leakage Complaint", description: "Report water pipeline leaks and issues" },
+      { icon: UserCog, title: "Update Profile", description: "Update your credentials" },
     ],
   },
   waste: {
@@ -65,6 +67,7 @@ const departmentData: Record<string, {
       { icon: Truck, title: "Garbage Collection Issues", description: "Report irregular garbage collection" },
       { icon: AlertTriangle, title: "Missed Pickup Reporting", description: "Report missed waste pickup from your area" },
       { icon: ShieldAlert, title: "Sanitation Complaints", description: "Report sanitation and hygiene issues" },
+      { icon: UserCog, title: "Edit Credentials", description: "Update your credentials" },
     ],
   },
   property: {
@@ -75,6 +78,7 @@ const departmentData: Record<string, {
       { icon: Receipt, title: "Property Tax Payment", description: "Pay your property tax online" },
       { icon: FileText, title: "Assessment Details", description: "View your property assessment information" },
       { icon: PlusCircle, title: "New Property Registration", description: "Register a new property with municipal records" },
+      { icon: UserCog, title: "Update Profile", description: "Update your credentials" },
     ],
   },
 };
@@ -100,7 +104,7 @@ const themeColors: Record<
     lightBg: "bg-amber-50/50",
     iconBg: "bg-[#FFA500]/10 text-[#FFA500]",
     borderFocus: "focus:border-[#FFA500] focus:ring-[#FFA500]/15",
-    video: "/videos/electricity.mp4",
+    video: "/videos/Electricity Video.mp4",
     marqueeImages: [
       "/images/elec1.jpeg",
       "/images/elec2.jpeg",
@@ -118,7 +122,7 @@ const themeColors: Record<
     lightBg: "bg-red-50/50",
     iconBg: "bg-[#FF4500]/10 text-[#FF4500]",
     borderFocus: "focus:border-[#FF4500] focus:ring-[#FF4500]/15",
-    video: "/videos/gas.mp4",
+    video: "/videos/Gas Video.mp4",
     marqueeImages: [
       "https://images.unsplash.com/photo-1581094288338-2314dddb7ecc?w=600&auto=format&fit=crop&q=80",
       "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&auto=format&fit=crop&q=80",
@@ -133,12 +137,12 @@ const themeColors: Record<
     lightBg: "bg-emerald-50/50",
     iconBg: "bg-[#4CAF50]/10 text-[#4CAF50]",
     borderFocus: "focus:border-[#4CAF50] focus:ring-[#4CAF50]/15",
-    video: "/videos/Municipal.mp4",
+    video: "/videos/Municipal Video.mp4",
     marqueeImages: [
-      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80"
+      "/images/municipal1.jpeg",
+      "/images/municipal2.jpeg",
+      "/images/municipal3.jpeg",
+      "/images/municipal4.jpeg"
     ]
   },
   water: {
@@ -148,7 +152,7 @@ const themeColors: Record<
     lightBg: "bg-blue-50/50",
     iconBg: "bg-[#2196F3]/10 text-[#2196F3]",
     borderFocus: "focus:border-[#2196F3] focus:ring-[#2196F3]/15",
-    video: "/videos/Water.mp4",
+    video: "/videos/Water Video.mp4",
     marqueeImages: [
       "/images/water1.jpeg",
       "/images/water2.jpeg",
@@ -165,7 +169,7 @@ const themeColors: Record<
     lightBg: "bg-emerald-50/50",
     iconBg: "bg-[#2ECC71]/10 text-[#2ECC71]",
     borderFocus: "focus:border-[#2ECC71] focus:ring-[#2ECC71]/15",
-    video: "/videos/Waste Management.mp4",
+    video: "/videos/Waste Video.mp4",
     marqueeImages: [
       "/images/sanitation1.jpeg",
       "/images/sanitation2.jpeg",
@@ -180,7 +184,7 @@ const themeColors: Record<
     lightBg: "bg-slate-50/50",
     iconBg: "bg-[#607D8B]/10 text-[#607D8B]",
     borderFocus: "focus:border-[#607D8B] focus:ring-[#607D8B]/15",
-    video: "/videos/Property.mp4",
+    video: "/videos/Property Video.mp4",
     marqueeImages: [
       "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80",
       "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&auto=format&fit=crop&q=80",
@@ -190,14 +194,14 @@ const themeColors: Record<
   },
 };
 
-// 🌈 MULTI-COLOR SOLID VIBRANT THEMES FOR EACH SQUARE ACCORDING TO REFERENCE LAYOUT!
+// 🌈 PREMIUM VIBRANT GRADIENT THEMES: Colorful but with a premium elegant gradient finish
 const squareColors = [
-  "bg-[#FFA500] shadow-[#FFA500]/20 hover:shadow-[#FFA500]/40", // Electricity: Saffron Gold
-  "bg-[#FF4500] shadow-[#FF4500]/20 hover:shadow-[#FF4500]/40", // Gas: Orange-Red
-  "bg-[#4CAF50] shadow-[#4CAF50]/20 hover:shadow-[#4CAF50]/40", // Municipal: Eco Green
-  "bg-[#2196F3] shadow-[#2196F3]/20 hover:shadow-[#2196F3]/40", // Water: Sky Blue
-  "bg-[#2ECC71] shadow-[#2ECC71]/20 hover:shadow-[#2ECC71]/40", // Sanitation: Jade Green
-  "bg-[#607D8B] shadow-[#607D8B]/20 hover:shadow-[#607D8B]/40", // Property: Teal-Gray
+  "bg-gradient-to-br from-[#FFA726] to-[#F57C00] shadow-[#F57C00]/20 hover:shadow-[#F57C00]/40 border border-white/10", // Vibrant Orange
+  "bg-gradient-to-br from-[#EF5350] to-[#D32F2F] shadow-[#D32F2F]/20 hover:shadow-[#D32F2F]/40 border border-white/10", // Vibrant Red
+  "bg-gradient-to-br from-[#66BB6A] to-[#388E3C] shadow-[#388E3C]/20 hover:shadow-[#388E3C]/40 border border-white/10", // Vibrant Green
+  "bg-gradient-to-br from-[#42A5F5] to-[#1976D2] shadow-[#1976D2]/20 hover:shadow-[#1976D2]/40 border border-white/10", // Vibrant Blue
+  "bg-gradient-to-br from-[#26A69A] to-[#00796B] shadow-[#00796B]/20 hover:shadow-[#00796B]/40 border border-white/10", // Vibrant Teal
+  "bg-gradient-to-br from-[#AB47BC] to-[#7B1FA2] shadow-[#7B1FA2]/20 hover:shadow-[#7B1FA2]/40 border border-white/10", // Vibrant Purple
 ];
 
 const DepartmentPage = () => {
@@ -219,7 +223,7 @@ const DepartmentPage = () => {
   const titleKey = `dept.${id}.title`;
 
   return (
-    <div className="h-full overflow-y-auto custom-scrollbar font-display relative flex flex-col justify-between bg-[#192e59] text-white pb-32">
+    <div className="h-full overflow-y-auto custom-scrollbar font-display relative flex flex-col bg-[#192e59] text-white">
       
       {/* 🎥 THE UNIFIED BACKGROUND BACKGROUND VIDEO FOR DEPARTMENT PAGE */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -239,10 +243,10 @@ const DepartmentPage = () => {
       <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" 
            style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }} />
 
-      <div className="relative z-10 w-full">
+      <div className="relative z-10 w-full min-h-full flex flex-col pb-8">
         
         {/* 🏛️ FLOATING COMPACT TOP BACK ACTION DECK */}
-        <div className="w-full px-[5%] pt-2 pb-0 flex justify-start shrink-0 relative z-50 max-w-none">
+        <div className="w-full px-[5%] pt-4 flex justify-start shrink-0 relative z-50 max-w-none">
           <button
             onClick={() => navigate('/departments')}
             className="flex items-center gap-2 px-5 py-2.5 bg-[#FD8008] hover:bg-[#e67000] text-white border border-[#FD8008]/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 group shadow-[0_4px_12px_rgba(253,128,8,0.3)]"
@@ -252,48 +256,21 @@ const DepartmentPage = () => {
           </button>
         </div>
 
-        {/* 🏛️ 2. CENTERED MAJESTIC DEPARTMENT BRAND HEADER */}
-        <div className="flex flex-col items-center mt-6 mb-8 text-center px-4 animate-slide-up relative z-10">
-          <div 
-            className="px-8 py-3.5 rounded-[2rem] flex items-center justify-center inline-flex shadow-2xl transition-transform hover:scale-105 duration-300 bg-white"
-            style={{ 
-              boxShadow: '0 15px 35px -5px rgba(25, 46, 89, 0.4)' 
-            }}
-          >
-            <span className="text-xl lg:text-2xl font-[900] uppercase tracking-[0.15em] text-[#192e59]">
-              {t(titleKey)}
-            </span>
+        {/* MAIN CONTENT WRAPPER - Groups all elements and aligns them to the top */}
+        <div className="flex-1 flex flex-col justify-start w-full px-[5%] max-w-none pt-2 lg:pt-6 pb-12 gap-8 lg:gap-10">
+
+          {/* 🏛️ 2. CENTERED MAJESTIC DEPARTMENT BRAND HEADER */}
+          <div className="flex flex-col items-center text-center px-4 animate-slide-up shrink-0">
+            <h1 className="flex flex-col text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-[900] leading-[1.15] tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-slate-400 drop-shadow-2xl uppercase">
+              <span>{t(titleKey)}</span>
+            </h1>
           </div>
-        </div>
-
-        {/* 📑 3. BRAND NEW ROUNDED-SQUARE ICON SERVICE TABS GRID */}
-        <div className="w-full px-[5%] mt-4 mb-8 max-w-none">
           
-          {id === "waste" ? (
-            /* 🌍 Split layout for Waste Management: Video on Left, Service Buttons on Right */
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center py-6 max-w-6xl mx-auto">
+          {/* 🌍 Vertical layout: Service Buttons on Top, Video on Bottom */}
+          <div className="flex flex-col gap-6 lg:gap-8 items-center max-w-6xl mx-auto w-full justify-center">
               
-              {/* Left Column: Video Placeholder */}
-              <div className="lg:col-span-6 w-full flex flex-col items-center">
-                <div className="w-full relative aspect-video bg-black rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
-                  <iframe 
-                    width="100%" 
-                    height="100%" 
-                    src="https://www.youtube.com/embed/g2H249N5l38?autoplay=1&mute=1&loop=1&playlist=g2H249N5l38" 
-                    title="Waste Segregation Guide" 
-                    frameBorder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowFullScreen
-                    className="absolute inset-0 w-full h-full"
-                  ></iframe>
-                </div>
-                <p className="text-[11px] text-green-400 font-black tracking-[0.2em] mt-4 uppercase animate-pulse">
-                  🌱 WASTE SEGREGATION & RECYCLING GUIDE
-                </p>
-              </div>
-
-              {/* Right Column: Service Cards as square boxes */}
-              <div className="lg:col-span-6 w-full flex flex-wrap justify-center gap-6 py-4">
+              {/* Top Section: Service Cards as square boxes */}
+              <div className="w-full flex flex-wrap justify-center gap-6 py-4">
                 {deptData.services.map((service, index) => {
                   const englishTitle = service.title.toLowerCase();
                   let route = "/complaint";
@@ -305,6 +282,8 @@ const DepartmentPage = () => {
                     route = "/load-change";
                   } else if (englishTitle.includes("meter")) {
                     route = "/meter-complaint";
+                  } else if (englishTitle.includes("profile") || englishTitle.includes("credential")) {
+                    route = "/profile";
                   }
 
                   const squareBg = squareColors[index % squareColors.length];
@@ -322,16 +301,16 @@ const DepartmentPage = () => {
                           }
                         }
                       })}
-                      className={`h-40 w-40 lg:h-48 lg:w-48 rounded-[2rem] flex flex-col items-center justify-center p-4 text-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg relative overflow-hidden group focus:outline-none ${squareBg}`}
+                      className={`aspect-square w-[42%] sm:w-36 md:w-40 lg:w-48 rounded-[2rem] flex flex-col items-center justify-center p-3 lg:p-4 text-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg relative overflow-hidden group focus:outline-none ${squareBg}`}
                     >
                       {/* Circle enclosing the thin crisp icon */}
-                      <div className="mb-4 h-12 w-12 rounded-full border-2 border-[#192e59] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0">
-                        <service.icon className="h-6 w-6 text-[#192e59] stroke-[2.2]" />
+                      <div className="mb-3 lg:mb-4 h-10 w-10 lg:h-12 lg:w-12 rounded-full border-2 border-white/50 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0 bg-white/5 group-hover:bg-white/10">
+                        <service.icon className="h-5 w-5 lg:h-6 lg:w-6 text-white stroke-[2.2]" />
                       </div>
                       
-                      {/* Centered Bold Dark Blue Title inside the flat solid card */}
-                      <h4 className="text-[12px] lg:text-[14px] font-[900] text-[#192e59] uppercase tracking-normal leading-snug line-clamp-3 px-1 relative z-10">
-                        {t(`dept.${id}.s${index + 1}`)}
+                      {/* Centered Bold White Title inside the glass card */}
+                      <h4 className="text-xs sm:text-sm font-[900] text-white uppercase tracking-normal leading-[1.2] line-clamp-3 px-1 relative z-10 drop-shadow-md">
+                        {t(`dept.${id}.s${index + 1}`, service.title)}
                       </h4>
 
                       <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -340,121 +319,56 @@ const DepartmentPage = () => {
                 })}
               </div>
 
-            </div>
-          ) : (
-            /* Centered horizontal flexbox of features for other departments */
-            <div className="flex flex-wrap items-start justify-center gap-8 lg:gap-12 py-10">
-              {deptData.services.map((service, index) => {
-                const englishTitle = service.title.toLowerCase();
-                let route = "/complaint";
-                if (englishTitle.includes("pay") || englishTitle.includes("bill") || englishTitle.includes("tax") || englishTitle.includes("subsidy")) {
-                  route = "/payment";
-                } else if (englishTitle.includes("new") || englishTitle.includes("connection") || englishTitle.includes("registration")) {
-                  route = "/application";
-                } else if (englishTitle.includes("load") || englishTitle.includes("change")) {
-                  route = "/load-change";
-                } else if (englishTitle.includes("meter")) {
-                  route = "/meter-complaint";
-                }
-
-                // Dynamic vibrant colors matching the dynamic theme colors or individual palette
-                const squareBg = squareColors[index % squareColors.length];
-
-                return (
-                  <button 
-                    key={index}
-                    onClick={() => navigate(`/auth/${id}`, {
-                      state: {
-                        redirectTo: route,
-                        serviceState: {
-                          category: t(titleKey),
-                          service: t(`dept.${id}.s${index + 1}`),
-                          description: t(`dept.${id}.s${index + 1}`)
-                        }
-                      }
-                    })}
-                    className={`h-40 w-40 lg:h-48 lg:w-48 rounded-[2rem] flex flex-col items-center justify-center p-4 text-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg relative overflow-hidden group focus:outline-none ${squareBg}`}
-                  >
-                    
-                    {/* Circle enclosing the thin crisp icon matching the reference style exactly! */}
-                    <div className="mb-4 h-12 w-12 rounded-full border-2 border-[#192e59] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0">
-                      <service.icon className="h-6 w-6 text-[#192e59] stroke-[2.2]" />
-                    </div>
-                    
-                    {/* Centered Bold Dark Blue Title inside the flat solid card */}
-                    <h4 className="text-[12px] lg:text-[14px] font-[900] text-[#192e59] uppercase tracking-normal leading-snug line-clamp-3 px-1 relative z-10">
-                      {t(`dept.${id}.s${index + 1}`)}
-                    </h4>
-
-                    {/* Subtle micro hover accent */}
-                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-        </div>
-
-        {/* 🎬 4. CINEMATIC INFINITE-SCROLLING DYNAMIC IMAGE MARQUEE */}
-        <div className="w-full px-[5%] mt-12 lg:mt-16 max-w-none">
-          <div className="overflow-hidden relative py-2">
-
-            <div className="flex w-max animate-img-marquee gap-8">
-              {[...theme.marqueeImages, ...theme.marqueeImages, ...theme.marqueeImages].map((imgUrl, idx) => (
-                <div key={idx} className="h-36 w-48 lg:h-48 lg:w-60 shrink-0 relative overflow-hidden rounded-xl border border-white/10 shadow-2xl group bg-white/5 transition-transform duration-300 hover:scale-105">
-                  <img 
-                    src={imgUrl} 
-                    alt="Department Activity" 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+              {/* Bottom Section: Video Placeholder */}
+              <div className="w-full lg:w-[80%] flex flex-col items-center">
+                <div className="w-full relative aspect-video bg-black rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+                  <video 
+                    src={theme.video}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-80" />
                 </div>
-              ))}
+              </div>
+
             </div>
 
-            <style>{`
-              @keyframes imgMarquee {
-                0% { transform: translateX(0); }
-                100% { transform: translateX(-33.3333%); }
-              }
-              .animate-img-marquee {
-                animation: imgMarquee 75s linear infinite;
-              }
-              .animate-img-marquee:hover {
-                animation-play-state: paused;
-              }
-            `}</style>
-          </div>
-        </div>
+          {/* 🎬 4. CINEMATIC INFINITE-SCROLLING DYNAMIC IMAGE MARQUEE */}
+          <div className="w-full mt-4 max-w-none">
+            <div className="overflow-hidden relative py-2">
 
-        </div>
+              <div className="flex w-max animate-img-marquee gap-8">
+                {[...theme.marqueeImages, ...theme.marqueeImages, ...theme.marqueeImages].map((imgUrl, idx) => (
+                  <div key={idx} className="h-36 w-48 lg:h-48 lg:w-60 shrink-0 relative overflow-hidden rounded-xl border border-white/10 shadow-2xl group bg-white/5 transition-transform duration-300 hover:scale-105">
+                    <img 
+                      src={imgUrl} 
+                      alt="Department Activity" 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-80" />
+                  </div>
+                ))}
+              </div>
 
-      {/* 🏛️ Lower Extras Grid */}
-      {["gas", "water", "property"].includes(id || "") && (
-        <div className="w-full px-[5%] mt-8 relative z-10 shrink-0 max-w-none">
-          <div className="w-full">
-            <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/10 shadow-2xl h-full text-white [&>div]:mt-0 [&>div]:bg-transparent [&>div]:border-none [&>div]:p-0 [&>div]:shadow-none">
-              <DepartmentExtras departmentId={id || ""} />
+              <style>{`
+                @keyframes imgMarquee {
+                  0% { transform: translateX(0); }
+                  100% { transform: translateX(-33.3333%); }
+                }
+                .animate-img-marquee {
+                  animation: imgMarquee 75s linear infinite;
+                }
+                .animate-img-marquee:hover {
+                  animation-play-state: paused;
+                }
+              `}</style>
             </div>
           </div>
+
         </div>
-      )}
 
-      {/* 📞 FLOATING CORNER ACTIONS DECK (Bottom Left Corner, matching Accessibility docks!) */}
-      <div className="fixed bottom-6 left-6 z-50 flex items-center gap-4 pointer-events-auto">
-         {/* Department Helpline Capsule - Flat & Solid Slate-Midnight */}
-         <div className="flex items-center gap-3 py-3 px-5 bg-[#0f172a] border border-white/20 rounded-full hover:bg-slate-800 active:scale-95 transition-all text-white shadow-2xl cursor-pointer group">
-            <Phone className="h-4.5 w-4.5 text-[#FD8008] group-hover:animate-bounce shrink-0" />
-            <span className="text-[12px] font-black uppercase tracking-wider text-slate-300">Support: <span className="text-white">1800-200-1234</span></span>
-         </div>
-
-         {/* Emergency SOS Capsule - Flat & Solid Vibrant Crimson */}
-         <div className="flex items-center gap-3 py-3 px-5 bg-red-600 border border-red-500 rounded-full hover:bg-red-700 active:scale-95 transition-all text-white shadow-2xl shadow-red-600/30 cursor-pointer group">
-            <AlertTriangle className="h-4.5 w-4.5 text-white animate-pulse shrink-0" />
-            <span className="text-[12px] font-black uppercase tracking-widest text-white">Emergency SOS</span>
-         </div>
       </div>
 
     </div>

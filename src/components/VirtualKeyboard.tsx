@@ -135,7 +135,7 @@ const VirtualKeyboard = () => {
   const currentLayout = layout === "shift" ? SHIFT_LAYOUT : DEFAULT_LAYOUT;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t shadow-[0_-5px_20px_rgba(0,0,0,0.05)] p-2 z-[100] animate-in slide-in-from-bottom-full duration-300">
+    <div translate="no" className="notranslate fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t shadow-[0_-5px_20px_rgba(0,0,0,0.05)] p-2 z-[100] animate-in slide-in-from-bottom-full duration-300">
       <div className="max-w-4xl mx-auto flex flex-col gap-1.5 relative">
         {/* Header & Controls */}
         <div className="flex justify-between items-center mb-1 px-2">
